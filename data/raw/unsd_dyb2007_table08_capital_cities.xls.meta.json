@@ -1,0 +1,15 @@
+{
+  "url": "https://unstats.un.org/unsd/demographic/products/dyb/dyb2007/Table08.xls",
+  "download_date": "2026-09-07",
+  "size_bytes": 1046528,
+  "license": "UN Terms and Conditions of Use of United Nations websites (http://www.un.org/en/aboutun/terms/): uso pessoal nao-comercial, sem redistribuicao nem obras derivadas sem autorizacao por escrito",
+  "level": "B",
+  "source_page": "https://unstats.un.org/unsd/demographic/products/dyb/dyb2007.htm",
+  "content_description": "UN Statistics Division, Demographic Yearbook 2007, Table 8 'Population of capital cities and cities of 100,000 or more inhabitants: latest available year, 1988-2007'. Linha Mocambique, censo de 1 VIII 1997 (CDFC = de facto), cidade de Tete = 101984 habitantes (city proper, ambos os sexos). Confirma exatamente a ancora de CLAUDE.md Sec8 (101.984). Moatize NAO aparece nesta tabela (nao e classificado como 'city' >=100mil pelo pais na submissao; e um distrito majoritariamente rural em 1997).",
+  "years_covered": "censo de 1997 (data exata 1 VIII 1997), publicado no anuario de 2007",
+  "geographic_level": "cidade (city proper) — nao distrito",
+  "format": "XLS",
+  "reprocessador": "United Nations Statistics Division (UNSD), Demographic Yearbook",
+  "origem_declarada": "Pais-membro (Mocambique/INE), dado submetido ao UNSD Demographic Yearbook",
+  "notes": "Nivel B (nao A): termos do site da ONU proibem redistribuicao e obras derivadas sem permissao por escrito, apesar de acesso livre e gratuito. Serve para validacao/confirmacao do valor de Tete 1997, nao para publicacao em nucleo A sem permissao adicional."
+}

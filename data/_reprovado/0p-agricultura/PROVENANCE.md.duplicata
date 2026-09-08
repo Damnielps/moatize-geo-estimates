@@ -1,0 +1,208 @@
+# data/PROVENANCE.md
+
+Rastreamento de proveniência de arquivos efetivamente baixados em `data/raw/`.
+Para cada arquivo espelhado: URL de origem, data de acesso, licença, citação, resolução,
+anos cobertos, hash SHA256.
+
+Complementado pelo arquivo `.meta.json` de cada arquivo.
+
+---
+
+## Família: AGRICULTURA URBANA E PERIURBANA
+
+Verificação concluída em 2026-09-07 pelo `coletor-dados`.
+
+### Arquivos espelhados (nível A, versionados em data/raw/)
+
+#### HydroRIVERS (vetorizado, África)
+
+| Atributo | Valor |
+|----------|-------|
+| **Arquivo** | `hydrorivers_af_v10.gdb.zip` |
+| **URL origem** | https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_af.gdb.zip |
+| **Data acesso** | 2026-09-07 18:06 UTC |
+| **Tamanho** | 116,308,480 bytes (111 MB) |
+| **SHA256** | c323c1807d55d73b99e9fbad38a6c8f375edd5607318e1bdbcacc81ab4a4c884 |
+| **Licença** | CC0 / Domínio Público (conforme documentação HydroSHEDS v1) |
+| **Citação** | Lehner, B., & Grill, G. (2013). Global river hydrography and network routing. Hydrological Processes, 27(15), 2171–2186. |
+| **Resolução** | Vetorial (~500 m acurácia de posicionamento) |
+| **Anos cobertos** | Datum fixo (sem série temporal); base ~2000–2013, atualizada descontinuamente |
+| **Cobertura geográfica** | Todos os rios da África com catchment ≥ 10 km² ou fluxo médio ≥ 0.1 m³/s |
+| **Uso previsto** | Cálculo de HAND (Height Above Nearest Drainage); delimitação de várzeas e zonas de vazante |
+| **Arquivo .meta.json** | ✓ Presente: `hydrorivers_af_v10.gdb.zip.meta.json` |
+| **Arquivo .sha256** | ✓ Presente: `hydrorivers_af_v10.gdb.zip.sha256` |
+
+---
+
+### Fontes raster grandes (scripts fetch em `pipeline/00_fetch/`, não versionados)
+
+Scripts idempotentes criados para download programático. Arquivo não será versionado; hash esperado
+será registrado e verificado antes de cada reexecução.
+
+#### GLAD Global Cropland (Potapov et al. 2022)
+
+| Atributo | Valor |
+|----------|-------|
+| **Script** | `pipeline/00_fetch/fetch_glad_cropland.py` |
+| **URL origem** | https://glad.umd.edu/dataset/croplands (GEE: ee.Image("GLAD/GLCLU2000_2020_v2")) |
+| **Resolução** | 30 m |
+| **Anos** | 2000, 2004, 2008, 2012, 2016, 2019 (compostos quadrienais) |
+| **Licença** | CC-BY 4.0 |
+| **Citação** | Potapov, P., et al. (2022). Global cropland extent, 2000–2019: Annual raster data (v1.1). Scientific Data, 9, 297. https://doi.org/10.1038/s41597-022-01292-5 |
+| **Status implementação** | Stub; requer acesso GEE ou WMS para produção |
+| **Notas** | Tipo: máscara binária (cultivo vs. não-cultivo); não discrimina sequeiro/irrigado |
+
+#### ESA WorldCover (2020, 2021)
+
+| Atributo | Valor |
+|----------|-------|
+| **Script** | `pipeline/00_fetch/fetch_esa_worldcover.py` |
+| **URL origem** | s3://esa-worldcover/2020/Map/ (AWS S3, públicos); Digital Earth Africa |
+| **Resolução** | 10 m |
+| **Anos** | 2020, 2021 |
+| **Licença** | CC-BY-4.0 |
+| **Citação** | ESA WorldCover 2020/2021. Zenodo. |
+| **Acesso** | AWS S3 sem assinatura; Digital Earth Africa HTTPS; Zenodo |
+| **Tipo de dado** | Classificação multiclasse (11 classes); cropland = classe 40 |
+| **Notas** | Não discrimina sequeiro/irrigado; requer análise fenológica complementar |
+
+#### Copernicus CGLS-LC100 (2015–2019)
+
+| Atributo | Valor |
+|----------|-------|
+| **Script** | `pipeline/00_fetch/fetch_lulc_products.py` (parte 1) |
+| **URL origem** | https://zenodo.org/records/3938963 (documentação); GEE; SANSA |
+| **Resolução** | 100 m |
+| **Anos** | 2015, 2016, 2017, 2018, 2019 (anual) |
+| **Licença** | Copernicus (livre, aberto) |
+| **Citação** | Buchhorn, M., et al. (2020). Copernicus Global Land Cover 100m Collection 3. https://doi.org/10.5281/zenodo.3938963 |
+| **Tipo de dado** | Classificação multiclasse; inclui fração de cultivo (0–100 %) |
+| **Notas** | Válida para validação e comparação com GLAD |
+
+#### ESRI/Impact Observatory Land Cover (2017–2025)
+
+| Atributo | Valor |
+|----------|-------|
+| **Script** | `pipeline/00_fetch/fetch_lulc_products.py` (parte 2) |
+| **URL origem** | s3://io-lulc/ (AWS S3); Esri Living Atlas; Planetary Computer |
+| **Resolução** | 10 m |
+| **Anos** | 2017–2025 (anual) |
+| **Licença** | CC-BY-4.0 |
+| **Citação** | Impact Observatory (2024). Sentinel-2 10m Land Use Land Cover. ESRI/National Geographic. |
+| **Acesso** | AWS S3 sem assinatura; Esri Living Atlas; Planetary Computer |
+| **Tipo de dado** | Classificação 9-classe |
+| **Recomendação** | **Usar como primária 2017–2025 (em lugar de Dynamic World)** para garantir reprodutibilidade |
+
+#### Copernicus DEM GLO-30
+
+| Atributo | Valor |
+|----------|-------|
+| **Script** | `pipeline/00_fetch/fetch_hydro_datasets.py` (parte 2) |
+| **URL origem** | s3://copernicus-dem-30m/ (AWS); OpenTopography; Copernicus Data Space |
+| **Resolução** | 30 m |
+| **Cobertura temporal** | Datum fixo (sem série temporal) |
+| **Licença** | Copernicus (livre, aberto) |
+| **Citação** | Copernicus DEM GLO-30. European Space Agency. |
+| **Acesso** | Múltiplos distribuidores; sem restrição de acesso |
+| **Tipo de dado** | Modelo digital de elevação (DSM) |
+| **Uso** | HAND (Height Above Nearest Drainage) + HydroRIVERS para delimitação de várzea |
+
+#### Dynamic World (Google/WRI, 2015–presente)
+
+| Atributo | Valor |
+|----------|-------|
+| **Script** | Nenhum (acesso prático restrito a GEE/Planetary Computer) |
+| **URL origem** | https://dynamicworld.app/; GEE: ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1") |
+| **Resolução** | 10 m |
+| **Anos** | 2015–2025 (contínuo; composições anuais possíveis) |
+| **Licença** | CC-BY-4.0 |
+| **Citação** | Brown, C.F., et al. (2023). Dynamic World: A 10m Global Land Use / Land Cover Dataset. Scientific Data, 10, 352. |
+| **Acesso** | GEE ou Planetary Computer; sem download direto/STAC público |
+| **Status** | **Nível B** para reprodutibilidade; usar ESRI/IO como primária |
+| **Notas** | Oferece fenologia e probabilidades por classe; excelente para sequeiro/irrigado se acessível |
+
+---
+
+### Fontes domiciliares/censitárias (não espelhadas; scripts de acesso)
+
+Dados públicos do INE; consultar portal direto ou contatar departamento de estatísticas.
+
+#### INE — Censos 2007, 2017
+
+| Atributo | Valor |
+|----------|-------|
+| **URL acesso** | https://mozdata.ine.gov.mz/ |
+| **Catálogo 2007** | https://mozdata.ine.gov.mz/index.php/catalog/22 |
+| **Catálogo 2017** | https://mozdata.ine.gov.mz/index.php/catalog/24 |
+| **Licença** | INE — exigida citação |
+| **Anos** | 2007 (Censo III), 2017 (Censo IV) |
+| **Resolução geográfica** | Província/distrito/cidade; Tete é unidade administrativa única (sem postos) |
+| **Variáveis previstas** | População, domicílios, habitação, educação, ocupação; **agricultura urbana (tabulações) ainda não confirmadas como públicas** |
+| **Ação** | Contato direto com INE (divisão de Tete ou departamento central) para verificar publicidade de tabulações |
+
+#### INE — Censo Agro-Pecuário 2009–10
+
+| Atributo | Valor |
+|----------|-------|
+| **URL acesso** | https://mozdata.ine.gov.mz/index.php/catalog/37 |
+| **Licença** | INE — exigida citação |
+| **Anos** | 2009–2010 (coleta); 2011 (publicação) |
+| **Resolução geográfica** | Distrito e abaixo (incluindo Tete/Moatize) |
+| **Conteúdo** | Explorações, área cultivada, tipos de cultivo |
+| **Uso** | Linha de base pré-boom (anterior a 2011 operação Vale) |
+| **Status acesso** | Público; download em ZIP no portal INE |
+
+#### INE — Inquérito Agrário Integrado (IAI) 2020
+
+| Atributo | Valor |
+|----------|-------|
+| **URL acesso** | https://mozdata.ine.gov.mz/index.php/catalog/62 |
+| **Licença** | INE — exigida citação |
+| **Anos** | 2020 (coleta); 2021 (publicação) |
+| **Tipo** | Inquérito probabilístico (amostra), não censo |
+| **Resolução geográfica** | Província (raramente distrito específico publicado) |
+| **Conteúdo** | Explorações agropecuárias, cultivos, bem-estar |
+| **Tete** | Tete representou 6 % das explorações amostradas |
+| **Uso** | Proxy para "Censo Agro-Pecuário 2019–20" mencionado em CLAUDE.md |
+| **Notas** | Amostra; cuidado ao usar como linha de base precisa |
+
+#### INE — Inquérito aos Orçamentos Familiares (IOF) 2014/15, 2019/20, 2022
+
+| Atributo | Valor |
+|----------|-------|
+| **URL acesso** | https://mozdata.ine.gov.mz/index.php/catalog/79 (IOF 2022); portal geral para 2014/15 e 2019/20 |
+| **Licença** | INE — exigida citação |
+| **Anos** | 2014–15, 2019–20, 2022–23 (coletas; publicação defasada ~1–2 anos) |
+| **Tipo** | Inquérito domiciliar; amostra probabilística |
+| **Resolução geográfica** | Província; raramente urbano/rural desagregado |
+| **Conteúdo** | Consumo, ativos, segurança alimentar, emprego, atividade agrícola domiciliar (consumo próprio) |
+| **Tete cobertura** | Agregada em "Região Centro"; Tete pode ser extraída ou Tete+Sofala pode ser usada como proxy |
+| **Microdados** | Disponíveis via IPUMS (nível B) ou contato direto com INE |
+| **Uso previsto** | Teste de H6 (segurança alimentar no bust); dimensão domiciliar de consumo próprio |
+
+---
+
+## Suficiência consolidada
+
+**Perguntas/hipóteses do estudo**:
+
+| Item | Status | Justificativa |
+|------|--------|---------------|
+| Pergunta 8 — Mapeamento de agricultura urbana | ✓ Respondível | GLAD (2000–19) + ESRI/IO (2017–25); ESA WC e CGLS para validação |
+| Pergunta 8 — Sequeiro vs. irrigado | ⚠️ Parcial | Requer fenologia (Landsat/Sentinel NDVI mensal) alocada em 01_imagery |
+| Pergunta 8 — Várzea (vazante) | ✓ Respondível | Copernicus DEM + HydroRIVERS → HAND + inundação sazonal |
+| Pergunta 8 — Dimensão domiciliar | ⚠️ Limitado | IOF provincial (desagregação limitada); Censos tabulações TBD com INE |
+| H5 — Conversão cropland→construído por topografia | ✓ Testável | Rasters LULC + Copernicus DEM |
+| H6 — Agricultura urbana como amortecedor no bust | ⚠️ Parcial | IOF 2019-20 e 2022 provincializado; série de área urbana OK |
+
+**Conclusão**: Conjunto A desta família **suficiente para núcleo reproduzível**. Lacunas (fenologia intra-anual, desagregação domiciliar Tete-específica) são mitigadas por aproximações documentadas.
+
+---
+
+## Próximas etapas (Fase 1–3)
+
+1. **01_imagery**: Composições mensais e índices fenológicos (NDVI, EVI, NDWI) 2000–2025
+2. **02_metrics**: Cálculo de HAND; delimitação de anel periurbano anualmente recalculado; matrizes de transição
+3. **03_causal**: Série interrompida de área/CAGR; desenho DiD vs. controles; elasticidades
+4. **Validação**: Pontos fotointerpretados para matriz de confusão por ano; acurácia por classe
+

@@ -1,0 +1,24 @@
+{
+  "fonte": "Google Open Buildings v3",
+  "url_indice": "https://openbuildings-public-dot-gweb-research.uw.r.appspot.com/public/tiles.geojson",
+  "blocos_origem": [
+    {
+      "tile_id": "193",
+      "url": "https://storage.googleapis.com/open-buildings-data/v3/polygons_s2_level_4_gzip/193_buildings.csv.gz"
+    }
+  ],
+  "metodo": "Streaming do(s) bloco(s) S2-nível-4 que intersectam a AOI (config/study.yaml -> aoi.bbox), filtro linha a linha por latitude/longitude dentro do bbox, sem gravar o bloco original (~1 GB, cobre múltiplos países) em disco.",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0,
+    "crs": "EPSG:4326"
+  },
+  "n_edificacoes_aoi": 268942,
+  "size_bytes": 66894584,
+  "licenca": "CC-BY-4.0 (ou ODbL 1.0, à escolha do usuário) — ver data/LICENSES.md",
+  "nivel": "A",
+  "data_processamento": "2026-09-08T11:26:12.851533+00:00",
+  "nota": "Recorte espacial de uma fonte nível A, não o bloco completo. Reproduzível byte a byte a partir da URL do bloco e do bbox acima."
+}

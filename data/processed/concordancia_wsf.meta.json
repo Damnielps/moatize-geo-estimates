@@ -1,0 +1,8 @@
+{
+  "e_acuracia": false,
+  "papel_do_wsf": "semente de treino (classificacao.rotulos_treino)",
+  "cobertura": "1985-2015; 2020 e 2025 ausentes por falta de referência",
+  "saida": "data/processed/concordancia_wsf.csv",
+  "data_processamento": "2026-09-08T10:53:41.950517+00:00",
+  "script": "pipeline/01_imagery/concordancia_wsf.py"
+}

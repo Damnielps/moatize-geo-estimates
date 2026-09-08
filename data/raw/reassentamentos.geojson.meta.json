@@ -1,0 +1,10 @@
+{
+  "url": "https://nominatim.openstreetmap.org/search (Cateme, Mwaladzi); https://overpass.kumi.systems/api/interpreter (25 de Setembro, sem resultado)",
+  "download_date": "2026-09-07",
+  "size_bytes": 2751,
+  "license": "ODbL 1.0 (c) OpenStreetMap contributors -- https://www.openstreetmap.org/copyright",
+  "level": "A",
+  "source_page": "https://nominatim.openstreetmap.org ; https://overpass-api.de",
+  "sha256": "300fdfe29e661255972d9a7ea19cd9cfada0f3f20a4e8f45428f24d48a4681bf",
+  "description": "Pontos OSM para os povoados de reassentamento de Cateme e Mwaladzi (Nominatim, elemento node resolvido); 25 de Setembro sem elemento OSM localizável em ambas as APIs consultadas. n_familias e ano_reassentamento vêm de HRW 2013, não do OSM."
+}

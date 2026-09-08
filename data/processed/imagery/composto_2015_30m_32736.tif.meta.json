@@ -1,0 +1,81 @@
+{
+  "ano": 2015,
+  "arquivo": "data/processed/imagery/composto_2015_30m_32736.tif",
+  "bandas": [
+    "blue",
+    "green",
+    "red",
+    "nir",
+    "swir16",
+    "swir22"
+  ],
+  "resolucao_m": 30,
+  "crs": "EPSG:32736",
+  "janela_temporal": {
+    "inicio_fim_iso": "2015-05-01T00:00:00Z/2015-10-31T23:59:59Z",
+    "ano_ancora": 2015,
+    "ano_inicio_janela": 2015,
+    "ano_fim_janela": 2015,
+    "janela_anos": 1
+  },
+  "nuvem_max_pct_cena": 40,
+  "reducao": "median",
+  "pixels_sem_observacao": 0,
+  "pixels_total": 2785056,
+  "min_observacoes_por_pixel": 6,
+  "mediana_observacoes_por_pixel": 10.0,
+  "catalogo_stac": "https://planetarycomputer.microsoft.com/api/stac/v1",
+  "colecao_landsat": {
+    "id_colecao": "landsat-c2-l2",
+    "plataforma": "landsat-8",
+    "n_itens": 10,
+    "itens": [
+      {
+        "id": "LC08_L2SP_168071_20150513_02_T1",
+        "datetime": "2015-05-13T07:46:11.836717+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20150529_02_T1",
+        "datetime": "2015-05-29T07:46:14.818096+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20150614_02_T1",
+        "datetime": "2015-06-14T07:46:27.214194+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20150630_02_T1",
+        "datetime": "2015-06-30T07:46:33.994064+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20150716_02_T1",
+        "datetime": "2015-07-16T07:46:43.718414+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20150817_02_T1",
+        "datetime": "2015-08-17T07:46:54.123620+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20150902_02_T1",
+        "datetime": "2015-09-02T07:46:59.160612+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20150918_02_T1",
+        "datetime": "2015-09-18T07:47:07.740129+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20151004_02_T1",
+        "datetime": "2015-10-04T07:47:11.573457+00:00"
+      },
+      {
+        "id": "LC08_L2SP_168071_20151020_02_T1",
+        "datetime": "2015-10-20T07:47:13.346052+00:00"
+      }
+    ]
+  },
+  "colecao_sentinel2": null,
+  "selo": "observado",
+  "data_processamento": "2026-09-08T12:07:05.529850+00:00",
+  "commit_git": "desconhecido (git indisponível)",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "script": "pipeline/01_imagery/compostos.py"
+}

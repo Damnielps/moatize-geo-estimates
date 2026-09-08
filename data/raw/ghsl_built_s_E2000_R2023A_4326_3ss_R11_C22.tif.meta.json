@@ -1,0 +1,13 @@
+{
+  "fonte": "GHSL BUILT-S R2023A (JRC/Copernicus)",
+  "url": "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2000_GLOBE_R2023A_4326_3ss/V1-0/tiles/GHS_BUILT_S_E2000_GLOBE_R2023A_4326_3ss_V1_0_R11_C22.zip",
+  "epoca": 2000,
+  "selo": "observado",
+  "nivel_dados": "A",
+  "licenca": "CC-BY-4.0 (JRC/Copernicus) — Pesaresi & Politis, GHSL R2023A",
+  "resolucao": "3 arcsec (~100 m), EPSG:4326",
+  "papel_no_pipeline": "referência independente de concordância na validação da classificação (§5.1). NÃO usado em treino nem em limiares.",
+  "sha256": "cc2c8825d7a1aba5efe1adbe8f7d482b3f0ea50f4b4793420c30d2752c2f7b2b",
+  "data_download": "2026-09-08T01:08:05.233597+00:00",
+  "script": "pipeline/00_fetch/fetch_ghsl_built_s.py"
+}

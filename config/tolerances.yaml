@@ -1,0 +1,100 @@
+# config/tolerances.yaml — tolerâncias declaradas (§10, §11.2.4, §11.3).
+# "Reproduz byte a byte OU dentro de tolerância declarada" — esta é a declaração.
+
+# §11.3 — a rota GEE precisa reproduzir a rota STAC (referência) dentro disto.
+concordancia_rotas:
+  area_por_camada_por_ano:
+    metrica: erro_relativo_absoluto
+    max: 0.03                 # 3 % da área da camada
+  mapa_pixel_a_pixel:
+    metrica: acordo_percentual
+    min: 0.95
+  justificativa: >
+    Diferenças abaixo destes limiares vêm de reamostragem, ordem de mosaicagem e
+    aritmética de ponto flutuante entre plataformas, não de decisão metodológica.
+    Divergência acima obriga investigação e registro em docs/ADR/ antes de prosseguir.
+
+# §11.2.4 — regressão numérica em CI.
+regressao_numerica:
+  area_km2_por_camada_ano:
+    metrica: erro_relativo_absoluto
+    max: 0.005                # 0,5 % entre execuções do mesmo código
+  acuracia_global:
+    metrica: diferenca_absoluta
+    max: 0.01
+  populacao_dasimetrica:
+    metrica: erro_relativo_absoluto
+    max: 0.02
+  indices_espectrais_pixel:
+    # pipeline/01_imagery/indices.py: NDBI/NDVI/MNDWI/EVI/NDWI são razões de bandas
+    # de ponto flutuante determinísticas (sem RNG, sem reamostragem adicional) —
+    # a única fonte de diferença entre execuções é arredondamento de ponto flutuante.
+    metrica: diferenca_absoluta_pixel
+    max: 1.0e-5
+  contrato_qa_pixel:
+    # pipeline/tests/test_imagery.py::test_nobs_bate_com_calculo_direto_do_qa_pixel
+    # — o contrato que teria pego o defeito de nodata do qa_pixel (Fase 1):
+    # soma total de observações válidas na AOI, recalculada por leitura
+    # `rasterio` bruta + reprojeção manual das cenas de origem (nunca passa
+    # por `odc.stac.load`/`stac_cfg`), comparada com a mesma soma calculada
+    # pelo pipeline (`carregar_colecao_mascarada` + `contar_observacoes_validas`).
+    # Tolerância cobre só a diferença de reamostragem entre os dois caminhos
+    # de reprojeção (ambos "nearest", mas implementações distintas: odc-stac
+    # via `rasterio.warp` internamente vs. chamada direta a
+    # `rasterio.warp.reproject` no teste) — o defeito corrigido nesta entrega
+    # produzia uma diferença de dezenas de pontos percentuais, muito acima
+    # deste limiar.
+    metrica: erro_relativo_absoluto
+    max: 0.01
+
+# §5.1/§10 — instabilidade numérica nos índices de razão de banda (NDVI, NDBI,
+# MNDWI, NDWI, EVI): o numerador e o denominador vêm de reflectância de
+# superfície plausível (Landsat C2 L2, faixa aproximada [-0.2, ~1.6]); a única
+# forma de sair de [-1, 1] (ou da faixa mais larga do EVI) é o denominador se
+# aproximar de zero por cancelamento entre duas reflectâncias de sinal oposto
+# ou quase nulas — não é erro de escala (p1/p99 de todos os índices são
+# plausíveis para savana semiárida, verificado pelo orquestrador nesta
+# tarefa). Pixels com |denominador| abaixo deste limiar são mascarados (NaN),
+# nunca divididos: um valor "plausível" resultante de denominador quase-zero
+# seria mais enganoso que um nulo declarado.
+#
+# Valor medido nesta tarefa (Fase 1, correção pós-defeito de qa_pixel): depois
+# de corrigir o carregamento (ver `_stac_common.STAC_CFG_QA_PIXEL_SEM_NODATA`),
+# os pixels que ainda violavam a faixa plausível em
+# `pipeline/tests/test_imagery.py` tinham |denominador| até 0,0175 (NDBI 2000),
+# 0,0575 (MNDWI 2000) e 0,0944 (EVI 2025) — água muito escura / sombra residual
+# com reflectância próxima de zero em duas bandas simultaneamente, não um erro
+# de escala. `min: 0.1` cobre esses três casos com folga e mascara, em cada
+# ano/composto, entre 0% e ~1,7% dos pixels válidos por índice (medido nos
+# cinco anos-âncora desta entrega) — não a maioria da imagem.
+processamento_indices:
+  denominador_minimo:
+    metrica: valor_absoluto_denominador
+    min: 0.1
+    nota: >
+      Abaixo deste módulo, o denominador de (a-b)/(a+b) ou do termo do EVI é
+      mascarado (NaN) em vez de dividido. Ver pipeline/01_imagery/indices.py.
+
+# §5.1.3 — concordância esperada com produtos de referência (não é erro, é sanidade).
+# Fora da faixa não reprova automaticamente, mas exige explicação escrita.
+consistencia_referencias:
+  wsf_evolution_2000_2015:
+    metrica: erro_relativo_absoluto_area_construida
+    faixa_esperada: [0.0, 0.30]
+    nota: "WSF é 30 m e conservador em assentamento disperso; divergência sistemática é esperada"
+  ghsl_built_s_2000_2020:
+    metrica: erro_relativo_absoluto_area_construida
+    faixa_esperada: [0.0, 0.35]
+    nota: "GHSL mede superfície construída, não mancha de assentamento — não são a mesma grandeza"
+  glad_cropland_2000_2019:
+    metrica: acordo_percentual_mascara_cultivo
+    min: 0.70
+  worldcover_2020_2021:
+    metrica: acordo_percentual_mascara_cultivo
+    min: 0.75
+
+# Ordem de grandeza demográfica (portão da Fase 2).
+sanidade_demografica:
+  densidade_hab_km2: {min: 500, max: 20000}
+  tamanho_medio_domicilio: {min: 3.0, max: 7.0}
+  cagr_populacional: {min: -0.02, max: 0.15}

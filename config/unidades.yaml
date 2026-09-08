@@ -1,0 +1,113 @@
+# config/unidades.yaml — vocabulário controlado de unidades geográficas.
+#
+# Motivo (ORCHESTRATION_LOG.md 2-02): as famílias `forma_urbana` e `demografia` chegaram à
+# Fase 2 com **nenhuma unidade em comum** — 'tete'/'moatize' de um lado, 'Cidade de Tete'/
+# 'Distrito de Moatize' do outro. Pior que rótulo divergente: 'moatize' é a vila-sede (§3) e
+# 'Distrito de Moatize' é o distrito inteiro. Juntar as duas produziria densidade da
+# população do distrito sobre a área construída da vila, inflada e em silêncio.
+#
+# Toda linha de data/processed/stats_by_year_by_unit.csv tem de usar um `id` daqui.
+# Contrato: pipeline/tests/test_metricas.py::test_unidades_do_vocabulario_controlado
+
+unidades:
+  tete:
+    rotulo: "Cidade de Tete"
+    geografia: "Distrito 'Cidade de Tete' do codificador do INE; §3 o trata como o núcleo urbano de Tete"
+    tipo: nucleo_urbano
+    # ATENÇÃO: os dois conjuntos do HDX usam esquemas de P-code DIFERENTES.
+    # COD-AB (geometria): MZ0501. COD-PS (população): MZ1006 — que no COD-AB é MATUTUINE,
+    # distrito da província de Maputo. Juntar os dois por P-code teria sucesso e daria a
+    # população de Tete a Matutuine. O cruzamento é por NOME + PROVÍNCIA, nunca por código.
+    fonte_geometria: "HDX COD-AB, ADM2 adm2_pcode=MZ0501 (adm1_pcode=MZ05, Tete)"
+    pcode_cod_ab: "MZ0501"
+    pcode_cod_ps: "MZ1006"
+    comparavel_entre_familias: true
+
+  moatize_vila:
+    rotulo: "Vila de Moatize"
+    geografia: "Vila-sede de Moatize; posto administrativo de Moatize (§3)"
+    tipo: nucleo_urbano
+    fonte_geometria: "classificação própria + OSM"
+    comparavel_entre_familias: false
+    motivo_nao_comparavel: >-
+      A demografia só existe para o DISTRITO de Moatize (HDX COD-AB ADM2 MZ1012), que
+      contém a vila e muito mais. Não há população em nível A para a vila isolada.
+      Qualquer razão população/área que misture as duas é inválida.
+
+  moatize_distrito:
+    rotulo: "Distrito de Moatize"
+    geografia: "Distrito administrativo inteiro; contém a vila-sede e os postos de Kambulatsitsi e Zóbue"
+    tipo: distrito
+    # Mesmo conflito de esquema: COD-AB usa MZ0510, COD-PS usa MZ1012.
+    fonte_geometria: "HDX COD-AB, ADM2 adm2_pcode=MZ0510 (adm1_pcode=MZ05, Tete)"
+    pcode_cod_ab: "MZ0510"
+    pcode_cod_ps: "MZ1012"
+    comparavel_entre_familias: false
+    motivo_nao_comparavel: >-
+      A forma urbana é medida sobre a vila-sede, não sobre o distrito. Ver moatize_vila.
+
+  cateme:
+    rotulo: "Cateme"
+    geografia: "Povoado de reassentamento rural; nó OSM 3899065178"
+    tipo: reassentamento
+    fonte_geometria: "data/raw/reassentamentos.geojson"
+    comparavel_entre_familias: false
+
+  mwaladzi:
+    rotulo: "Mwaladzi"
+    geografia: "Povoado de reassentamento; nó OSM 3899065179"
+    tipo: reassentamento
+    fonte_geometria: "data/raw/reassentamentos.geojson"
+    comparavel_entre_familias: false
+
+  vinte_cinco_setembro:
+    rotulo: "25 de Setembro"
+    geografia: "Bairro urbano de reassentamento em Moatize"
+    tipo: reassentamento
+    fonte_geometria: "NÃO LOCALIZADO — geometry null em data/raw/reassentamentos.geojson"
+    comparavel_entre_familias: false
+    motivo_nao_comparavel: >-
+      Sem geometria. Nem Nominatim nem Overpass retornam elemento. A camada `urbano`
+      inclui o crescimento deste povoado sem poder separá-lo, e a magnitude do vazamento
+      não é estimável (ver PROVENANCE.md, Fase 1).
+
+  industrial:
+    rotulo: "Pegada industrial e minerária"
+    geografia: "Polígonos de mineração de Maus et al. v2 recortados pela AOI, mais digitalização"
+    tipo: industrial
+    fonte_geometria: "data/raw/global_mining_polygons_v2_maus_2022"
+    comparavel_entre_familias: false
+
+  aoi:
+    rotulo: "AOI inteira"
+    geografia: "Retângulo de config/study.yaml; agregado de referência, não unidade analítica"
+    tipo: agregado
+    fonte_geometria: "config/study.yaml"
+    comparavel_entre_familias: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Esquemas de P-code incompatíveis entre fontes do HDX (ORCHESTRATION_LOG.md 2-04)
+# ─────────────────────────────────────────────────────────────────────────────
+# Verificado pelo orquestrador em 2026-09-08:
+#
+#                      | província Tete | Cidade de Tete | Moatize
+#   COD-AB (geometria) | MZ05           | MZ0501         | MZ0510
+#   COD-PS (população) | MZ10           | MZ1006         | MZ1012
+#
+# No COD-AB, MZ10 é MAPUTO e MZ1006 é MATUTUINE. Os códigos colidem sem colidir:
+# a chave existe nos dois lados e aponta para entidades a ~1.500 km de distância.
+# Um merge por P-code SUCEDE em silêncio e atribui 307.338 habitantes de Tete a
+# Matutuine. Nenhum erro, nenhuma chave faltante, nenhum aviso.
+esquemas_pcode:
+  cod_ab:
+    fonte: "data/raw/hdx_cod-ab-moz_admin_boundaries.geojson.zip"
+    campos: [adm1_pcode, adm2_pcode]
+    provincia_tete: MZ05
+  cod_ps:
+    fonte: "data/raw/hdx_cod-ps-moz_admpop_adm2_2017_v2.csv"
+    campos: [ADM1_PCODE, ADM2_PCODE]
+    provincia_tete: MZ10
+  regra: >-
+    O cruzamento entre geometria e população é feito por NOME normalizado mais
+    província, nunca por P-code. Contrato:
+    pipeline/tests/test_unidades.py::test_pcodes_das_duas_fontes_nao_sao_intercambiaveis

@@ -1,0 +1,34 @@
+# CI exigida por §11.2.4: contratos de dados e regressão numérica a cada commit.
+# O app só é publicado se estes testes passam.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.12.1"
+          enable-cache: true
+
+      - name: Ambiente exatamente como travado
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Contratos de dados e regressão numérica
+        run: uv run pytest -q
+
+      - name: Nenhum dado de nível B ou C versionado (§4.0, regra 2)
+        run: |
+          if git ls-files | grep -Ei 'ipums|nicfi|dhs_microdata'; then
+            echo "::error::arquivo de nível B versionado — ver .gitignore e §4.0"
+            exit 1
+          fi

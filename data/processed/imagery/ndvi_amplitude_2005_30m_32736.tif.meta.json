@@ -1,0 +1,30 @@
+{
+  "ano": 2005,
+  "selo": "observado",
+  "janela_estacao_chuvosa": "2004-11-01T00:00:00Z/2005-04-30T23:59:59Z",
+  "missao_usada": "LANDSAT_7",
+  "usou_missao_substituta": true,
+  "n_cenas_landsat": 6,
+  "n_cenas_sentinel2": 0,
+  "itens_landsat": [
+    "LE07_L2SP_168071_20041130_02_T1",
+    "LE07_L2SP_168071_20050202_02_T1",
+    "LE07_L2SP_168071_20050218_02_T1",
+    "LE07_L2SP_168071_20050306_02_T1",
+    "LE07_L2SP_168071_20050322_02_T1",
+    "LE07_L2SP_168071_20050423_02_T1"
+  ],
+  "itens_sentinel2": [],
+  "fracao_pixels_cobertos": 0.9987142089782036,
+  "criterio_viabilidade": {
+    "min_cenas": 3,
+    "min_obs_por_pixel": 2,
+    "min_fracao_pixels": 0.9
+  },
+  "definicao_amplitude": "NDVI(chuva nov(A-1)-abr(A)) - NDVI(seca mai-out(A))",
+  "catalogo_stac": "https://planetarycomputer.microsoft.com/api/stac/v1",
+  "data_processamento": "2026-09-08T01:52:40.753554+00:00",
+  "commit_git": "desconhecido (git indisponível)",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "script": "pipeline/01_imagery/compostos_chuva.py"
+}

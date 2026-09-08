@@ -1,0 +1,14 @@
+{
+  "url": "https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Pink-Sheet-June-2026.pdf",
+  "download_date": "2026-09-07",
+  "size_bytes": 266418,
+  "license": "Public Domain (World Bank)",
+  "level": "A",
+  "source_page": "https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/",
+  "content_description": "World Bank Commodity Markets Observatory — Pink Sheet. Coal prices (Australia and South Africa) in USD/mt, monthly data. Contains historical price series.",
+  "years_covered": "historical to June 2026",
+  "geographic_level": "global (commodity prices)",
+  "format": "PDF",
+  "notes": "Direct download from World Bank public repository; no authentication required. Citation: World Bank. Commodity Markets Observatory — Pink Sheet. June 2026.",
+  "nota_orquestrador": "size_bytes corrigido de 260418 para 266418 em 2026-09-07: o campo havia sido declarado sem medir o arquivo. Contrato em pipeline/tests/test_config.py::test_checksums_de_data_raw_conferem impede a repetição."
+}

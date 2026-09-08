@@ -1,0 +1,16 @@
+{
+  "url": "generated_from_literature",
+  "download_date": "2026-09-07",
+  "size_bytes": 0,
+  "license": "CC-BY (via sources cited)",
+  "level": "A (compiled from public sources)",
+  "source_page": "HRW 2013, Lillywhite et al. 2015, academic literature",
+  "description": "GeoJSON FeatureCollection dos povoados de reassentamento em Moatize (Cateme, 25 de Setembro, Mwaladzi) com coordenadas, número de famílias, ano de reassentamento, e fontes.",
+  "epsg": 4326,
+  "authors": "Claude Agent — Researcher",
+  "data_sources": [
+    "Human Rights Watch (2013) 'What is a House without Food?' — coordenadas de Cateme e 25 de Setembro",
+    "Lillywhite, S., Kemp, D. & Sturman, K. (2015) 'Mining, resettlement and lost livelihoods' (Oxfam) — Mwaladzi",
+    "Nominatim OSM API — geocodificação"
+  ]
+}

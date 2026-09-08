@@ -1,0 +1,15 @@
+{
+  "url": "https://data.humdata.org/dataset/46b79d47-0667-4baa-8d69-468b208855ed/resource/173abc7f-810a-4022-89dd-c9a9fa40a490/download/moz_admpop_adm2_2017_v2.csv",
+  "download_date": "2026-09-07",
+  "size_bytes": 54556,
+  "license": "CC BY-IGO 3.0 (http://creativecommons.org/licenses/by/3.0/igo/legalcode)",
+  "level": "A",
+  "source_page": "https://data.humdata.org/dataset/cod-ps-moz",
+  "content_description": "HDX COD-PS Mozambique — population by admin2 (district/city), sex and 5-year age group, vintage 2017 (aligned to IV RGPH 2017 census). Columns include ADM2_PT='Cidade De Tete' (T_TL=307338) and 'Moatize' (T_TL=260843), matching CLAUDE.md §8 anchors exactly.",
+  "years_covered": "2017 (IV RGPH census-aligned vintage)",
+  "geographic_level": "ADM2 (distrito/cidade)",
+  "format": "CSV",
+  "reprocessador": "UNFPA/OCHA Mozambique via HDX (dataset owner field: cod-ps-moz)",
+  "origem_declarada": "INE Mocambique, IV RGPH 2017",
+  "notes": "Segunda via independente (reprocessador institucional, nao agregador) confirmando os valores primarios do INE recuperados via Wayback em demograficas.md: Cidade de Tete 307338 e Distrito de Moatize 260843. Nenhuma divergencia encontrada."
+}

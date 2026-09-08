@@ -1,0 +1,26 @@
+{
+  "source": "Maus et al. Global-scale Mining Polygons v2",
+  "doi": "10.1594/PANGAEA.942325",
+  "url": "https://doi.org/10.1594/PANGAEA.942325",
+  "download_url": "https://download.pangaea.de/dataset/942325/files/global_mining_polygons_v2.gpkg",
+  "license": "CC-BY-SA-4.0",
+  "level": "A",
+  "resolution": "10 m (source: Sentinel-2 cloudless mosaic 2019, s2maps.eu)",
+  "spatial_extent": "Global; 44,929 polygons, 101,583 km²",
+  "temporal_extent": "2019 (source imagery year); v2 released 2022-03-14",
+  "format": "GeoPackage (GPKG)",
+  "crs": "EPSG:4326 (WGS84)",
+  "size_bytes": 24657920,
+  "sha256": "6936e2743a21ba952b4de3e4b6f77099a0aa4479f7e2639d9d1b0787876a3ea1",
+  "download_date": "2026-09-08T01:00:03.094511+00:00",
+  "citation": "Maus, V., da Silva, D. M., Gutschlhofer, J., da Rosa, R., Giljum, S., Gass, S. L. B., Luckeneder, S., Lieber, M., McCallum, I. (2022): Global-scale mining polygons (Version 2) [dataset]. PANGAEA, https://doi.org/10.1594/PANGAEA.942325",
+  "accuracy_reported_by_producer": {
+    "overall_accuracy": 0.883,
+    "kappa": 0.77,
+    "f1_score": 0.87,
+    "producer_accuracy_mine": 0.789,
+    "user_accuracy_mine": 0.972,
+    "n_control_points": 1000,
+    "nota": "Validação própria dos autores (Maus et al.), não recalculada aqui."
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "_doc": "Camada corrente por classe de tarefa (§0-A.3). T1=haiku T2=sonnet T3=opus T4=fable. Escalonamento por reprovação no portão; rebaixamento após 3 aprovações consecutivas na mesma camada.",
+  "_atualizado_em": "2026-09-07",
+  "_operante": true,
+  "classes": {
+    "coleta_dados": {
+      "agente": "coletor-dados",
+      "camada_inicial": "T1",
+      "camada_corrente": "T2",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 1,
+      "_nota": "T2 na Fase 0'. Aprovadas: area construida e proxies economicos (T1); imagem, reassentamento e agricultura (T2). Pendente: demografica (esqueleto PENDENTE apos 4 tentativas, 331K tokens; causa = maxTurns 40). Rebaixamento para T1 desaconselhado ate que a taxa de reprovacao caia."
+    },
+    "auditoria_licencas": {
+      "agente": "auditor-dados",
+      "camada_inicial": "T2",
+      "camada_corrente": "T2",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 0
+    },
+    "pipeline_imagem": {
+      "agente": "pipeline-imagem",
+      "camada_inicial": "T2",
+      "camada_corrente": "T2",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 0,
+      "_nota": "rebaixamento para T1 proibido: classificação e calibração não passam no portão em haiku"
+    },
+    "metricas_urbanas": {
+      "agente": "metricas-urbanas",
+      "camada_inicial": "T2",
+      "camada_corrente": "T2",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 0
+    },
+    "desenho_causal": {
+      "agente": "desenho-causal",
+      "camada_inicial": "T3",
+      "camada_corrente": "T3",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 0,
+      "_nota": "rebaixamento T3→T2 proibido: §0-A tabela reserva julgamento causal a T3"
+    },
+    "app_frontend": {
+      "agente": "app-frontend",
+      "camada_inicial": "T2",
+      "camada_corrente": "T2",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 0
+    },
+    "redacao_artigo": {
+      "agente": "redator-artigo",
+      "camada_inicial": "T3",
+      "camada_corrente": "T3",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 0
+    },
+    "formatacao_traducao_bibliografia": {
+      "agente": "coletor-dados",
+      "camada_inicial": "T1",
+      "camada_corrente": "T1",
+      "aprovacoes_consecutivas": 0,
+      "reprovacoes_consecutivas": 0
+    },
+    "validacao_qa": {
+      "agente": "qa-validador",
+      "camada_inicial": "T2",
+      "camada_corrente": "T2",
+      "_nota": "camada fixa: o validador nunca escala nem rebaixa"
+    },
+    "arbitragem": {
+      "agente": "revisor-adversarial",
+      "camada_inicial": "T4",
+      "camada_corrente": "T4",
+      "_nota": "camada fixa; só por invocação explícita do orquestrador; maxTurns 20"
+    }
+  },
+  "eventos": [
+    {
+      "data": "2026-09-07",
+      "fase": "0'",
+      "classe": "coleta_dados",
+      "tarefa": "familia reassentamento + AOI",
+      "de": "T1",
+      "para": "T2",
+      "motivo": "coordenadas inventadas (desvio de 13 km e 31 km do Nominatim; um ponto sem fonte)",
+      "decidido_por": "orquestrador",
+      "evidencia": "data/_reprovado/0p-reassentamento/MOTIVO.md"
+    },
+    {
+      "data": "2026-09-07",
+      "fase": "0'",
+      "classe": "coleta_dados",
+      "tarefa": "familia imagem orbital",
+      "de": "T1",
+      "para": "T2",
+      "motivo": "probe_stac.sh grava resultado nao medido para Element84 e conta tamanho de pagina como n_cenas",
+      "decidido_por": "orquestrador",
+      "evidencia": "verificacao direta do endpoint Element84 em 2026-09-07"
+    },
+    {
+      "data": "2026-09-07",
+      "fase": "0'",
+      "classe": "coleta_dados",
+      "tarefa": "familia demografica",
+      "de": "T1",
+      "para": "T2",
+      "motivo": "ancoras de §8 marcadas CONFIRMADO contra citypopulation.de (§4.0 regra 4) e licencas por presuncao (§4.0 regra 1)",
+      "decidido_por": "orquestrador",
+      "evidencia": "data/licenses_parts/demograficas.md (versao T1)"
+    },
+    {
+      "data": "2026-09-07",
+      "fase": "0'",
+      "classe": "coleta_dados",
+      "tarefa": "familias agricultura e demografica (reexecucoes)",
+      "de": "T2",
+      "para": "T2",
+      "motivo": "cinco execucoes interrompidas em maxTurns=40 antes de gravar; nao e falha de camada, e de configuracao",
+      "decidido_por": "orquestrador",
+      "evidencia": "ORCHESTRATION_LOG.md 0'-13 e 0'-23; maxTurns elevado para 100, so vale apos reinicio da sessao"
+    }
+  ]
+}

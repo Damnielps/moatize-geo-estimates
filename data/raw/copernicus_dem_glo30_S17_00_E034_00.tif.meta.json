@@ -1,0 +1,19 @@
+{
+  "url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_S17_00_E034_00_DEM/Copernicus_DSM_COG_10_S17_00_E034_00_DEM.tif",
+  "download_date": "2026-09-07T22:27:31.952268+00:00",
+  "size_bytes": 44766526,
+  "license": "Licença Copernicus (uso livre e gratuito; atribuição obrigatória)",
+  "level": "A",
+  "source_page": "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM",
+  "dataset": "Copernicus DEM GLO-30",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0,
+    "crs": "EPSG:4326"
+  },
+  "citation": "European Space Agency / Airbus (2022). \"Copernicus DEM GLO-30.\" DOI 10.5270/ESA-c5d3d65",
+  "tile": "S17_00_E034_00",
+  "resolution_m": 30
+}

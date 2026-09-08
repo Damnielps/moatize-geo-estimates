@@ -1,0 +1,18 @@
+{
+  "url": "https://web.archive.org/web/20191114015524id_/http://www.ine.gov.mz/iv-rgph-2017/tete/quadro-3-populacao-por-idade-segundo-area-de-residencia-distrito-e-sexo-provincia-de-tete-2017.xlsx",
+  "url_original": "http://www.ine.gov.mz/iv-rgph-2017/tete/quadro-3-populacao-por-idade-segundo-area-de-residencia-distrito-e-sexo-provincia-de-tete-2017.xlsx",
+  "snapshot_timestamp": "20191114015524",
+  "download_date": "2026-09-07",
+  "size_bytes": 20530,
+  "sha256": "167350d954563c7c641d6ff987d38e21d6418c18fb719abbc7705d467e57e5ab",
+  "produtor": "Instituto Nacional de Estatística (INE), Moçambique",
+  "titulo": "QUADRO 3. POPULAÇÃO POR IDADE, SEGUNDO ÁREA DE RESIDÊNCIA, DISTRITO E SEXO. PROVÍNCIA DE TETE, 2017",
+  "operacao": "IV Recenseamento Geral da População e Habitação (IV RGPH), 2017",
+  "nivel_geografico": "distrito e cidade, província de Tete",
+  "anos_cobertos": "2017",
+  "license": "não localizada — o INE não publica texto de licença nesta página nem no catálogo mozdata",
+  "level": "pendente_auditoria",
+  "nota_nivel": "Proveniência é primária: é o arquivo do próprio INE, servido pelo Internet Archive porque ine.gov.mz está fora do ar (000 em todas as variantes, verificado em 2026-09-07). Isso satisfaz a decisão do usuário registrada em ORCHESTRATION_LOG.md 0'-08. O que falta é o texto de licença exigido por §4.0 regra 1. A classificação A/B/C cabe ao auditor-dados, não ao coletor nem ao orquestrador.",
+  "source_page": "http://www.ine.gov.mz/iv-rgph-2017/tete",
+  "verificacao": "sha256 do arquivo recuperado do Wayback em 2026-09-07 é idêntico ao do arquivo órfão deixado por execução interrompida; a origem está confirmada, não presumida."
+}

@@ -1,0 +1,95 @@
+# config/study.yaml — parâmetros do estudo Tete–Moatize.
+# Único lugar onde AOI, anos-âncora, thresholds e controles são definidos.
+# Alterar aqui invalida a proveniência: registre em docs/ADR/ e refaça o hash.
+
+aoi:
+  # §3 do prompt-mestre. Confirmado na Fase 0' — ver docs/ADR/0001-aoi-final.md.
+  # Cobre Tete, Moatize, a mina e os povoados de reassentamento georreferenciados
+  # em data/raw/reassentamentos.geojson. O limite leste foi de 33.95 para 34.10
+  # porque Cateme (33.9731 E) e Mwaladzi (34.0326 E) ficavam FORA do bbox provisório.
+  status: confirmado          # provisorio | confirmado (Fase 0')
+  crs_definicao: EPSG:4326
+  bbox:
+    xmin: 33.50
+    ymin: -16.35
+    xmax: 34.10
+    ymax: -16.00
+
+crs:
+  metrico: EPSG:32736         # UTM 36S — toda métrica de área
+  exibicao: EPSG:4326         # apenas para o app
+
+anos_ancora:
+  imagem: [2000, 2005, 2010, 2015, 2020, 2025]
+  censo:  [1997, 2007, 2017]
+  censo_futuro: [2027]        # incluir quando publicado
+
+sensores:
+  2000: {missao: LANDSAT_7,  colecao: "LANDSAT/LE07/C02/T1_L2", res_m: 30, nota: "pre-SLC-off"}
+  2005: {missao: LANDSAT_5,  colecao: "LANDSAT/LT05/C02/T1_L2", res_m: 30, nota: "evitar L7 (falhas de linha)"}
+  # 2010 usa LANDSAT_7 apesar da regra geral de evitá-lo: não existe NENHUMA cena
+  # Landsat 5 na estação seca de 2010 sobre a AOI (levantamento em docs/ADR/0005).
+  # A cobertura foi medida, não presumida: 0,005% dos pixels ficam sem qualquer
+  # observação válida e 97% têm 3 ou 4 — as falhas do SLC-off não coincidem entre
+  # as 4 datas o bastante para inviabilizar a mediana.
+  2010: {missao: LANDSAT_7,  colecao: "LANDSAT/LE07/C02/T1_L2", res_m: 30, nota: "SLC-off; ver ADR 0005"}
+  2015: {missao: LANDSAT_8,  colecao: "LANDSAT/LC08/C02/T1_L2", res_m: 30, complemento: "COPERNICUS/S2_SR_HARMONIZED (dez/2015+)"}
+  2020: {missao: LANDSAT_8,  colecao: "LANDSAT/LC08/C02/T1_L2", res_m: 30, complemento: "COPERNICUS/S2_SR_HARMONIZED"}
+  2025: {missao: LANDSAT_9,  colecao: "LANDSAT/LC09/C02/T1_L2", res_m: 30, complemento: "COPERNICUS/S2_SR_HARMONIZED"}
+
+composto:
+  # §5.1: estação seca, mediana. Mesmo protocolo em todos os anos.
+  estacao_seca: {mes_inicio: 5, mes_fim: 10}
+  reducao: median
+  janela_anos: 1              # ±0: só o ano-âncora; aumentar só se cobertura falhar (registrar em ADR)
+  nuvem_max_pct: 40
+
+# Fenologia para agricultura urbana (§5.6.1): precisa das duas estações.
+composto_fenologico:
+  estacao_chuvosa: {mes_inicio: 11, mes_fim: 4}   # atravessa o ano-novo
+  estacao_seca:    {mes_inicio: 5,  mes_fim: 10}
+  metricas: [ndvi_amplitude_chuva_seca, ndvi_min_seca, ndvi_max_chuva, n_picos]
+
+indices: [NDBI, NDVI, MNDWI, EVI, NDWI]
+
+classes:
+  construido: [urbano, industrial]          # 'reassentamento' é recorte espacial de 'urbano'
+  cobertura:  [cultivo_sequeiro, cultivo_irrigado, vegetacao, solo_exposto, agua]
+
+zoneamento_agricola:
+  # §5.6.2 — anéis recalculados a partir da borda urbana DE CADA ANO.
+  aneis_km: [[0, 1], [1, 3]]
+  varzea:
+    metodo: hand              # height above nearest drainage
+    hand_max_m: 10
+    dist_max_rio_m: 1000
+
+acuracia:
+  meta_global: 0.85
+  meta_kappa: 0.70
+  # Redesenho da Fase 1 (docs/ADR/0007): os 300 pontos/ano só eram atingíveis porque
+  # eram rotulados por uma segunda REGRA ESPECTRAL — o que media concordância entre
+  # duas regras sobre o mesmo sinal confundido, não acurácia. Os pontos passam a ser
+  # rotulados por interpretação visual de recortes RGB, e o n cai para o que é de
+  # fato interpretável um a um. n menor com rótulo honesto > n grande automatizado.
+  n_pontos_interpretados_por_estrato_ano: 24
+  estratificacao: estratificada_pelo_mapa_construido_x_nao_construido
+  estimador: olofsson_2014
+
+controles:
+  # §3 e §5.4 — justificar cada inclusão/exclusão por escrito (desenho-causal).
+  incluidos: [Chimoio, Quelimane, Lichinga, Xai-Xai, Inhambane]
+  excluidos:
+    Pemba:   "boom de gás/LNG no período — tratamento contaminado"
+    Nampula: "efeito do Corredor de Nacala — exposição parcial ao mesmo choque"
+    Nacala:  "terminal do Corredor de Nacala — exposição direta ao choque carbonífero"
+
+quebras_serie_interrompida: [2005, 2011, 2016, 2022]
+
+cenarios:
+  horizontes: [2035, 2040]
+  nomes: [continuidade, declinio, diversificacao]
+
+censo_2017:
+  subenumeracao_pct: 3.7      # aplicar de forma consistente, inclusive aos controles
+  reportar: [ajustado, nao_ajustado]

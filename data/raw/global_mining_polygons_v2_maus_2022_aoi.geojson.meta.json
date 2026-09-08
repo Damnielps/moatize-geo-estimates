@@ -1,0 +1,24 @@
+{
+  "source": "Maus et al. Global-scale Mining Polygons v2 — recorte AOI",
+  "doi": "10.1594/PANGAEA.942325",
+  "url": "https://doi.org/10.1594/PANGAEA.942325",
+  "arquivo_origem": "global_mining_polygons_v2_maus_2022.gpkg",
+  "hash_arquivo_origem": "6936e2743a21ba952b4de3e4b6f77099a0aa4479f7e2639d9d1b0787876a3ea1",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0
+  },
+  "aoi_crs": "EPSG:4326",
+  "n_poligonos": 13,
+  "area_total_km2": 59.18092481858377,
+  "license": "CC-BY-SA-4.0",
+  "level": "A",
+  "crs": "EPSG:4326 (WGS84)",
+  "sha256": "174a9ac9994debe14859e0e768bc2273357760342bed69e3931138aedb0d48b0",
+  "processed_date": "2026-09-08T01:00:03.149728+00:00",
+  "commit_git": "desconhecido (git indisponível)",
+  "script": "pipeline/00_fetch/fetch_maus_mining_polygons.py",
+  "nota": "Polígonos digitalizados sobre mosaico Sentinel-2 sem nuvens de 2019 — representam a pegada minerária em 2019, não em anos anteriores. Para 2000/2005 (antes da abertura da mina de Moatize em 2011), este polígono NÃO é retroativo; ver metodologia por ano em pipeline/01_imagery/classificacao.py e data/provenance_parts/imagem_fase1.md."
+}
