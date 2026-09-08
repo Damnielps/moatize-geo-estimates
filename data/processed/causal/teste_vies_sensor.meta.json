@@ -1,0 +1,24 @@
+{
+  "morfologia": {
+    "fonte_mascara": "WSF Evolution (DLR) reprojetado para a grade do estudo",
+    "erosao": "3x3 (clf.rotulos_treino)",
+    "coerencia": "maioria 5/9 em janela 3x3 (clf.filtrar_coerencia_espacial)",
+    "saida": "data/processed/causal/teste_vies_morfologia.csv",
+    "data_processamento": "2026-09-08T02:06:32.698873+00:00",
+    "script": "pipeline/03_causal/teste_vies_sensor.py",
+    "selo": "diagnostico"
+  },
+  "degradacao": {
+    "ano_alvo": 2015,
+    "perfil_ano_antigo": {
+      "ano": 2000,
+      "n_cenas_seca": 3,
+      "n_cenas_chuva": 6
+    },
+    "regra_de_selecao_de_cenas": "espaçamento uniforme na ordem temporal",
+    "saida": "data/processed/causal/teste_vies_degradacao.csv",
+    "data_processamento": "2026-09-08T02:09:56.073541+00:00",
+    "script": "pipeline/03_causal/teste_vies_sensor.py",
+    "selo": "diagnostico"
+  }
+}

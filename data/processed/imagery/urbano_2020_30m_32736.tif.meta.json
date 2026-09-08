@@ -1,0 +1,59 @@
+{
+  "ano": 2020,
+  "camada": "urbano",
+  "arquivo_raster": "data/processed/imagery/urbano_2020_30m_32736.tif",
+  "arquivo_vetor": "data/processed/imagery/urbano_2020.geojson",
+  "n_poligonos_vetor": 561,
+  "area_km2": 39.2058,
+  "n_pixels": 43562,
+  "resolucao_m": 30,
+  "crs": "EPSG:32736",
+  "metodo": "Random Forest com protocolo único em todos os anos (config/seeds.yaml -> random_forest); rótulos de treino ancorados no WSF Evolution e em limiares físicos fixos; features incluem as métricas fenológicas chuva-seca.",
+  "ordem_precedencia": "industrial > reassentamento > urbano",
+  "natureza": "cobertura classificada",
+  "diagnostico_pegada": null,
+  "regras_temporais": {
+    "R1_confirmacao_primeira_deteccao": "primeira detecção só vale se confirmada no ano-âncora seguinte; confirmada",
+    "R2_permanencia": "construído(t) = união cumulativa até t — série não decrescente por construção"
+  },
+  "papel_wsf": "semente de treino (não é validação — ver docstring do script)",
+  "papel_ghsl": "referência independente de concordância (não entra em treino)",
+  "selo": "observado",
+  "data_processamento": "2026-09-08T12:48:27.779109+00:00",
+  "commit_git": "desconhecido (git indisponível)",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "hash_config_seeds_yaml": "3bd52590e495f4eeb8327c17eeefaa9b4c2b1c78c827ebfc70edddacfad0997f",
+  "script": "pipeline/01_imagery/classificacao.py",
+  "info_treino_rf": {
+    "n_amostras_treino": 200282,
+    "n_disponivel_por_classe": {
+      "agua": 2954,
+      "vegetacao": 737206,
+      "solo_exposto": 1792219,
+      "construido": 43874
+    },
+    "n_amostrado_por_classe": {
+      "agua": 500,
+      "vegetacao": 57043,
+      "solo_exposto": 139329,
+      "construido": 3410
+    },
+    "importancia_features": {
+      "ndvi": 0.4658963255013187,
+      "ndbi": 0.04116606356877927,
+      "mndwi": 0.023127931839262376,
+      "ndwi": 0.11934063884842507,
+      "evi": 0.20706332027493365,
+      "ndvi_chuva": 0.01832408188616289,
+      "ndvi_amplitude": 0.01553679212808418,
+      "blue": 0.020774474762773235,
+      "green": 0.012071891591291841,
+      "red": 0.03960169574299757,
+      "nir": 0.013302166610625624,
+      "swir16": 0.0097871464238196,
+      "swir22": 0.014007470821526079
+    },
+    "estrategia_amostragem": "proporcional_ao_prior",
+    "fonte_rotulos": "positivos = WSF Evolution erodido 3x3 (WSF <= min(ano, 2015)); negativos = partição exaustiva por limiares físicos fixos, fora de uma faixa de guarda de 150 m em torno de qualquer WSF construído e fora de mineração/reassentamento. Nenhum percentil da própria imagem."
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "ano": 2010,
+  "camada": "vegetacao",
+  "arquivo_raster": "data/processed/imagery/vegetacao_2010_30m_32736.tif",
+  "arquivo_vetor": "data/processed/imagery/vegetacao_2010.geojson",
+  "n_poligonos_vetor": 7602,
+  "area_km2": 1891.8495,
+  "n_pixels": 2102055,
+  "resolucao_m": 30,
+  "crs": "EPSG:32736",
+  "metodo": "Random Forest com protocolo único em todos os anos (config/seeds.yaml -> random_forest); rótulos de treino ancorados no WSF Evolution e em limiares físicos fixos; features incluem as métricas fenológicas chuva-seca.",
+  "ordem_precedencia": "industrial > reassentamento > urbano",
+  "natureza": "cobertura classificada",
+  "diagnostico_pegada": null,
+  "regras_temporais": {
+    "R1_confirmacao_primeira_deteccao": "primeira detecção só vale se confirmada no ano-âncora seguinte; confirmada",
+    "R2_permanencia": "construído(t) = união cumulativa até t — série não decrescente por construção"
+  },
+  "papel_wsf": "semente de treino (não é validação — ver docstring do script)",
+  "papel_ghsl": "referência independente de concordância (não entra em treino)",
+  "selo": "observado",
+  "data_processamento": "2026-09-08T12:48:24.041222+00:00",
+  "commit_git": "desconhecido (git indisponível)",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "hash_config_seeds_yaml": "3bd52590e495f4eeb8327c17eeefaa9b4c2b1c78c827ebfc70edddacfad0997f",
+  "script": "pipeline/01_imagery/classificacao.py",
+  "info_treino_rf": null
+}

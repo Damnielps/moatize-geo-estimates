@@ -1,0 +1,16 @@
+{
+  "url": "https://data.humdata.org/dataset/5e8d83a5-1210-49be-b7d9-cf286dbc15df/resource/f1d97232-4cb5-4083-b3cc-d192aa9bdcfe/download/moz_admin_boundaries.geojson.zip",
+  "source_page": "https://data.humdata.org/dataset/cod-ab-moz",
+  "download_date": "2026-09-08",
+  "size_bytes": 61310853,
+  "sha256": "5fd2e4ed6d7aa15f5d666716d215b28e3445c86b5a86c77e49362d20af63ebad",
+  "produtor": "UN OCHA Regional Office for Southern Africa (ROSEA) — COD-AB",
+  "origem_declarada": "Instituto Nacional de Estatística (INE) de Moçambique",
+  "license": "CC BY-IGO 3.0 (http://creativecommons.org/licenses/by/3.0/igo/legalcode)",
+  "level": "A",
+  "selo": "observado",
+  "conteudo": "moz_admin0 a admin4, adminpoints, admincapitals, adminlines (GeoJSON, EPSG:4326)",
+  "campos_chave": "adm1_name/adm1_pcode; adm2_name/adm2_pcode (Cidade de Tete = MZ1006, Moatize = MZ1012)",
+  "uso": "geometria para os mapas de localização do artigo (§7): nacional, provincial e distrital",
+  "nota": "O XLSX já espelhado traz só a tabela de atributos, sem geometria."
+}

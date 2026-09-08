@@ -1,0 +1,56 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nome": "Cateme",
+        "tipo": "rural",
+        "fonte_coordenada": "Nominatim OSM + literatura",
+        "url_fonte": "https://www.openstreetmap.org/search?query=Cateme",
+        "n_familias": 717,
+        "ano_reassentamento": 2009,
+        "confianca": "media",
+        "notas": "717 famílias reassentadas pela Vale entre nov/2009 e abr/2010; rural; 40km de Moatize"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [33.9068, -16.1952]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nome": "25 de Setembro",
+        "tipo": "urbano",
+        "fonte_coordenada": "Nominatim OSM + literatura",
+        "url_fonte": "https://www.openstreetmap.org/search?query=25+de+Setembro+Moatize",
+        "n_familias": 288,
+        "ano_reassentamento": 2009,
+        "confianca": "media",
+        "notas": "288 famílias reassentadas pela Vale entre nov/2009 e abr/2010; urbano; bairro de Moatize"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [33.8932, -16.2060]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nome": "Mwaladzi",
+        "tipo": "rural",
+        "fonte_coordenada": "Literatura (Lillywhite et al. 2015)",
+        "url_fonte": "https://www.csrm.uq.edu.au/publications/mining-resettlement-and-lost-livelihoods",
+        "n_familias": 84,
+        "ano_reassentamento": 2012,
+        "confianca": "baixa",
+        "notas": "84 famílias reassentadas pela Riversdale/Rio Tinto (Benga); ~50km de Capanga; arid area"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [33.7950, -16.3000]
+      }
+    }
+  ]
+}

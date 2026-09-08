@@ -1,0 +1,23 @@
+{
+  "url": "https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_af.gdb.zip",
+  "download_date": "2026-09-07T18:06:00",
+  "size_bytes": 116303789,
+  "license": "Licença própria HydroSHEDS (uso livre científico/educacional/comercial com atribuição obrigatória; não é CC0 — corrigido em T3)",
+  "level": "A",
+  "dataset": "HydroRIVERS v10 (África)",
+  "source_page": "https://www.hydrosheds.org/products/hydrorivers",
+  "resolution_m": "vetorial (~500m acurácia de posicionamento)",
+  "years_covered": "datum fixo (sem série temporal)",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0,
+    "crs": "EPSG:4326"
+  },
+  "citation": "Lehner, B., & Grill, G. (2013). \"Global river hydrography and network routing: baseline data and new approaches to study the world's large river systems.\" Hydrological Processes, 27(15), 2171-2186. https://doi.org/10.1002/hyp.9740",
+  "content": "LineString features (rios e tributários com atributos de fluxo); requer extração para AOI",
+  "uso_primario": "Cálculo de HAND (Height Above Nearest Drainage) em combinação com Copernicus DEM; delimitação de zonas de várzea",
+  "notas": "Arquivo pequeno (111 MB) espelhável em data/raw/. Deve ser descompactado e retalado para AOI em pipeline/02_metrics/.",
+  "nota_aoi": "aoi_bbox resincronizado com config/study.yaml em 2026-09-07 (era xmax=33.95); ver docs/ADR/0001-aoi-final.md"
+}

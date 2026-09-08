@@ -1,0 +1,20 @@
+{
+  "estimador": "Olofsson et al. (2014), estratificado pelo mapa",
+  "interpretes": [
+    "Claude (modelo multimodal, Anthropic) — interpretação visual de recortes RGB; NÃO é fotointerpretação humana nem verdade de campo"
+  ],
+  "tipo_de_rotulo": "interpretação visual automatizada (modelo multimodal)",
+  "nao_e": [
+    "fotointerpretação humana",
+    "verdade de campo",
+    "regra espectral"
+  ],
+  "imagem_interpretada": "composto de estação seca do ano, 30 m, EPSG:32736",
+  "papel_do_wsf": "semente de treino — excluído da validação por construção",
+  "saidas": [
+    "data/processed/acuracia_por_ano.csv",
+    "data/processed/matriz_confusao_por_ano.csv"
+  ],
+  "data_processamento": "2026-09-08T12:49:10.176657+00:00",
+  "script": "pipeline/01_imagery/acuracia.py"
+}

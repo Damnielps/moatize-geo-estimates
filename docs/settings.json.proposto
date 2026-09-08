@@ -1,0 +1,32 @@
+{
+  "_COMENTARIO": "Copiar este conteúdo (sem esta chave _COMENTARIO) para .claude/settings.json. Ver ORCHESTRATION_LOG.md B-02: a gravação direta foi recusada pelo classificador de auto-mode porque o arquivo configura hooks do harness.",
+  "model": "opus",
+  "fallbackModel": ["opus", "sonnet", "haiku"],
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
+    "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "2",
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "6"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python:*)", "Bash(python3:*)", "Bash(pip:*)", "Bash(uv:*)",
+      "Bash(conda:*)", "Bash(make:*)", "Bash(snakemake:*)",
+      "Bash(gdalinfo:*)", "Bash(ogr2ogr:*)", "Bash(gdal_translate:*)",
+      "Bash(curl:*)", "Bash(wget:*)", "Bash(unzip:*)", "Bash(shasum:*)",
+      "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git add:*)",
+      "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)",
+      "Bash(grep:*)", "Bash(rg:*)", "Bash(find:*)", "Bash(wc:*)", "Bash(jq:*)",
+      "Bash(npm run:*)", "Bash(npm ci:*)", "Bash(npx vite:*)",
+      "WebSearch", "WebFetch"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./**/*credentials*)"
+    ]
+  },
+  "hooks": {
+    "SubagentStop": [
+      { "hooks": [ { "type": "command", "command": "./scripts/log_cost.sh" } ] }
+    ]
+  }
+}

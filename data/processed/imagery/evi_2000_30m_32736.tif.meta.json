@@ -1,0 +1,14 @@
+{
+  "ano": 2000,
+  "indice": "EVI",
+  "arquivo": "data/processed/imagery/evi_2000_30m_32736.tif",
+  "arquivo_origem": "data/processed/imagery/composto_2000_30m_32736.tif",
+  "hash_arquivo_origem": "350e5d8138db4475a2c4a3736375f6b1d4205de495b7a7ff82bfcd56d3668ddc",
+  "formula": "2.5*(nir-red)/(nir+6*red-7.5*blue+1)",
+  "denominador_min_mascarado": 0.1,
+  "selo": "observado",
+  "data_processamento": "2026-09-08T00:24:42.216601+00:00",
+  "commit_git": "desconhecido (git indisponível)",
+  "hash_config_study_yaml": "114b96c33d14fdaf89f8d41f5105338cb97da0b274e56f8b6be6b2392372d306",
+  "script": "pipeline/01_imagery/indices.py"
+}

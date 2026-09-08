@@ -1,0 +1,82 @@
+# config/plausibilidade.yaml — faixa de área plausível por camada e ano.
+#
+# Motivo (ORCHESTRATION_LOG.md 2-06): as camadas `industrial` e `reassentamento` eram a
+# interseção da classificação de construído com uma máscara espacial. Mediam "construído
+# dentro do polígono", não a pegada — e 93% da área minerária conhecida ficava fora de
+# qualquer camada. O contrato de exclusividade mútua passava; nenhum contrato perguntava
+# se a camada media o que o nome dela promete.
+#
+# Cada faixa abaixo tem justificativa explícita e fonte. Sair da faixa não é proibido:
+# é obrigatório explicar num ADR. O contrato aponta para o ADR quando ele existe.
+# Contrato: pipeline/tests/test_plausibilidade.py
+
+camadas:
+
+  industrial:
+    descricao: "Pegada minerária e industrial: cava, pilha de estéril, rejeito, planta, pátio ferroviário"
+    justificativa: >-
+      Os polígonos de Maus et al. v2 (PANGAEA, Sentinel-2 2017–2019) somam 59,2 km² dentro
+      da AOI, medidos em EPSG:32736. É a única referência externa de nível A para a pegada,
+      e vale como retrato do período 2017–2019, não como série.
+      A âncora de §8 dá ~140 km² para a mina de Moatize inteira, mas parte dela cai fora
+      da AOI — por isso a referência operacional é 59,2 e não 140.
+      Cava e pilha de estéril são rocha e solo exposto: **espectralmente não são
+      construído**, e um classificador de construído os perde por definição.
+      Corrigido em docs/ADR/0011: a camada passou a ser classe própria (solo/rocha
+      exposto persistente, limiar relativo à paisagem do ano), e a cobertura dos
+      polígonos de Maus em 2025 subiu de 7,1% para 76,3%.
+    faixas:
+      # A mina de Moatize recebe licença em 2006 e opera em maio de 2011 (§8, GCMT).
+      - {ano_min: 2000, ano_max: 2005, min_km2: 0.0,  max_km2: 0.5,
+         nota: "anterior à licença da Vale (2006); pegada industrial deve ser desprezível"}
+      - {ano_min: 2006, ano_max: 2010, min_km2: 0.0,  max_km2: 30.0,
+         nota: "implantação: obras a partir de ~2007, sem operação plena"}
+      - {ano_min: 2011, ano_max: 2016, min_km2: 5.0,  max_km2: 70.0,
+         nota: "operação da Vale desde mai/2011 e Benga desde 2012; a pegada cresce em direção aos 59,2 km² de 2017–2019"}
+      - {ano_min: 2017, ano_max: 2030, min_km2: 30.0, max_km2: 90.0,
+         nota: "referência de Maus: 59,2 km² em 2017–2019. Piso em ~metade e teto em ~1,5× admitem erro de classificação e expansão posterior, mas reprovam a ordem de grandeza errada"}
+
+  reassentamento:
+    # `descricao` corrigida em docs/ADR/0011: a camada mede a PEGADA do povoado
+    # (lotes, vias, terreno alterado), não a área de telhado. Nenhum valor de faixa
+    # foi alterado — as faixas já tinham sido derivadas de área de LOTE, que é o que
+    # a pegada mede, e não de área construída.
+    descricao: "Pegada dos povoados de reassentamento: lotes, vias e terreno alterado (Cateme, Mwaladzi; 25 de Setembro sem geometria)"
+    justificativa: >-
+      HRW 2013 registra 716 famílias reassentadas em Cateme e 84 em Mwaladzi (nível B:
+      serve para dimensionar a plausibilidade, não para sustentar número publicado).
+      Um lote em povoado de reassentamento rural fica na ordem de 500 a 1.000 m². Só de
+      lotes, 800 famílias dariam 0,4 a 0,8 km²; com vias, equipamentos e quintais, o piso
+      realista é da ordem de 0,5 km².
+      A camada mediu 0,07 km² em 2025 — cerca de um décimo do piso — porque a habitação
+      de reassentamento é baixa, esparsa e de telhado metálico ou fibrocimento, mal
+      detectada por classificador de construído a 30 m. Corrigido em docs/ADR/0011:
+      a camada passou a ser classificada como pegada (solo alterado persistente unido
+      ao construído), dentro de um buffer de detecção de 1000 m, e mede 1,20-2,32 km²
+      na série 2010-2025.
+      "25 de Setembro" não tem geometria e **não entra nesta conta**: a faixa cobre só
+      Cateme e Mwaladzi, e o povoado ausente é subestimação declarada, não erro.
+    faixas:
+      - {ano_min: 2000, ano_max: 2008, min_km2: 0.0, max_km2: 0.05,
+         nota: "anterior ao reassentamento da Vale (nov/2009 a abr/2010)"}
+      - {ano_min: 2009, ano_max: 2011, min_km2: 0.1, max_km2: 2.0,
+         nota: "Cateme e 25 de Setembro implantados; Mwaladzi só em 2011"}
+      - {ano_min: 2012, ano_max: 2030, min_km2: 0.3, max_km2: 3.0,
+         nota: "os três povoados implantados; piso conservador porque só Cateme e Mwaladzi têm geometria"}
+
+  urbano:
+    descricao: "Construído fora dos polígonos de mineração e fora dos buffers de reassentamento"
+    justificativa: >-
+      A referência externa é o WSF Evolution (DLR, 30 m, anual 1985–2015, nível A), que
+      mede assentamento pelo mesmo tipo de sinal. A classificação própria subestima o WSF
+      por fator de 0,4 a 0,7 (ORCHESTRATION_LOG.md 1-10), e o viés de sensor de
+      +1,25%/ano (docs/ADR/0008) explica parte disso.
+      A faixa abaixo é larga de propósito: ela não afere acurácia, e sim ordem de
+      grandeza. Quem afere acurácia é a validação de docs/ADR/0009.
+    faixas:
+      - {ano_min: 2000, ano_max: 2030, min_km2: 5.0, max_km2: 200.0,
+         nota: "a AOI tem ~2.500 km²; construído acima de 200 km² (8% da AOI) indica confusão com solo exposto, o defeito que reprovou a primeira classificação"}
+
+# Regra de escape: uma camada pode sair da faixa se um ADR explicar por quê. Declare aqui
+# o número do ADR e o contrato passa a exigir que ele exista e mencione a camada.
+excecoes: {}

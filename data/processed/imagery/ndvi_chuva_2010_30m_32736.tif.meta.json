@@ -1,0 +1,29 @@
+{
+  "ano": 2010,
+  "selo": "observado",
+  "janela_estacao_chuvosa": "2009-11-01T00:00:00Z/2010-04-30T23:59:59Z",
+  "missao_usada": "LANDSAT_5",
+  "usou_missao_substituta": true,
+  "n_cenas_landsat": 5,
+  "n_cenas_sentinel2": 0,
+  "itens_landsat": [
+    "LT05_L2SP_168071_20091104_02_T2",
+    "LT05_L2SP_168071_20091120_02_T1",
+    "LT05_L2SP_168071_20100123_02_T1",
+    "LT05_L2SP_168071_20100208_02_T1",
+    "LT05_L2SP_168071_20100328_02_T1"
+  ],
+  "itens_sentinel2": [],
+  "fracao_pixels_cobertos": 0.9993350223478451,
+  "criterio_viabilidade": {
+    "min_cenas": 3,
+    "min_obs_por_pixel": 2,
+    "min_fracao_pixels": 0.9
+  },
+  "definicao_amplitude": "NDVI(chuva nov(A-1)-abr(A)) - NDVI(seca mai-out(A))",
+  "catalogo_stac": "https://planetarycomputer.microsoft.com/api/stac/v1",
+  "data_processamento": "2026-09-08T01:53:03.225620+00:00",
+  "commit_git": "desconhecido (git indisponível)",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "script": "pipeline/01_imagery/compostos_chuva.py"
+}

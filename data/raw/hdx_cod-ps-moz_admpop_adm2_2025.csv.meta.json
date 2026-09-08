@@ -1,0 +1,20 @@
+{
+  "url": "https://data.humdata.org/dataset/46b79d47-0667-4baa-8d69-468b208855ed/resource/8bbafaba-2ad5-41e6-9df1-34b25fa915f0/download/moz_admpop_adm2_2025.csv",
+  "source_page": "https://data.humdata.org/dataset/cod-ps-moz",
+  "download_date": "2026-09-07",
+  "size_bytes": 54277,
+  "sha256": "13f077294a634d77d8c55681f1ca50fe96083c0d1c0d59c8c9c536b00009e78c",
+  "produtor": "UNFPA / OCHA — Common Operational Dataset, Population Statistics (COD-PS)",
+  "origem_declarada": "Instituto Nacional de Estatística (INE) de Moçambique — projeções de população",
+  "license": "CC BY-IGO 3.0 (http://creativecommons.org/licenses/by/3.0/igo/legalcode)",
+  "level": "A",
+  "nota_nivel": "Reprocessador institucional com licença própria e verificável, não agregador: publica sob CC BY-IGO, variante de CC-BY admitida por §4.0 na tabela de nível A. A origem declarada é o INE, mas quem se cita é o COD-PS.",
+  "selo": "modelado",
+  "nota_selo": "São PROJEÇÕES do INE para 2025, não contagem censitária. §5.3 exige selo observado/interpolado/modelado; este produto é modelado e não pode ser apresentado como população recenseada.",
+  "nivel_geografico": "distrito (ADM2), P-codes",
+  "anos_cobertos": "2025",
+  "valores_lidos": {
+    "MZ1006 Cidade De Tete": 460248,
+    "MZ1012 Moatize": 349103
+  }
+}

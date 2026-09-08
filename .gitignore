@@ -1,0 +1,55 @@
+# Intermediários regeneráveis (§11.1)
+data/interim/
+
+# Binários espelhados: fora do git, reconstruíveis pelos scripts de pipeline/00_fetch/.
+# Os sidecars .sha256 e .meta.json CONTINUAM versionados — são eles que garantem que o
+# download futuro é byte a byte o mesmo arquivo. Decisão do usuário em 2026-09-07;
+# §11.1 admite DVC ou git-lfs, e esta é a variante sem dependência extra.
+data/raw/*
+!data/raw/*.sha256
+!data/raw/*.meta.json
+!data/raw/.gitkeep
+
+# Dados de nível B — nunca versionados nem publicados (§4.0, regra 2)
+data/raw/ipums/
+data/raw/nicfi/
+data/raw/dhs_microdata/
+*.nicfi.tif
+
+# Rasters grandes de data/processed/ não são versionados no git (mesma lógica de
+# data/raw/: reconstruíveis por pipeline/01_imagery/ a partir dos itens STAC
+# registrados no .meta.json). Só o sidecar de proveniência é versionado.
+data/processed/**/*.tif
+!data/processed/**/.gitkeep
+
+# Vetorizações das classes auxiliares de cobertura: 186 MB de GeoJSON gerado a partir
+# de raster de 30 m, regenerável por `make imagery`. §11.1 manda versionar GeoJSON de
+# data/processed, e as camadas ANALÍTICAS ficam versionadas (urbano, industrial,
+# reassentamento, água somam 8,5 MB). Solo exposto e vegetação são insumo intermediário
+# da classificação, não produto do estudo.
+data/processed/imagery/solo_exposto_*.geojson
+data/processed/imagery/vegetacao_*.geojson
+
+# Credenciais
+.env
+*.credentials
+*service_account*.json
+.ee_credentials
+
+# Ambiente
+__pycache__/
+*.py[cod]
+.venv/
+env/
+.ipynb_checkpoints/
+
+# App
+app/node_modules/
+app/dist/
+app/.vite/
+
+# Sistema
+.DS_Store
+
+# uv
+.uv/

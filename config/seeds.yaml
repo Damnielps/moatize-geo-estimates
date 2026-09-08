@@ -1,0 +1,42 @@
+# config/seeds.yaml — determinismo (§11.2.1).
+# Nenhum processo estocástico pode rodar sem seed daqui.
+# Alterar uma seed muda os artefatos: registre em docs/ADR/ antes.
+
+global: 20250907
+
+random_forest:
+  seed: 20250907
+  n_trees: 300
+  min_leaf_population: 1
+  bag_fraction: 0.5
+  variables_per_split: null   # null = sqrt(n_features)
+
+amostragem_treino:
+  seed: 20250907
+  # Redesenho da Fase 1 (ver docs/ADR/0006): a amostragem ESTRATIFICADA BALANCEADA
+  # (500 por classe) distorcia o prior — construído é ~1% da AOI e a classe entrava
+  # no treino com 25% do peso. Medido: com 500/classe o Random Forest devolvia
+  # 365 km² de construído em 2000 (WSF: 34 km²; GHSL: 20 km²); com amostragem
+  # proporcional ao prior, 15,7 km². A amostragem agora é aleatória simples sobre
+  # o conjunto rotulado (respeita o prior por construção), com um piso por classe
+  # só para garantir que classes raras (água) não desapareçam do treino.
+  estrategia: proporcional_ao_prior
+  n_total: 200000
+  n_minimo_por_classe: 500
+
+pontos_validacao:
+  seed: 424242                # independente do treino, para não reamostrar os mesmos pixels
+  n_por_ano: 300
+
+controle_sintetico:
+  seed: 13579
+  n_placebos_espaciais: 5     # um por cidade de controle
+  n_placebos_temporais: 4     # um por quebra em quebras_serie_interrompida
+
+bootstrap:
+  seed: 97531
+  n_reamostragens: 1000
+
+logit_espacial:
+  seed: 24680
+  n_amostras_negativas: 10000
