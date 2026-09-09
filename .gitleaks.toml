@@ -1,0 +1,17 @@
+# Configuração do gitleaks para este repositório.
+# Mantém TODAS as regras padrão e abre uma única exceção, restrita por caminho: os
+# sidecars .sha256 (checksum de integridade dos espelhos de data/raw/, §11.1) e os
+# .meta.json que também podem citar esses hashes têm 64 caracteres hexadecimais e casam
+# com regras de token genérico -- mas são somas de verificação públicas, não credenciais.
+title = "Tete-Moatize"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Checksums SHA-256 dos sidecars de proveniência (integridade, não segredo)"
+paths = [
+  '''.*\.sha256$''',
+  '''.*\.meta\.json$''',
+]
+regexes = ['''\b[0-9a-f]{64}\b''']

@@ -266,14 +266,56 @@ def test_checksums_de_data_raw_conferem():
     assert not problemas, "; ".join(problemas)
 
 
+# Tolerância de contenção geográfica, em graus. A resolução mais fina em jogo é a das
+# luzes noturnas harmonizadas, ~0,00449° (~500 m); 1e-9° são ~0,1 mm. A folga é grande
+# o bastante para absorver erro de ponto flutuante e pequena demais para esconder falta
+# de cobertura real, que se mede em pixels.
+#
+# Defeito real (ORCHESTRATION_LOG.md 3-04): os recortes de 2022 e 2025 vinham com
+# `left = 33.500000000000028` — 2,8e-14° acima de 33,5, ou cerca de 3 nanômetros. A
+# comparação exata `b.left <= lon` reprovava dois rasters perfeitamente bons. Um teste
+# de contenção geográfica escrito com igualdade exata de float testa o formato binário
+# do GeoTIFF, não a cobertura do terreno.
+TOL_GRAUS = 1e-9
+
+# Rasters que NÃO devem cobrir a AOI de Tete, porque são de outro lugar por construção.
+# A Fase 3 introduziu recortes das cinco capitais de controle (§3 e config/study.yaml).
+# Antes dela, todo raster em data/raw/ era sobre Tete e a premissa do contrato era
+# invisível porque era verdadeira.
+CIDADES_CONTROLE = ("chimoio", "quelimane", "lichinga", "xaixai", "inhambane")
+
+
+def _cobre(bounds_lista, lon: float, lat: float) -> bool:
+    return any(
+        (b.left - TOL_GRAUS) <= lon <= (b.right + TOL_GRAUS)
+        and (b.bottom - TOL_GRAUS) <= lat <= (b.top + TOL_GRAUS)
+        for b in bounds_lista
+    )
+
+
+def _bounds_4326(rasterio, caminhos) -> list:
+    saida = []
+    for caminho in caminhos:
+        with rasterio.open(caminho) as src:
+            if src.crs is None or src.crs.to_epsg() != 4326:
+                continue  # cobertura em outro CRS: fora do escopo deste contrato
+            saida.append(src.bounds)
+    return saida
+
+
 def test_rasters_de_data_raw_cobrem_a_aoi(study):
-    """Todo raster espelhado tem de cobrir a AOI inteira, em união.
+    """Todo raster espelhado DA AOI tem de cobrir a AOI inteira, em união.
 
     Defeito real da Fase 0': o script do Copernicus DEM fixou no código a AOI
     provisória (33.50–33.95 E) e uma lista de tiles à mão, então baixou apenas a
     coluna E033. Com a AOI confirmada indo a 34.10 E, a faixa 34.0–34.1 ficou sem
     elevação — exatamente onde está Mwaladzi (34.0326 E), o que inviabilizaria o
     HAND de várzea (§5.6) num povoado de reassentamento.
+
+    Recortes das capitais de controle são excluídos: exigir que um recorte de Xai-Xai,
+    a 1.000 km, cubra a AOI de Tete é o contrato perguntando a coisa errada. Quem
+    verifica a cobertura deles é `test_recortes_de_controle_cobrem_a_propria_cidade`,
+    logo abaixo — a exclusão sem essa contrapartida seria só apagar o teste.
     """
     rasterio = pytest.importorskip("rasterio")
 
@@ -286,17 +328,14 @@ def test_rasters_de_data_raw_cobrem_a_aoi(study):
     # Agrupa por família (prefixo antes do primeiro '_S' ou '_N' do nome do tile).
     familias: dict[str, list] = {}
     for caminho in tifs:
+        if any(c in caminho.name.lower() for c in CIDADES_CONTROLE):
+            continue
         familia = caminho.name.split("_S")[0].split("_N")[0]
         familias.setdefault(familia, []).append(caminho)
 
     faltando = []
     for familia, caminhos in familias.items():
-        cobertos = []
-        for caminho in caminhos:
-            with rasterio.open(caminho) as src:
-                if src.crs is None or src.crs.to_epsg() != 4326:
-                    continue  # cobertura em outro CRS: fora do escopo deste contrato
-                cobertos.append(src.bounds)
+        cobertos = _bounds_4326(rasterio, caminhos)
         if not cobertos:
             continue
         # Amostra o bbox da AOI e exige que cada ponto caia em algum tile.
@@ -305,9 +344,7 @@ def test_rasters_de_data_raw_cobrem_a_aoi(study):
             lon = bbox["xmin"] + (bbox["xmax"] - bbox["xmin"]) * i / (passos - 1)
             for j in range(passos):
                 lat = bbox["ymin"] + (bbox["ymax"] - bbox["ymin"]) * j / (passos - 1)
-                if not any(
-                    b.left <= lon <= b.right and b.bottom <= lat <= b.top for b in cobertos
-                ):
+                if not _cobre(cobertos, lon, lat):
                     faltando.append(f"{familia}: ({lon:.4f}, {lat:.4f}) fora de todo tile")
                     break
             else:
@@ -315,6 +352,50 @@ def test_rasters_de_data_raw_cobrem_a_aoi(study):
             break
 
     assert not faltando, "; ".join(faltando)
+
+
+def test_recortes_de_controle_cobrem_a_propria_cidade(study):
+    """Contrapartida da exclusão acima: cada recorte de controle cobre a sua cidade.
+
+    Sem este teste, tirar as capitais do contrato da AOI seria remover a verificação em
+    vez de corrigi-la. O DiD e o controle sintético de §5.4 dependem de cada doador ter
+    dado no lugar certo; um recorte vazio ou deslocado destruiria o contrafactual em
+    silêncio, e a série resultante pareceria apenas uma cidade escura.
+
+    As coordenadas são as do Nominatim, verificadas na Fase 3 depois de a primeira
+    passagem da coleta errar Inhambane em 147 km (ORCHESTRATION_LOG.md 3-01).
+    """
+    rasterio = pytest.importorskip("rasterio")
+
+    centros = {
+        "chimoio": (33.483, -19.116),
+        "quelimane": (36.888, -17.878),
+        "lichinga": (35.240, -13.313),
+        "xaixai": (33.641, -25.044),
+        "inhambane": (35.384, -23.866),
+    }
+
+    raw = ROOT / "data" / "raw"
+    tifs = sorted(raw.glob("*.tif")) if raw.exists() else []
+    alvos = [t for t in tifs if any(c in t.name.lower() for c in centros)]
+    if not alvos:
+        pytest.skip("nenhum recorte de capital de controle espelhado ainda")
+
+    problemas = []
+    for caminho in alvos:
+        cidade = next(c for c in centros if c in caminho.name.lower())
+        lon, lat = centros[cidade]
+        cobertos = _bounds_4326(rasterio, [caminho])
+        if not cobertos:
+            continue
+        if not _cobre(cobertos, lon, lat):
+            b = cobertos[0]
+            problemas.append(
+                f"{caminho.name}: centro de {cidade} ({lon}, {lat}) fora do recorte "
+                f"({b.left:.3f}, {b.bottom:.3f}, {b.right:.3f}, {b.top:.3f})"
+            )
+
+    assert not problemas, "; ".join(problemas)
 
 
 def test_scripts_de_fetch_nao_fixam_a_aoi_no_codigo():
@@ -361,18 +442,93 @@ def test_sidecars_nao_declaram_aoi_divergente(study):
     bbox = study["aoi"]["bbox"]
     divergentes = []
     for meta in sorted(raw.glob("*.meta.json")):
+        # Recortes das capitais de controle declaram, corretamente, o bbox da SUA cidade.
+        # Compará-los com a AOI de Tete é o contrato perguntando a coisa errada — mesmo
+        # engano de test_rasters_de_data_raw_cobrem_a_aoi (ORCHESTRATION_LOG.md 3-04).
+        # A contrapartida é test_sidecars_de_controle_declaram_a_propria_cidade.
+        if any(c in meta.name.lower() for c in CIDADES_CONTROLE):
+            continue
         dados = json.loads(meta.read_text(encoding="utf-8"))
+        # Tolerância = 1,5 pixel DO PRÓPRIO raster, não uma constante.
+        #
+        # A versão anterior exigia igualdade a 1e-9. Isso vale para um sidecar que copia
+        # o bbox pedido, mas NÃO para um que declara os bounds reais do recorte: um corte
+        # raster encaixa na grade da fonte e por isso transborda a AOI por uma fração de
+        # pixel (medido: ymin −16,350343 contra −16,35; xmax 34,101871 contra 34,1). Com
+        # 1e-9, transbordo legítimo de meio pixel reprova.
+        #
+        # É a quarta vez nesta sessão que uma constante absoluta calibrada num contexto
+        # falha noutro (docs/ADR/0014 e ORCHESTRATION_LOG.md 3-04, 3-07). A tolerância
+        # correta é a unidade natural da grandeza — aqui, o pixel — e não um número.
+        # O defeito que este teste existe para pegar (sidecar com o xmax obsoleto de
+        # 33,95 em vez de 34,10) erra por 0,15°, ou ~33 pixels: continua sendo pego.
+        tol = 1e-9
+        companheiro = raw / meta.name.replace(".meta.json", "")
+        if companheiro.suffix == ".tif" and companheiro.exists():
+            try:
+                import rasterio
+
+                with rasterio.open(companheiro) as src:
+                    tol = max(abs(src.res[0]), abs(src.res[1])) * 1.5
+            except Exception:
+                pass
         for chave in ("aoi_bbox", "aoi", "bbox"):
             valor = dados.get(chave)
             if not isinstance(valor, dict):
                 continue
             for canto in ("xmin", "ymin", "xmax", "ymax"):
-                if canto in valor and abs(float(valor[canto]) - bbox[canto]) > 1e-9:
+                if canto in valor and abs(float(valor[canto]) - bbox[canto]) > tol:
                     divergentes.append(
                         f"{meta.name}: {chave}.{canto}={valor[canto]}, "
-                        f"config diz {bbox[canto]}"
+                        f"config diz {bbox[canto]} (tolerância {tol:.6f}°)"
                     )
     assert not divergentes, "; ".join(divergentes)
+
+
+def test_sidecars_de_controle_declaram_a_propria_cidade():
+    """Contrapartida da exclusão acima: o bbox declarado contém o centro da cidade.
+
+    Sem isto, excluir as capitais do teste de AOI apagaria a verificação de proveniência
+    delas em vez de corrigi-la — e um `.meta.json` que descreve um recorte diferente do
+    arquivo que está ali é justamente o defeito que o teste de cima existe para pegar.
+    """
+    import json
+
+    centros = {
+        "chimoio": (33.483, -19.116),
+        "quelimane": (36.888, -17.878),
+        "lichinga": (35.240, -13.313),
+        "xaixai": (33.641, -25.044),
+        "inhambane": (35.384, -23.866),
+    }
+
+    raw = ROOT / "data" / "raw"
+    if not raw.exists():
+        pytest.skip("data/raw ainda não populado")
+
+    problemas = []
+    for meta in sorted(raw.glob("*.meta.json")):
+        cidade = next((c for c in centros if c in meta.name.lower()), None)
+        if cidade is None:
+            continue
+        dados = json.loads(meta.read_text(encoding="utf-8"))
+        valor = next(
+            (dados[k] for k in ("aoi_bbox", "aoi", "bbox") if isinstance(dados.get(k), dict)),
+            None,
+        )
+        if valor is None or not all(c in valor for c in ("xmin", "ymin", "xmax", "ymax")):
+            continue  # lote antigo, sem bbox declarado: nada a conferir
+        lon, lat = centros[cidade]
+        dentro = (
+            float(valor["xmin"]) - TOL_GRAUS <= lon <= float(valor["xmax"]) + TOL_GRAUS
+            and float(valor["ymin"]) - TOL_GRAUS <= lat <= float(valor["ymax"]) + TOL_GRAUS
+        )
+        if not dentro:
+            problemas.append(
+                f"{meta.name}: bbox declarado não contém o centro de {cidade} ({lon}, {lat})"
+            )
+
+    assert not problemas, "; ".join(problemas)
 
 
 def test_proveniencia_nao_afirma_aoi_obsoleta():

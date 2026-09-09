@@ -30,9 +30,17 @@ unidades:
     fonte_geometria: "classificação própria + OSM"
     comparavel_entre_familias: false
     motivo_nao_comparavel: >-
-      A demografia só existe para o DISTRITO de Moatize (HDX COD-AB ADM2 MZ1012), que
-      contém a vila e muito mais. Não há população em nível A para a vila isolada.
-      Qualquer razão população/área que misture as duas é inválida.
+      A demografia oficial (censo/HDX COD-PS) só existe para o DISTRITO de Moatize (HDX
+      COD-AB ADM2 MZ1012), que contém a vila e muito mais — nenhum reprocessador publica
+      ADM3. Desde 2026-09-09 há uma estimativa MODELADA para a vila isolada (dasimetria
+      de terceiros: grade GRID3 x máscara construída própria, dentro do cluster de
+      Voronoi 'moatize_vila' — pipeline/02_metrics/populacao_vila_moatize.py,
+      data/processed/populacao_vila_moatize_sensibilidade.csv), mas isso não é contagem:
+      a validação cruzada do mesmo método em Cidade de Tete mediu desvio de -40 % a -75 %
+      frente ao observado (HDX COD-PS 2017), e o sentido é subestimação. Qualquer razão
+      população/área que misture a vila com o distrito continua inválida; e uma razão
+      população/área que use SÓ a estimativa da vila herda a incerteza medida acima —
+      por isso `comparavel_entre_familias` permanece `false`.
 
   moatize_distrito:
     rotulo: "Distrito de Moatize"
@@ -84,6 +92,30 @@ unidades:
     tipo: agregado
     fonte_geometria: "config/study.yaml"
     comparavel_entre_familias: false
+
+  provincia_tete:
+    rotulo: "Província de Tete"
+    geografia: "Província de Tete inteira; soma dos 15 distritos/cidade do COD-PS/COD-AB"
+    tipo: provincia
+    fonte_geometria: "HDX COD-AB, ADM1 adm1_pcode=MZ05 (geometria); HDX COD-PS, ADM1_PCODE=MZ10 (população, soma dos ADM2)"
+    pcode_cod_ab: "MZ05"
+    pcode_cod_ps: "MZ10"
+    comparavel_entre_familias: false
+    motivo_nao_comparavel: >-
+      Só demografia (dashboard de população, pipeline/02_metrics/demografia_dashboard.py).
+      Não há forma urbana, agricultura nem qualquer outra família medida no nível
+      provincial — usar apenas para comparar ritmo de crescimento populacional.
+
+  mocambique:
+    rotulo: "Moçambique"
+    geografia: "País inteiro; soma nacional dos ADM2 do COD-PS (não o total 'ajustado' do INE)"
+    tipo: pais
+    fonte_geometria: "HDX COD-AB, ADM0; HDX COD-PS, soma de todos os ADM2"
+    comparavel_entre_familias: false
+    motivo_nao_comparavel: >-
+      Só demografia (dashboard de população). Mesma razão de provincia_tete — não é
+      unidade de análise de forma urbana/agricultura, apenas referência nacional de ritmo
+      de crescimento.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Esquemas de P-code incompatíveis entre fontes do HDX (ORCHESTRATION_LOG.md 2-04)

@@ -3,7 +3,13 @@
 - **Data:** 2026-09-07
 - **Fase:** 1 (Pipeline de imagem)
 - **Decidido por:** usuário, sobre recomendação do orquestrador
-- **Estado:** aceito
+- **Estado:** aceito. **Os VALORES desta decisão foram superados por `docs/ADR/0014`**
+  (reexecução da validação sobre os estratos corrigidos): acurácia do usuário de
+  `construido` **0,286–0,625**, e não 0,27–0,63; comissão **37,5 %–71,4 %**, e não
+  37 %–73 %. O **critério** decidido aqui continua válido sem emenda — o que envelheceu
+  foi a medição que o ilustra. Os números abaixo são preservados como registro do que se
+  media em 2026-09-07; quem precisa do valor corrente lê
+  `data/processed/acuracia_por_ano.csv` via `pipeline/lib/acuracia_texto.py`.
 
 ## Contexto
 
@@ -21,6 +27,11 @@ A validação da Fase 1 mostrou que esse critério **não discrimina** neste pro
 
 **Os seis anos passam no critério de §10.** E, no entanto, entre **37 % e 73 %** do que o
 mapa chama de construído não é construído.
+
+> **Valor superado (registro histórico).** Esta faixa é a medição de 2026-09-07.
+> `docs/ADR/0014` reexecutou a validação sobre os estratos corrigidos e obteve
+> **37,5 %–71,4 %** (acurácia 0,286–0,625). O argumento desta seção não muda; o número,
+> sim. Nenhum texto derivado deve citar 37–73 como valor corrente.
 
 A causa é aritmética, não acidental: a classe de interesse ocupa **0,56 % a 1,93 %** da AOI.
 Um classificador que marcasse *tudo* como não-construído — isto é, que falhasse

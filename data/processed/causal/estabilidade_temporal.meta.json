@@ -1,0 +1,162 @@
+{
+  "gerado_em": "2026-09-08T13:44:44.920501+00:00",
+  "commit": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
+  "selo": "modelado (diagnóstico experimental)",
+  "reproducao_r2_publicado": {
+    "bate_pixel_a_pixel": true,
+    "pixels_divergentes_por_ano": {
+      "2000": 0,
+      "2005": 0,
+      "2010": 0,
+      "2015": 0,
+      "2020": 0,
+      "2025": 0
+    }
+  },
+  "destino_2015_2020": {
+    "agua": 0.019,
+    "vegetacao": 0.481,
+    "solo_exposto": 15.031,
+    "construido": 1.8,
+    "sem_rotulo_valido": 1.532,
+    "_total_perdido_km2": 18.862
+  },
+  "radiometria_da_paisagem_por_ano": {
+    "2000": {
+      "mediana_ndvi_seca_paisagem": 0.2328,
+      "mediana_ndvi_chuva_paisagem": 0.4732,
+      "fracao_aoi_acima_do_limiar_vegetacao": 0.1077,
+      "limiar_vegetacao_ndvi_seca": 0.3
+    },
+    "2005": {
+      "mediana_ndvi_seca_paisagem": 0.2308,
+      "mediana_ndvi_chuva_paisagem": 0.5418,
+      "fracao_aoi_acima_do_limiar_vegetacao": 0.1107,
+      "limiar_vegetacao_ndvi_seca": 0.3
+    },
+    "2010": {
+      "mediana_ndvi_seca_paisagem": 0.3582,
+      "mediana_ndvi_chuva_paisagem": 0.4783,
+      "fracao_aoi_acima_do_limiar_vegetacao": 0.7667,
+      "limiar_vegetacao_ndvi_seca": 0.3
+    },
+    "2015": {
+      "mediana_ndvi_seca_paisagem": 0.4089,
+      "mediana_ndvi_chuva_paisagem": 0.6672,
+      "fracao_aoi_acima_do_limiar_vegetacao": 0.9085,
+      "limiar_vegetacao_ndvi_seca": 0.3
+    },
+    "2020": {
+      "mediana_ndvi_seca_paisagem": 0.2592,
+      "mediana_ndvi_chuva_paisagem": 0.576,
+      "fracao_aoi_acima_do_limiar_vegetacao": 0.2763,
+      "limiar_vegetacao_ndvi_seca": 0.3
+    },
+    "2025": {
+      "mediana_ndvi_seca_paisagem": 0.2042,
+      "mediana_ndvi_chuva_paisagem": 0.3263,
+      "fracao_aoi_acima_do_limiar_vegetacao": 0.0607,
+      "limiar_vegetacao_ndvi_seca": 0.3
+    }
+  },
+  "prior_de_treino_por_ano": {
+    "2000": {
+      "n_disponivel_por_classe": {
+        "agua": 531,
+        "vegetacao": 275216,
+        "solo_exposto": 2262852,
+        "construido": 23893
+      },
+      "n_amostrado_por_classe": {
+        "agua": 500,
+        "vegetacao": 21523,
+        "solo_exposto": 176487,
+        "construido": 1935
+      },
+      "importancia_ndvi_seca": 0.4838,
+      "importancia_ndvi_amplitude": 0.0097
+    },
+    "2005": {
+      "n_disponivel_por_classe": {
+        "agua": 555,
+        "vegetacao": 298342,
+        "solo_exposto": 2235169,
+        "construido": 28710
+      },
+      "n_amostrado_por_classe": {
+        "agua": 500,
+        "vegetacao": 23012,
+        "solo_exposto": 174722,
+        "construido": 2220
+      },
+      "importancia_ndvi_seca": 0.4688,
+      "importancia_ndvi_amplitude": 0.016
+    },
+    "2010": {
+      "n_disponivel_por_classe": {
+        "agua": 1541,
+        "vegetacao": 2028143,
+        "solo_exposto": 501653,
+        "construido": 34548
+      },
+      "n_amostrado_por_classe": {
+        "agua": 500,
+        "vegetacao": 158293,
+        "solo_exposto": 38868,
+        "construido": 2717
+      },
+      "importancia_ndvi_seca": 0.433,
+      "importancia_ndvi_amplitude": 0.0043
+    },
+    "2015": {
+      "n_disponivel_por_classe": {
+        "agua": 144,
+        "vegetacao": 2404102,
+        "solo_exposto": 124838,
+        "construido": 43877
+      },
+      "n_amostrado_por_classe": {
+        "agua": 163,
+        "vegetacao": 186862,
+        "solo_exposto": 9707,
+        "construido": 3412
+      },
+      "importancia_ndvi_seca": 0.3983,
+      "importancia_ndvi_amplitude": 0.0175
+    },
+    "2020": {
+      "n_disponivel_por_classe": {
+        "agua": 2954,
+        "vegetacao": 737206,
+        "solo_exposto": 1792219,
+        "construido": 43874
+      },
+      "n_amostrado_por_classe": {
+        "agua": 500,
+        "vegetacao": 57043,
+        "solo_exposto": 139329,
+        "construido": 3410
+      },
+      "importancia_ndvi_seca": 0.4659,
+      "importancia_ndvi_amplitude": 0.0155
+    },
+    "2025": {
+      "n_disponivel_por_classe": {
+        "agua": 42602,
+        "vegetacao": 164954,
+        "solo_exposto": 2363722,
+        "construido": 44099
+      },
+      "n_amostrado_por_classe": {
+        "agua": 3193,
+        "vegetacao": 12672,
+        "solo_exposto": 180757,
+        "construido": 3378
+      },
+      "importancia_ndvi_seca": 0.3027,
+      "importancia_ndvi_amplitude": 0.0129
+    }
+  },
+  "nota": "EXPERIMENTAL — regeneração determinística dos intermediários do RF que classificacao.py não persiste. Não substitui nenhum artefato publicado.",
+  "rasters_experimentais": "data/interim/estabilidade"
+}

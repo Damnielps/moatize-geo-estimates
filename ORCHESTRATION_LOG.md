@@ -1551,3 +1551,1784 @@ infraestrutura de verificação, não de método, e ela cresce a cada fase.
 O T2 estourou por causa de duas coisas que não estavam no plano da fase: a reabertura da
 Fase 1 (que consumiu T3) e as duas passagens do portão, mais a figura de localização pedida
 pelo usuário. A reabertura não é retrabalho da Fase 2 — é correção de defeito herdado.
+
+---
+
+## 2026-09-08 — Fase 2b (Agricultura urbana e periurbana)
+
+### 2b-01 · Quatro fontes de validação de cultivo espelhadas
+Todas as fontes de §4.6 que nunca tinham sido obtidas, agora em `data/raw/` — **28 rasters
+recortados pela AOI**, com `.sha256` e `.meta.json`:
+
+- **GLAD Global Cropland** (Potapov et al. 2021, DOI `10.1038/s43016-021-00429-z`,
+  CC-BY 4.0) — 2003, 2007, 2011, 2015, 2019.
+- **ESA WorldCover** 2020 e 2021 (CC-BY 4.0), tile `S18E033` **derivado da AOI** por
+  `tile_sw_corners()`, não presumido — e conferiu com o palpite anterior.
+- **CGLS-LC100** 2015–2019 (CC-BY 4.0 pelo registro no Zenodo; a página do produto não tem
+  texto de licença localizável, e isso está registrado).
+- **ESRI/Impact Observatory** 2017–2024 (CC-BY 4.0).
+
+Duas decisões técnicas que valem registro. O agente usou **leitura em janela por
+`/vsicurl/`** em vez de baixar o tile global e recortar depois — os arquivos do GLAD saem
+com 70–90 KB. E resolveu um defeito real do script anterior: o bucket do ESRI/IO estava
+errado (`io-lulc-annual-v02` devolve 404) e o nome de célula MGRS era um palpite de 5
+caracteres. O correto é `io-10m-annual-lulc`, indexado pelo **designador de zona de grade
+de 3 caracteres**, e as células verdadeiras da AOI (`36K` e `36L`) foram **descobertas
+amostrando uma grade de pontos** com a biblioteca `mgrs` — a AOI atravessa a fronteira
+entre as faixas de latitude K e L, exatamente em −16,00°. Não dava para adivinhar.
+
+2025 ainda não está publicado no bucket do ESRI (a listagem confirma 2024 como último).
+
+### 2b-02 · Contrato do Makefile estava rígido demais — correção do orquestrador
+`test_todo_script_de_etapa_implementada_esta_no_grafo` exigia que cada script fosse chamado
+**pelo alvo mapeado para o seu diretório**. Mas a classificação de cultivo (§5.6) vive em
+`pipeline/01_imagery/` porque é classificação de imagem, e quem a executa é o alvo `agri`
+da Fase 2b, não `imagery`.
+
+Amarrar diretório a alvo impunha uma arrumação que §11.1 não pede. O contrato passou a
+exigir o que de fato importa: **estar em algum alvo** — o Makefile inteiro é o grafo.
+
+A falha remanescente é legítima e é trabalho em curso: os cinco scripts de cultivo
+(`cultivo.py`, `varzea.py`, `cultivo_varzea.py`, `amostras_validacao_cultivo.py`,
+`acuracia_cultivo.py`) ainda não foram ligados ao alvo `agri` pelo agente que os está
+escrevendo. O contrato acusando isso é o comportamento correto.
+
+### 2b-03 · Classificação de cultivo — `cultivo_sequeiro` NÃO é defensável
+`docs/ADR/0012`. O agente entregou o resultado negativo com número, em vez de maquiar:
+
+- **`cultivo_sequeiro`: acurácia do usuário 0,000** (n=8, interpretação visual própria) e
+  Jaccard de **0,0006 a 0,0046** contra GLAD Cropland e ESA WorldCover, em todos os pares
+  de ano. A corroboração externa é independente da validação visual e diz a mesma coisa.
+- **`cultivo_irrigado`: 0,556 ± 0,344** (n=9), Jaccard 0,017–0,125. Fraco em absoluto,
+  mas consistentemente melhor que sequeiro.
+- **Kappa de 2020: −0,037** — pior que aleatório.
+
+**Limitação herdada que o agente identificou e o orquestrador confirmou:** as classes de
+cobertura oscilam de forma impossível entre anos.
+
+| ano | vegetação | solo exposto |
+|---|---|---|
+| 2000 | 10,6% | 87,3% |
+| 2005 | 10,9% | 86,5% |
+| 2010 | 75,5% | 21,1% |
+| 2015 | **89,0%** | 6,1% |
+| 2020 | 27,1% | 67,4% |
+| 2025 | **6,1%** | 87,8% |
+
+Vegetação não vai de 10% a 89% e volta a 6%. **A série de área de cultivo não pode ser lida
+como mudança de uso do solo.**
+
+**Diagnóstico do orquestrador.** A mediana de NDVI da estação chuvosa varia por fator de 2
+(0,326 em 2025 contra 0,667 em 2015) e a amplitude por fator de 3 (0,110 a 0,311). Tudo o
+que é fenológico herda isso. Duas causas plausíveis, não separadas: a variação de
+capacidade de observação já documentada em `docs/ADR/0008` (3–4 cenas nos anos antigos
+contra 100+ nos recentes) e a variabilidade interanual de chuva, que em ambiente semiárido
+é real e grande.
+
+**Erro do orquestrador, registrado:** eu havia anunciado como "defeito concreto" que o
+composto de chuva não usava Sentinel-2 em 2020 e 2025. **Estava errado** — li a coluna
+truncada do CSV. O composto de chuva usa 108 cenas de S2 em 2020 e 116 em 2025, simétrico
+ao de seca. Não há assimetria de sensor entre os dois termos da amplitude. Afirmei a partir
+de leitura parcial, que é exatamente o que venho reprovando nas entregas.
+
+**Também registrado do agente:** o HAND foi aproximado por vizinho euclidiano mais próximo,
+por não haver biblioteca de roteamento hidrológico no ambiente — limitação declarada, não
+escondida. A várzea dá 650,2 km² estáticos, e `cultivo_irrigado` aparece mais enriquecido
+em várzea que `cultivo_sequeiro` em 4 dos 6 anos-âncora, o que **sustenta H5 fracamente**.
+
+80 contratos passando, `ruff` limpo, alvo `agri` ligado ao Makefile.
+
+### 2b-04 · DEFEITO GRAVE CAUSADO PELO ORQUESTRADOR — a máscara de denominador apagava o rio
+O usuário pediu para conferir a agricultura urbana numa imagem de satélite da Tete central,
+atravessada pelo Zambeze. A conferência revelou um defeito que eu mesmo introduzi.
+
+**Sintoma:** na janela da Tete central, a classe `agua` vai de **0,0% (2015) a 11,1% (2025)**.
+Um rio de 1 km de largura não aparece e desaparece.
+
+**Trilha até a causa.** Primeiro suspeitei do composto e li as bandas num ponto que estimei
+da imagem: SWIR ≈ 0,30, assinatura de terra. **Mas a coordenada era minha estimativa** — não
+concluí, fui procurar onde a água está de fato no dado. Em 2015 o SWIR mínimo é **0,0056**,
+com 9.926 pixels abaixo de 0,05: **o rio está no composto, correto**.
+
+Comparando o raster de índice com a fórmula recalculada do composto: os valores batem
+**exatamente** (`max|Δ| = 0`), mas as frações diferem. A diferença é de **máscara**, não de
+valor — e o arquivo de índice mascara justamente a água.
+
+**A causa.** `config/tolerances.yaml → processamento_indices.denominador_minimo: 0.1`.
+Água tem green baixo **e** SWIR baixo, então `green + swir16` fica **abaixo de 0,10**
+(0,0821 em 2000; 0,0505 em 2015) e o pixel é descartado como "instabilidade numérica".
+
+| ano | denominador sobre água | pixels mascarados |
+|---|---|---|
+| 2000 | 0,0821 | 32.909 |
+| 2015 | 0,0505 | 44.364 |
+| 2025 | água turva, sem SWIR baixo | 0 |
+
+**A responsabilidade é minha.** Quando os contratos acusaram 1 pixel fora de faixa em
+`ndbi_2000`, 1 em `mndwi_2000` e 4 em `evi_2025`, eu instruí: "mascare o denominador, não
+afrouxe o contrato". O agente calibrou o limiar contra os pixels ofensores e chegou a 0,10.
+Correto pelo que foi pedido — **e o remédio removeu dez mil vezes mais que a doença**.
+
+**A correção, testada antes de prescrever.** Os pixels realmente patológicos (`|índice| > 1`)
+são **exatamente 1** por raster, e **todos** têm uma banda de reflectância **não positiva** —
+artefato de correção atmosférica, fisicamente inválido. Mascarar por banda não positiva:
+
+| | máscara atual (denom < 0,10) | máscara por banda não positiva |
+|---|---|---|
+| patológicos removidos | 1 | **1** |
+| água removida | 32.909 a 44.364 | **1** de 36.042 |
+
+**Consequência para a pergunta do usuário.** A agricultura de vazante nas margens e ilhas do
+Zambeze — que §3 nomeia explicitamente como uma das quatro camadas de agricultura urbana —
+estava sendo **apagada junto com o rio** nos anos de água clara. Isso contamina a
+classificação de cultivo, a várzea e a classe `agua`, e é candidato a explicar parte da
+oscilação de cobertura registrada em 2b-03.
+
+**Lição de método:** eu diagnostiquei corretamente que a instabilidade numérica era real e
+localizada, e prescrevi uma máscara sem verificar **o que mais ela removia**. Um limiar
+calibrado só contra os casos que se quer excluir não é calibrado — é ajustado.
+
+### 2b-05 · Diagnóstico de estabilidade — três instâncias do MESMO defeito
+`docs/ADR/0013`. O agente respondeu às cinco perguntas com número, e achou a causa raiz que
+eu não tinha pedido.
+
+**Item 1 — a catraca é real e cresce.** Fração do estoque pós-R2 **não detectada no próprio
+ano**: 0 / 0 / 3,4 / 6,1 / **12,7** / **18,0 %**. Em 2025, 8,69 dos 48,29 km² só existem pela
+união. O estoque sustentado pelo ano **estagna**: 36,39 (2015) → 36,11 (2020) → 39,60 (2025),
+CAGR de **0,85 %/ano contra 2,23 %/ano** da série publicada.
+
+**Item 2 — `urbano` é estável em área, instável em lugar.** Razão interanual: `construido`
+fator 2,0; `vegetacao` fator 32; `solo_exposto` fator 41 — 16 a 20× mais estável. Mas o
+**churn de pixel é de 31 a 54 %**: a área é utilizável, a localização não.
+
+**Item 3 — a causa raiz, achado extra.** `rotulos_treino()` usa corte **absoluto**
+NDVI(seca) ≥ 0,30 sobre série cuja mediana de paisagem vai de 0,204 a 0,409. Verificado pelo
+orquestrador: a fração da AOI acima do corte **é** a série de vegetação publicada, ao décimo.
+
+| ano | NDVI ≥ 0,30 | classe `vegetacao` | mediana NDVI |
+|---|---|---|---|
+| 2000 | 10,7 % | 10,6 % | 0,233 |
+| 2015 | 90,8 % | 89,0 % | 0,409 |
+| 2025 | 6,1 % | 6,1 % | 0,204 |
+
+**`docs/ADR/0011` corrigiu esse defeito só na pegada e nunca o propagou.**
+
+**Item 4 — a queda de 2015→2020 é artefato, e o ano anômalo é 2015.** O GHSL observado não
+cai (+4,3 %); a razão bruta/GHSL pica em 1,48 só em 2015; 79,7 % dos 18,86 km² "perdidos"
+viram `solo_exposto`, cujo pool de treino colapsa 18× naquele ano. R1 rejeitou 15,32 km² em
+2015, o maior da série — **a confirmação funcionou; a permanência, não**.
+
+**Item 5 — R2 deve ter escopo por camada.** Defensável em `urbano`. Indefensável em
+`industrial`, porque cava é reabilitada. E **danoso em `reassentamento`**: 69 % herdado em
+2020, e torna **abandono indetectável** — que é literalmente a pergunta 3 de §1.
+
+**Item 6 — o que a Fase 3 não pode fazer**, e uma ressalva que atinge a espinha dorsal:
+- **não pode** estimar quebra de nível na série pós-R2; **não pode** testar H4 com área vinda
+  de R2, porque ΔR2 ≥ 0 gera "área cresce, luz cai" mesmo se H4 for falsa; **não pode** usar
+  o par 2015–2020 como base de efeito;
+- **ressalva nova sobre `docs/ADR/0008`: o WSF Evolution também é monotônico por construção.**
+  Eu vinha tratando o WSF como a série limpa de tendência. Ele é uma série de **ano de
+  primeira detecção**, e sua monotonicidade é definicional, não empírica;
+- **pode** estimar 2005 e 2011 sobre o WSF lido como taxa de primeira detecção, e 2016 e 2022
+  sobre luzes noturnas, com um **quarto placebo obrigatório**: a mesma quebra estimada sobre
+  a fração da AOI acima do limiar de NDVI.
+
+### 2b-06 · O padrão que une os três achados
+Somando com 2b-04, há **três instâncias do mesmo defeito — limiar absoluto sobre série não
+estacionária**:
+
+1. **máscara de denominador** (`< 0,10`) — apagou o Zambeze nos anos de água clara; prescrita
+   por mim;
+2. **corte de treino de vegetação** (NDVI ≥ 0,30) — produziu a série impossível de 10 % a 89 %;
+3. **classificação de construído** — mesma origem, corrigida em `docs/ADR/0011` **apenas para
+   a pegada** e nunca propagada às demais classes.
+
+O padrão de correção já está estabelecido e testado: **limiar relativo à mediana da paisagem
+do próprio ano**. O que falta é aplicá-lo onde ainda não foi.
+
+### 2b-07 · Correção de raiz aplicada e verificada — `docs/ADR/0014`
+O agente foi interrompido por limite de sessão depois de corrigir o código e rodar
+`imagery` e `metrics`, na frase "agora rodar metrics e a cadeia agri". O orquestrador
+completou a cadeia `agri` e verificou os resultados.
+
+**O Zambeze volta a existir.** Classe `agua` na janela da Tete central, onde o rio tem ~1 km
+de largura: antes 0,2 / 0,2 / 0,5 / **0,0** / 0,9 / 11,1 %; depois **9,3 / 9,4 / 10,8 / 10,6
+/ 11,0 / 11,1 %**. Um rio permanente passa a ser detectado de forma estável nos seis anos.
+
+**As classes de cobertura param de oscilar.** Vegetação passa de variar por **fator 15**
+(6,1 % a 89,0 %) para **fator 2,2** (5,6 % a 12,1 %); solo exposto, de fator 14 para
+**1,09** (82,2 % a 89,7 %). O que resta é compatível com variabilidade de chuva em ambiente
+semiárido.
+
+**`reassentamento` deixa de ser catraca:** 1,20 · 1,65 · **0,70** · 1,09 — não monotônica.
+Abandono e adensamento voltam a ser observáveis, que é o que a pergunta 3 de §1 exige. O
+valor de 2020 ficou **dentro** da faixa de plausibilidade; a exceção declarada que o ADR 0013
+previu como possível não foi necessária.
+
+**A acurácia de `urbano` foi reexecutada, não presumida:** 0,286 a 0,625, contra 0,27 a 0,63.
+`docs/ADR/0009` continua válido sem emenda.
+
+**O cultivo NÃO melhorou, e isso é informativo.** `cultivo_sequeiro` segue indefensável:
+kappa −0,065, Jaccard 0,001–0,002 contra o GLAD. O desacordo de área é de ordem de grandeza —
+359 a 761 km² contra cerca de 20 km² do GLAD na mesma AOI. Como a correção resolveu água e
+cobertura e **não** resolveu o cultivo, a falha fica localizada na **abordagem fenológica
+bianual**, não nos limiares. `docs/ADR/0012` sai **reforçado**.
+
+84 contratos passando, `ruff` limpo.
+
+### 2b-08 · O que a correção não resolve
+- **A anomalia de 2015 permanece** (série bruta pica em 55,56 km²). `docs/ADR/0013` já havia
+  isolado 2015 como o ano anômalo, com o GHSL como árbitro independente.
+- **A catraca de `urbano` permanece**, porque R2 continua nela por decisão. As ressalvas do
+  item 6 do ADR 0013 para a Fase 3 valem integralmente.
+- **O WSF segue monotônico por construção**, conforme a emenda do ADR 0008.
+
+### 2b-09 · Portão da Fase 2b — REPROVADO por não propagação, e corrigido
+Quatro motivos, todos a mesma coisa: **a avaliação honesta existia no log de orquestração e
+nos ADRs novos, e nunca chegou aos artefatos que o app e o artigo consomem.**
+
+`data/DATA_AUDIT.md` classificava **H5 como "RESPONDÍVEL"** e **H6 como "PARCIAL"**, com data
+anterior aos ADRs 0012, 0013 e 0014. `PROVENANCE.md` herdava de um fragmento da Fase 0' que
+afirmava "permite testar H5". A frase correta — "sustenta H5 fracamente" — só existia em
+`ORCHESTRATION_LOG.md`, que nenhum consumidor lê.
+
+**A raiz que o validador identificou com precisão:** os vereditos da Fase 0' julgavam
+**disponibilidade de dado**; o que veio depois mediu **desempenho da classificação**. O dado
+existe; a classificação não funciona. São coisas diferentes, e o documento nunca reconciliou.
+
+É a mesma falha de propagação de `docs/ADR/0011`, que corrigiu o limiar absoluto só na pegada
+e deixou o defeito vivo em outras duas classes por toda uma fase. **Eu havia nomeado esse
+padrão na mensagem imediatamente anterior ao portão, e ele me pegou no meu próprio trabalho.**
+
+**Correções aplicadas:**
+1. Reconciliação declarada em `data/provenance_parts/agricultura.md`, com os números que
+   falsificam as afirmações da Fase 0'; propaga ao `PROVENANCE.md` pelo consolidador.
+2. `data/DATA_AUDIT.md` revisto pelo `auditor-dados`, com seção datada no topo e o texto
+   anterior preservado abaixo.
+3. **Contrato novo:** `pipeline/tests/test_coerencia_hipoteses.py`, duas regras — artefato
+   consumido não pode ser mais antigo que o ADR de medição mais recente, e nenhum deles pode
+   conter afirmação de testabilidade que a medição desmentiu. A segunda é textual porque
+   **data sozinha não basta**: um documento regenerado reproduz a frase antiga vinda do
+   fragmento, que foi exatamente o que aconteceu.
+
+**Três acréscimos do auditor que eu não havia pedido e que valem mais que a correção:**
+- **P4 e H2 ganham ressalva de churn.** O churn de 31–54 % medido em `docs/ADR/0013` atinge
+  qualquer alegação de **tipologia por pixel** — infill, borda, leapfrog — e de matriz de
+  transição. A Fase 2 produziu exatamente essas métricas.
+- **H4 tem circularidade dos dois lados**, não de um: a população de 2025 é projeção
+  modelada, **e** a série de `urbano` é catraca por R2. Usar as duas para testar
+  descolamento entre população e luzes confirmaria a hipótese duplamente por construção.
+- **P2 e P6:** o par 2015–2020 da série própria está contaminado pelo colapso do pool de
+  treino em 2015, e não pode ancorar magnitude de bust. VIIRS e DMSP recomendados como série
+  primária pós-2015.
+
+**Veredito global permanece CONJUNTO A INSUFICIENTE**, agora por **duas razões independentes**:
+lacunas de licença (Fase 0') e lacunas de desempenho de classificação, recém-medidas.
+
+86 contratos passando.
+
+### 2b-10 · Segunda reprovação da Fase 2b — o contrato estava escopado às instâncias, não ao fenômeno
+O validador reprovou de novo, e o item 4 é uma crítica precisa **ao contrato que eu tinha
+acabado de escrever**: `test_coerencia_hipoteses.py` cobria só `DATA_AUDIT.md` e
+`PROVENANCE.md` — os dois artefatos **onde o defeito tinha aparecido**. O mesmo defeito
+reincidiu uma camada abaixo, em `data/processed/stats_by_year_by_unit.csv` e em
+`data/provenance_parts/metricas_fase2.md`, **sem que o contrato acusasse**.
+
+E o item 5 fecha o argumento: `metricas_fase2.md` é de 08:33, anterior ao `docs/ADR/0013`
+(10:46) — **a minha própria regra de data o teria pego se ele estivesse na lista**.
+
+É exatamente o erro do limiar de denominador de `docs/ADR/0014`: **calibrar contra os casos
+observados, não contra o fenômeno.** Terceira vez que essa lição aparece nesta sessão.
+
+**A sobrecorreção, e o ajuste.** Ao reescopar para todos os artefatos consumidos, a regra de
+data passou a acusar **29 arquivos**, incluindo CSVs de contagem bruta — que **não ficam
+errados** porque um ADR foi escrito depois. Restringi a regra de data a quem **faz afirmação
+falsificável** (menciona H1–H6, "respondível", "testável" ou "suficiência"); a regra textual
+e a de churn continuam amplas. Passou a acusar exatamente 4 fragmentos, todos legítimos.
+
+**Correções aplicadas:**
+1. **Ressalva de churn na origem**, em `tipologia_expansao.py` — a nota de cada linha de
+   tipologia passa a dizer que a identidade pixel a pixel troca 31–54 % e que toda tipologia
+   depende de qual pixel mudou. Regenerado.
+2. **Seção de churn em `metricas_fase2.md`**, com tabela do que é atingido e do que não é:
+   tipologia e matriz de transição sim; rosa de expansão pouco, por agregar em setor; área,
+   CAGR e fragmentação agregada não.
+3. **Reconciliação nos três fragmentos demográficos.** O mais sério: `demografia_fase2.md`
+   afirmava que a reformulação por área era "a via respondível" — e a emenda do
+   `docs/ADR/0008` mostrou que essa via **também** é monotônica por construção. A formulação
+   correta de H1 hoje é sobre **taxa de incorporação de solo**, não sobre estoque.
+4. **Contrato novo** `test_metricas_por_pixel_carregam_a_ressalva_de_churn`, que lê as linhas
+   de tipologia e transição do CSV e o fragmento, e reprova se a ressalva faltar.
+
+87 contratos passando, `ruff` limpo.
+
+### 2b-11 · Portão da Fase 2b — APROVADO na terceira passagem
+
+Verificado pelo `qa-validador` **em disco**, não por descrição: a ressalva de churn está na
+origem (`pipeline/02_metrics/tipologia_expansao.py:180-193`) e chega ao CSV regenerado; o
+contrato `test_coerencia_hipoteses.py` varre `data/processed/*.csv` e
+`data/provenance_parts/*.md`, não só os dois consolidados; a restrição da regra de data foi
+testada contra os 9 fragmentos que ficam fora dela, e nenhum reivindica testabilidade
+obsoleta; os três fragmentos demográficos estão reconciliados e posteriores aos ADR 0012,
+0013 e 0014; `DATA_AUDIT.md` e `PROVENANCE.md` concordam entre si e com as fontes sobre H1
+(taxa, não estoque), H4, H5, H6, P4 e P8. Exclusividade mútua sem regressão.
+87 contratos, `ruff` limpo.
+
+**A pergunta que fiz ao validador nesta passagem** — se o defeito reincidisse pelo mesmo
+padrão uma camada abaixo, que dissesse isso explicitamente — **não teve de ser respondida**.
+Ela fica registrada como instrumento: pedir ao portão que reporte o *padrão* do defeito, e
+não só o defeito, é o que transformou 2b-09 e 2b-10 em lição de método em vez de dois
+retrabalhos isolados.
+
+**Estado ao fim da Fase 2b:** 14 ADRs, 87 contratos, camadas de cultivo entregues com a
+qualificação de `docs/ADR/0012` (sequeiro não defensável como cropland; irrigado com
+acurácia 0,556 ± 0,344), e as ressalvas do item 6 de `docs/ADR/0013` valendo integralmente
+para a Fase 3.
+
+### 3-01 · Fase 3 aberta — e a coleta reprovada na primeira passagem
+
+**Bloqueio material achado pelo orquestrador ao abrir a fase.** `docs/ADR/0013` designa as
+luzes noturnas como **série primária de §5.4 depois de 2015**, porque não são monotônicas
+por construção. `data/raw/` tem **zero** arquivos VIIRS, DMSP ou harmonizado. E o WSF cobre
+só `S18E032`/`S18E034`, os dois tiles de Tete: as cinco capitais de controle não têm
+cobertura. Das duas bases que o ADR 0013 permite, **uma não existia e a outra estava pela
+metade.**
+
+**A coleta (T1 `haiku`) foi reprovada.** Entregou 6 fragmentos de documentação e **nenhum
+dado**: 51 arquivos em `data/raw/`, os mesmos de antes, o mais recente das 10:16. Três
+defeitos medidos, não inferidos:
+
+1. **Coordenada de Inhambane errada em 147 km.** Declarou −22,78 / 34,57. O Nominatim dá
+   **−23,866 / 35,384** (relation 11623616, "Cidade de Inhambane"). É o mesmo modo de falha
+   das coordenadas fabricadas de Cateme e Mwaladzi na Fase 0'.
+2. **Derivação dos tiles WSF errada em 4 de 5 cidades**, e de forma **sistemática**: sempre
+   uma célula de 2° ao sul. A convenção foi confirmada contra os dois tiles já em disco —
+   canto SW, arredondando para baixo ao par — e reproduz `S18E032`/`S18E034` para Tete
+   exatamente. Correto: `S20E032`, `S18E036`, `S14E034`, `S26E032`, `S24E034`. O agente
+   disse `S22E32`, `S20E36`, `S16E34`, `S28E32`, `S24E34`. O único acerto veio de uma
+   coordenada errada, o que o torna acerto por compensação, não por método.
+3. **P-codes das capitais afirmados sem leitura de arquivo.** Nada foi baixado, logo
+   `MZ0903`, `MZ1104`, `MZ0404`, `MZ1003`, `MZ1203` não foram lidos do COD-AB: foram
+   asseridos. É exatamente o risco que `config/unidades.yaml` existe para impedir.
+
+Classificar a fonte como "nível A provisório" também extrapola o papel — quem classifica é
+`auditor-dados` —, mas o hedge de "provisório" torna isso o menor dos problemas.
+
+**Padrão:** um agente T1 encarregado de *obter* dado entregou *documentação sobre* o dado.
+Os três defeitos são todos de derivação e asserção, nenhum de download. A tarefa era de
+aquisição e verificação aritmética — não é tarefa de T1. Escalado para T2, com os valores
+corretos entregues junto, para que a próxima passagem seja de coleta e não de recálculo.
+
+**Erro do orquestrador nesta entrada.** Ao mover os 6 fragmentos para
+`data/_reprovado/fase3_coleta_t1/`, os pares `licenses_parts/` e `provenance_parts/`
+tinham o **mesmo nome de arquivo**, e o segundo `mv` sobrescreveu o primeiro: sobraram 3
+de 6. É a mesma colisão de caminho único que a Fase 2 corrigiu com fragmento mais
+consolidador (2-01) — cometida por mim, na mão, num diretório de quarentena. Nada
+publicável se perdeu, porque o material estava reprovado; o que se perdeu foi metade do
+registro do que foi reprovado, e isso fica declarado em vez de silenciado.
+
+### 3-02 · Desenho pré-registrado da Fase 3 — aceito
+
+`docs/DESENHO_FASE3.md`, 532 linhas, escrito **antes** de os dados de luzes existirem em
+disco, deliberadamente. Verificado por amostragem: não estima nada, não inventa número, e
+não reabilita hipótese rebaixada.
+
+**O achado aritmético que muda o que o estudo pode alegar.** Com 1 tratado e 5 doadores, a
+inferência por permutação tem **p mínimo = 1/6 ≈ 0,167**. Nenhum resultado deste desenho
+pode atingir significância convencional, por construção do pool — não por fraqueza do
+efeito. Está escrito no desenho e tem de estar no artigo: um leitor que veja "p = 0,17"
+sem essa nota lê como resultado nulo o que é piso aritmético.
+
+**Critérios de fracasso F1–F7 fixados antes do dado**, com a direção de erro correta em
+F1: o limiar de tendência paralela é frouxo **de propósito**, porque no teste de pré-tendência
+o erro caro é *aceitar* paralelismo falso, não rejeitar paralelismo verdadeiro. F4 é o mais
+útil na prática — pesos concentrados > 0,80 num doador rebaixam o "sintético" a comparação
+bilateral, que é o que ele de fato seria.
+
+**Não estimável, declarado sem substituto improvisado:** quebra de área em 2016 e 2022 (o
+WSF termina em 2015, o GHSL observado em 2020 e é não-decrescente); inclinação pré-2016 em
+VIIRS; elasticidade população–luz em fase nenhuma (nível A só tem 2017 observado e 2025
+projetado). As duas elasticidades que testariam H4 caem justamente nas células de bust e
+transição: **H4 chega rebaixada e sai rebaixada.**
+
+Escrever o desenho antes do dado teve efeito imediato: o documento lista os **pré-requisitos
+não satisfeitos** e o que cada ausência custa — sem as luzes faltam 2016/2022, sem os tiles
+dos controles falta o DiD inteiro, sem a série anual de NDVI de paisagem o quarto placebo
+deixa de ser teste. Um desenho escrito depois teria simplesmente omitido o que não pôde
+fazer.
+
+### 3-03 · §6-A — transparência metodológica exigida pelo usuário
+
+Decisão do usuário: **app e artigo têm de apresentar metodologia detalhada e processo de
+implementação, incluindo bibliotecas utilizadas.** Registrada em `CLAUDE.md` §6-A, que todo
+subagente carrega — não só nesta conversa, que a compactação apaga (foi assim que o
+fechamento de custo da Fase 2b se perdeu).
+
+A regra central: **a lista de versões é gerada de `uv.lock`, nunca redigida.** Uma lista
+escrita à mão por um agente é a mesma classe de erro do DOI inexistente e do P-code
+afirmado sem abrir o arquivo — plausível, não verificada.
+
+Contrato `pipeline/tests/test_transparencia_metodologica.py`, escrito **antes** de os
+artefatos das Fases 4 e 5 existirem, para não repetir 2-10 (escopar a verificação ao que já
+aconteceu). Passa por vacuidade hoje e morde no instante em que o arquivo aparecer.
+**Verificado reintroduzindo o defeito:** um apêndice de teste com `rasterio 1.3.9`,
+`numpy 1.26.4` e `scikit-learn 1.4.0` — versões plausíveis, do tipo que um agente escreveria
+— foi reprovado contra o `uv.lock` real (1.5.1, 2.5.3, 1.9.0). A omissão dos ADR 0011–0014
+também foi reprovada. Arquivo de teste removido.
+
+### 3-04 · Coleta da Fase 3, segunda passagem — bloqueio resolvido, com um defeito e um contrato consertado
+
+**O bloqueio saiu.** 54 recortes de luzes noturnas harmonizadas (Harvard Dataverse,
+`10.7910/DVN/YGIVCD`, CC0) — 9 anos × AOI de Tete e as 5 capitais — mais 4 tiles WSF novos e
+o COD-AB. Verificado em disco, não pelo resumo: os rasters de Tete abrem, cobrem a AOI
+exata e têm sinal crescente e plausível (soma de radiância 400 em 2000 → 9.367 em 2025).
+O agente também **corrigiu a atribuição que eu passei errada**: o produto é de Chen/Yu et
+al., não de Li et al. 2020 — dois harmonizados distintos. Corrigir o orquestrador é
+comportamento desejado, e fica registrado como tal.
+
+**Defeito: `wsf_evolution_S18E036.tif` (Quelimane) NÃO existe.** Existem o `.sha256` e o
+`.meta.json`; o `.tif` não. O download morreu no `.part` e os sidecars ficaram. O resumo
+disse "all 5 confirmed and downloaded, MD5-verified" — **falso para Quelimane**. É a mesma
+classe de erro da sessão inteira: afirmação de verificação sobre coisa não verificada. Sem
+esse tile não há série de área para um dos cinco doadores, o que degrada o pool do controle
+sintético de 5 para 4 — e o desenho já declarou que com 6 unidades o p mínimo é 1/6.
+Um `.sha256` de arquivo inexistente é pior que um arquivo faltando: é um atestado de
+integridade sobre o vazio.
+
+**Erro do contrato, achado ao investigar: 47 reprovações, e 45 delas eram a pergunta
+errada.** `test_rasters_de_data_raw_cobrem_a_aoi` exigia que **todo** raster de
+`data/raw/` cobrisse a AOI de Tete. A premissa era invisível porque era verdadeira: até a
+Fase 3, todo raster espelhado era sobre Tete. Com as capitais de controle, o contrato passou
+a exigir que um recorte de Xai-Xai, a 1.000 km, cobrisse Tete. **Mesmo padrão de 2-06 e
+2-10 — o contrato escopado ao mundo que existia quando ele foi escrito.**
+
+Corrigido com a contrapartida obrigatória, para não ser só apagar o teste:
+`test_recortes_de_controle_cobrem_a_propria_cidade` exige que cada recorte contenha o centro
+da **sua** cidade, pelas coordenadas do Nominatim. Verificado por reintrodução: um recorte
+com bounds de Tete e nome de Quelimane é reprovado.
+
+**As outras 2 reprovações eram ponto flutuante.** Os recortes de 2022 e 2025 vinham com
+`left = 33.500000000000028` — 2,8e-14° acima de 33,5, cerca de **3 nanômetros**. A
+comparação exata `b.left <= lon` reprovava dois rasters perfeitamente bons. Um teste de
+contenção geográfica com igualdade exata de float testa o formato binário do GeoTIFF, não a
+cobertura do terreno. Tolerância de 1e-9° (~0,1 mm), contra pixel de ~500 m.
+
+**Pendências desta entrada:** baixar `wsf_evolution_S18E036.tif`; corrigir o `.sha256` do
+COD-AB, gravado com caminho em vez de nome-base. E uma observação para quem estimar: o
+máximo de radiância cai de 70,4 (2020) para 49,9 (2022) e fica em 49,9 (2025) — a
+descontinuidade precisa ser explicada antes de qualquer quebra ser lida em 2022.
+
+### 3-05 · Auditoria da Fase 3, e um vão de delegação do orquestrador
+
+**Classificação (`auditor-dados`), consolidada em `data/LICENSES.md` e `PROVENANCE.md`:**
+harmonizado Chen/Yu **A** (CC0, confirmada na API do Dataverse); WSF dos 5 controles **A**;
+COD-AB **A**; **VIIRS VNL V2 rebaixado de A para B** — `eogdata.mines.edu` passou a exigir
+login OAuth, e o registro anterior no repositório ("FTP público", nível A) estava
+desatualizado; **DMSP-OLS excluído, nível C** — URL 404 e sucessora sob o mesmo bloqueio.
+
+**Correção de atribuição que muda o prompt-mestre.** O produto obtido é de **Chen, Z., Yu,
+B. et al. (2021), *ESSD* 13:889–906, DOI 10.5194/essd-13-889-2021**, dataset no Harvard
+Dataverse (10.7910/DVN/YGIVCD). `CLAUDE.md` §4.4 nomeia "Li et al. 2020", que é um
+harmonizado **distinto** (Sci Data, DOI 10.1038/s41597-020-0510-y). São dois produtos, não
+dois nomes do mesmo. §4.4 precisa de correção editorial, e o artigo tem de citar o que foi
+usado, não o que o prompt supôs. Eu propaguei o nome errado na delegação; o agente corrigiu.
+
+**Resposta à pergunta de conciliação — e é um limite, não um detalhe.** Com VNL em B e
+DMSP em C, o Chen/Yu é a **única** série de luz de nível A. A premissa 4 do desenho supunha
+conciliar DMSP↔VIIRS por sobreposição própria em 2012–2013; isso deixou de ser possível. A
+conciliação passa a ser interna a um modelo de terceiros, **não auditável por este
+pipeline**. Some-se a queda de radiância máxima que medi (70,4 em 2020 → 49,9 em 2022,
+estável até 2025): **não é possível, com o conjunto A de hoje, distinguir quebra de produto
+de quebra de economia em 2022.** Isso vira aviso obrigatório em toda figura e tabela que
+publique essa quebra.
+
+**Vão de delegação, meu.** A coleta trouxe **9 anos** (2000, 2005, 2010, 2011, 2015, 2016,
+2020, 2022, 2025) — os anos-âncora mais os de quebra. O desenho exige **série anual
+2012–2025, T = 14**, e uma série interrompida não se ajusta a 5 pontos pós-2012. Pior: o
+placebo temporal P2 usa anos falsos **2008, 2014 e 2019**, e nenhum dos três foi baixado —
+o placebo não é só fraco, é **inexecutável**.
+
+O agente escolheu os anos-âncora, que é a escolha sensata para quem não recebeu instrução:
+**eu nunca escrevi "série anual" na delegação**, embora o desenho, escrito em paralelo, a
+exigisse. Duas frentes simultâneas, uma definindo o requisito e a outra coletando sem
+conhecê-lo. O erro não é do coletor nem do desenhista: é de quem as paralelizou sem fazer o
+requisito atravessar de uma para a outra.
+
+### 3-06 · O orquestrador matou o próprio download ao limpar os vigias
+
+Ao investigar por que o painel do usuário mostrava **cinco atividades**, encontrei um
+processo de trabalho e **quatro laços de espera vigiando o mesmo PID** — três criados pelo
+subagente antes de devolver o turno, um por mim. O agente empilhou vigias em vez de esperar
+num só; foi por isso que ele encerrou dizendo "vou aguardar".
+
+Rodei `kill 23729 23869 24163` para remover os redundantes. **Isso derrubou o download.**
+Os PIDs 23727 (download) e 23729 (vigia) eram adjacentes e tinham tempo de vida idêntico: o
+vigia que matei era o líder do grupo de processos do próprio download, e o sinal alcançou o
+filho. Perdeu-se o progresso de 2014 e os sete anos que faltavam (2008, 2014, 2017, 2018,
+2021, 2023, 2024) continuam ausentes.
+
+**O erro não foi matar processos — foi matá-los sem verificar a árvore.** Eu tinha `ps` à
+mão e conferi `etime` e `command`, mas não `ppid`/`pgid`, que era exatamente o campo que
+dizia quem era pai de quem. Julguei a relação entre os processos por adjacência de PID e
+semelhança de linha de comando, que é inferência, e agi como se fosse medição — a mesma
+distinção que venho cobrando dos agentes em cada entrada deste log.
+
+Religado **desacoplado** (`setsid`, PPID 1, log em `data/interim/fetch_luzes.log`), com a
+ordem dos anos escolhida por prioridade analítica e não por sequência: **2014, 2017, 2018,
+2021** primeiro, porque fecham a janela da série interrompida; **2008** em seguida, porque é
+ano falso do placebo temporal; **2023 e 2024** por último, porque só alongam a cauda e não
+mudam nenhuma quebra.
+
+**Custo real do incidente:** cerca de 45 minutos de rede a ~50 KB/s. Barato como acidente,
+caro como lição — e a lição é sobre verificar antes de agir destrutivamente, que é
+literalmente a regra que este projeto aplica a dado e não estava aplicando a processo.
+
+### 3-07 · Terceira reincidência do padrão do ADR 0014 — agora num timeout de rede
+
+Depois do incidente `3-06`, o download religado terminou **limpo** em 23 min, mas com
+**5 dos 7 anos ausentes** — e justamente os quatro que destravam a estimação (2014, 2017,
+2018, 2021) mais 2023. Conseguiu só 2008 e 2024. Um processo que sai com código 0 tendo
+falhado a maior parte do trabalho é a pior forma de falha: parece sucesso.
+
+A causa está em `pipeline/00_fetch/fetch_npp_viirs_like_chen_yu_annual.py`:
+
+```
+--speed-limit 51200 --speed-time 30     # aborta abaixo de 50 KB/s por 30 s
+subprocess.run(cmd, timeout=300)        # 5 min de relógio para um zip de 90-140 MB
+```
+
+Medi a banda desta rede três vezes ao longo da tarde: **35, 52 e 82 KB/s**, com picos
+acima de 400 (2008 tem 140 MB e entrou em menos de 5 min). A banda **oscila em torno do
+limiar de 50 KB/s**. O curl matava as próprias transferências legítimas sempre que a rede
+caía abaixo dele, e o teto de 5 minutos deixava passar apenas os anos que calhavam de pegar
+a rede rápida. Os dois anos que entraram não entraram por serem menores — 2008 é o **maior**
+de todos: entraram por sorte de banda.
+
+**É o padrão de `docs/ADR/0014` pela terceira vez: limiar absoluto sobre grandeza não
+estacionária, calibrado contra o caso que se quer excluir sem perguntar o que mais ele
+remove.** Antes foi a máscara de denominador que apagava o Zambeze e o corte de treino de
+vegetação; agora é um timeout que apaga downloads. A grandeza mudou de reflectância para
+banda de rede, o erro é o mesmo — e desta vez ele não estava no pipeline analítico, o que
+sugere que o padrão é do **modo de pensar**, não do domínio.
+
+Correção com a mesma forma da do ADR 0014 — o critério passa a distinguir **parado** de
+**lento**, e o teto vira proporcional em vez de constante:
+- `--speed-limit 5120 --speed-time 120` — 5 KB/s por 2 min é conexão morta; 35 KB/s vive.
+- `timeout = max(1800, tamanho_MB × 1e6 / 12000)` — piso de 30 min, mais 1 s por 12 KB.
+- `-C -` para retomar: uma falha deixa de custar todo o progresso anterior.
+- `TAMANHOS_MB` lido da API do Dataverse, só para dimensionar o teto; não entra em número
+  publicado.
+
+Religado para 2014, 2017, 2018, 2021 e 2023, com log em `data/interim/fetch_luzes.log`.
+`ruff` limpo (o arquivo era novo e trazia 6 problemas herdados; corrigidos junto).
+
+**Nota sobre o `setsid` de 3-06:** aquele relançamento **nunca rodou** — macOS não tem
+`setsid`, e o log tinha uma linha só, com o erro. O processo que sobreviveu era o do agente,
+órfão por acaso. Eu havia relatado como "religado desacoplado" algo que não conferi. Duas
+vezes na mesma hora, portanto, relatei como feito o que apenas mandei fazer — que é
+literalmente o defeito pelo qual reprovei a coleta em `3-04`.
+
+### 3-08 · Quarta e quinta instâncias do mesmo padrão, ambas em contratos meus
+
+Ao conferir a suíte depois da correção de `3-07`, dois contratos reprovaram — e os dois
+pelo mesmo motivo estrutural, não pelo mesmo sintoma.
+
+**`test_sidecars_nao_declaram_aoi_divergente`, parte 1 — escopo.** Ele comparava o
+`aoi_bbox` de **todo** sidecar com a AOI de Tete. Os recortes das capitais de controle
+declaram, corretamente, o bbox da **sua** cidade. É o mesmo engano de `3-04`, no arquivo ao
+lado: o contrato escrito quando todo raster do repositório era sobre Tete. Corrigido com a
+contrapartida obrigatória — `test_sidecars_de_controle_declaram_a_propria_cidade` exige que
+o bbox declarado contenha o centro da cidade que o nome promete. Verificado por reintrodução.
+
+**Parte 2 — tolerância.** Mesmo excluídas as capitais, os sidecars de Tete reprovavam:
+declaram `ymin = −16,350343` contra `−16,35` da config, e `xmax = 34,101871` contra `34,1`.
+Não é divergência: é **encaixe na grade**. Um recorte raster alinha aos pixels da fonte e
+por isso transborda a AOI por fração de pixel. A tolerância era `1e-9`, escrita quando os
+sidecars copiavam o bbox pedido em vez de declarar os bounds reais.
+
+A tolerância passou a ser **1,5 pixel do próprio raster**, lido do `.tif` companheiro, em
+vez de uma constante. O defeito que o teste existe para pegar — sidecar com o `xmax`
+obsoleto de 33,95 — erra por 0,15°, cerca de 33 pixels, e continua sendo pego: verificado
+por reintrodução, com a mensagem mostrando `tolerância 0,006737°`.
+
+**O padrão, agora com cinco ocorrências nesta sessão:** máscara de denominador, corte de
+treino de vegetação, limiar de construído (`docs/ADR/0014`), timeout de rede (`3-07`) e esta
+tolerância. Em todas, uma **constante absoluta** calibrada num contexto e aplicada noutro.
+A correção teve sempre a mesma forma: trocar o número pela **unidade natural da grandeza** —
+mediana da paisagem do ano, tamanho do arquivo, pixel do raster.
+
+Vale registrar o que muda no meu próprio comportamento: nas três primeiras eu precisei do
+diagnóstico de um agente ou de um portão; nesta e na anterior reconheci a forma antes de
+terminar de ler o erro. O padrão virou heurística — mas só depois de cinco vezes, e as duas
+últimas estavam em código que **eu** tinha escrito.
+
+Estado: **94 contratos**, `ruff` limpo.
+
+### 3-09 · A costura DMSP→VIIRS é visível no dado, e restringe a janela das luzes
+
+Série anual completa: **19 anos, 114 recortes**, seis áreas, dimensões idênticas em todos
+os anos. 94 contratos passando. Antes de entregar ao desenho, fiz uma verificação de
+integridade — e ela achou coisa que nenhum contrato procurava.
+
+**Fração de pixels acesos (`n>0`), 2011 → 2012 → 2013:**
+
+| área | 2011 | 2012 | 2013 |
+|---|---|---|---|
+| Tete (AOI) | 13,9 % | 9,8 % | 6,5 % |
+| Chimoio | 11,2 % | 7,4 % | 4,9 % |
+| Quelimane | 5,3 % | 3,4 % | 2,9 % |
+| Lichinga | 4,5 % | 3,2 % | 3,2 % |
+| Xai-Xai | 19,1 % | 11,0 % | 7,8 % |
+| Inhambane | 28,8 % | 14,4 % | 4,0 % |
+
+**As seis áreas colapsam nos mesmos dois anos e todas se recuperam monotonicamente
+depois.** Seis cidades a centenas de quilômetros umas das outras não têm um choque
+econômico comum em 2012–2013 e uma recuperação comum a seguir. **É a costura da
+harmonização DMSP→VIIRS**: o DMSP-OLS floresce e satura, superestimando a área acesa; o
+VIIRS é mais nítido. A transição do produto está em 2012–2013 e é diretamente observável.
+
+**A métrica primária do desenho — soma de radiância — é menos atingida, mas não ilesa.**
+Variação 2011→2013: Tete +15 %, Chimoio +6 %, Quelimane +81 %, Lichinga −40 %,
+Xai-Xai −20 %, Inhambane −61 %. Não há direção comum, o que afasta um reescalonamento
+uniforme; mas uma dispersão de −61 % a +81 % em dois anos, entre cinco capitais **não
+tratadas**, não é economia. É a costura se propagando conforme o quanto cada cidade
+florescia sob o DMSP.
+
+**Consequência para a Fase 3, e é restritiva:**
+1. A janela homogênea das luzes começa em **2013**, não em 2012.
+2. A pré-janela da quebra de 2016 cai de 4 pontos (2012–2015) para **3** (2013–2015).
+3. Nenhum uso de 2011–2012 como base pré-tratamento nas luzes.
+4. Em compensação, a quebra de **2022 fica dentro da janela homogênea** — a preocupação
+   anterior com a queda da radiância máxima entre 2020 e 2022 perde força: a soma **sobe**
+   em 2023–2025 enquanto o máximo cai, o que é dispersão da luz, não reescalonamento do
+   produto. A ressalva do auditor continua valendo, mas mais fraca do que eu havia dito.
+
+Registro do método: isto apareceu ao **olhar o dado bruto antes de modelá-lo**, com duas
+tabelas de dez linhas. Nenhum dos 94 contratos perguntava se dois anos vizinhos da mesma
+série mediam a mesma coisa — e agora é evidente que essa era a pergunta.
+
+### 3-10 · Fase 3 estimada — e o critério pré-registrado degenera em 2022
+
+Emenda 1 gravada em `docs/DESENHO_FASE3.md` §11 (E1–E9), com as afirmações originais
+intactas e marcadas `⟨EMENDADO · E#⟩` — 9 marcas conferidas. A costura de `3-09` foi
+absorvida: `n_pre` da quebra de 2016 é **3**, como a janela homogênea 2013–2025 exige.
+
+**Resultado central, e é negativo: a quebra de 2016 não é do carvão.**
+
+| unidade | b2 (nível, 2016) | p |
+|---|---|---|
+| **Tete** | **−0,152** | 0,000 |
+| Chimoio | −0,396 | 0,000 |
+| Lichinga | −0,301 | 0,008 |
+| Xai-Xai | −0,294 | 0,000 |
+| Inhambane | −0,183 | 0,028 |
+| Quelimane | −0,076 | 0,172 |
+
+**Quatro das cinco capitais sem carvão caem MAIS que Tete.** O placebo espacial reprova, e
+com razão. Um efeito de bust estimado sobre esta série mediria algo nacional — ou do
+produto —, não a bacia de Moatize. Este é o tipo de achado que só aparece porque o placebo
+foi pré-registrado como obrigatório e rodado antes das quebras.
+
+**Mas em 2022 o critério degenera, e o veredito precisa de arbitragem.**
+
+Em 2022, Tete tem **b2 = −0,181** e os cinco controles têm b2 **positivo**
+(+0,277 · +0,022 · +0,175 · +0,247 · +0,217). É **divergência de sinal**: Tete cai enquanto
+todos sobem — potencialmente o resultado mais forte do estudo.
+
+O P1 reprova mesmo assim, porque a regra pré-registrada é uma **disjunção**: replica quem
+tiver mesmo sinal e ≥50 % da magnitude **em b2 OU em b3**. E em b3 Tete vale **+0,0083, com
+IC95 [−0,0159; +0,0324] — que inclui zero**. Os controles têm b3 de +0,085 a +0,172, dez a
+vinte vezes maior. O teste de magnitude "≥50 % da de Tete" vira 0,0042: **qualquer** número
+o satisfaz.
+
+**O critério degenera quando o coeficiente de referência é nulo.** É a mesma família do
+padrão de `docs/ADR/0014` — uma regra relativa cujo denominador vai a zero. Sexta ocorrência,
+e a primeira num critério **estatístico** e não num limiar de processamento.
+
+**O que NÃO vou fazer:** reverter o veredito. Reescrever o critério depois de ver que ele
+reprova o resultado que eu gostaria de ter é exatamente o "procurar especificação que passa"
+que proibi na delegação. O veredito pré-registrado fica como está.
+
+**O que vou fazer:** escalar para o `revisor-adversarial` — que o desenho já exigia como
+segunda opinião obrigatória na Fase 3 — com a pergunta posta nos dois sentidos, para que a
+resposta não dependa de como eu a formulei.
+
+### 3-11 · Arbitragem: eu estava errado, e a pergunta estava mal posta
+
+O `revisor-adversarial` não respondeu a pergunta que fiz — mostrou que ela partia de uma
+premissa que ninguém tinha conferido. Verifiquei em disco antes de aceitar:
+
+| janela | retângulo | Cidade de Tete | resto (Moatize + mina) |
+|---|---|---|---|
+| 2021 → 2022 | −6,0 % | **+0,7 %** | **−12,7 %** |
+| 2021 → 2025 | +21,2 % | **+45,0 %** | **−2,5 %** |
+
+**A queda de 2022 não está na cidade.** O "Tete cai enquanto os controles sobem" é artefato
+de recorte: o retângulo de Tete contém a mina e a vila de Moatize, e nenhum retângulo de
+controle contém mina. A cidade não cai — **cresce 45 % entre 2021 e 2025**.
+
+A decomposição por ADM2 estava em `serie_luzes_anual.csv` desde a Emenda E6. **Ninguém a
+leu antes de discutir o veredito, eu inclusive.** Passei uma rodada inteira arbitrando o
+sinal de um coeficiente quando bastava perguntar *onde*, dentro do retângulo, a luz caía.
+
+`docs/ADR/0015` registra: (1) ramo de teste relativo cuja referência tem IC que inclui zero
+é **ramo vazio** — não estimável, com motivo, nunca "falha"; (2) P1-2022 reclassificado, com
+o "FALHA" original **preservado em coluna própria**; (3) a mudança é lícita **porque não
+reabilita nada** — F3 e F4 já derrubam o contrafactual de 2022 (sintético = Inhambane com
+peso 1,000; DiD −0,12, IC [−0,28; +0,03], p = 0,333); (4) nenhuma frase sobre a mina antes
+da decomposição de §2.3, registrada como **etapa não executada**; (5) sétima ocorrência do
+padrão do ADR 0014, a primeira num critério estatístico.
+
+**Custo ao estudo, dito sem suavizar:** o único ponto em que Tete se separava de todos os
+controles não sobrevive. A pergunta 6 de §1 — se a cidade ficou maior que a economia que a
+criou — perde suporte causal e passa a ter suporte **descritivo e interno à AOI**: a luz da
+mina e de Moatize recua enquanto a da cidade acelera. É mais fraco do que eu esperava, e é
+o que o dado sustenta.
+
+### 3-12 · ADR 0015 executado — e a decomposição recusa autorizar a frase sobre a mina
+
+**Regra do ramo vazio aplicada às quatro quebras.** Vereditos pré e pós, com o original
+preservado em `veredito_pre_adr0015`:
+
+| quebra | P1 antes → depois | P2 antes → depois |
+|---|---|---|
+| 2005 | passa → **não estimável** | passa → **não estimável** |
+| 2011 | FALHA → FALHA | FALHA → **passa** |
+| 2016 | FALHA → FALHA | não estimável → não estimável |
+| 2022 | FALHA → **não estimável** | passa → **não estimável** |
+
+**Verifiquei em disco a única coisa que tornava a emenda lícita:** os quatro painéis seguem
+`CONTRAFACTUAL NAO SUSTENTADO`, cada um por critérios F que **não dependem dos placebos** —
+F3 (RMSPE pré), F4 (peso concentrado), F5 (rank), F7 (leave-one-out). O afrouxamento de
+P2-2011 não reabilita 2011: P1-2011 continua FALHA e o painel cai por F3, F5 e F7.
+
+**O agente contradisse o revisor em dois pontos, e conferi que ele tem razão.** O parecer
+previa que a mudança seria "neutra em três de quatro" e que 2005 continuaria `passa`. Não é:
+os dois coeficientes de referência de Tete em 2005 incluem zero, logo **ambos os ramos são
+vazios** — muda 2 de 4 em P1 e 3 de 4 em P2. E 2016 tem 4 réplicas, não 5 (Quelimane sai
+pelo IC próprio). A condição de licitude que vale é a que eu escrevi no ADR — **não
+reabilitar nada** —, não a de neutralidade que o revisor supôs; e essa se verifica.
+
+**A decomposição de §2.3 existe, e recusa a frase que eu já tinha adiantado.** Ela é
+parcialmente defensável: o total reconcilia com a série publicada (diferença máxima 0,0004),
+mas **não é partição** — a razão teto/piso é 2,1 em `industrial`, 1,8 em `urbano` e 5,2 em
+`reassentamento`. Nenhum nível e nenhum *share* é publicável; só o **sinal comum às duas
+envoltórias**.
+
+O sinal diz: 2021→2022 `industrial` cai 15,3 %/9,8 % e `urbano` fica plano; 2021→2025
+`urbano` sobe ~33 % e `industrial` **não recupera**. Mas a pegada industrial responde por
+apenas **32–42 %** da queda de 2022 — o maior contribuinte é `resto`, com −4,87/−2,64 dos
+−6,04 pontos.
+
+**Correção do que eu disse ao usuário em 3-11.** Escrevi que "a luz da mina e de Moatize
+recua enquanto a da cidade acelera". A parte da cidade está certa e medida. A atribuição à
+**mina** não está autorizada: a maior parte da queda está em `resto`, que não é nem
+industrial nem urbano classificado. O que se pode dizer é que **a queda está fora da cidade**
+— não que ela seja da mina.
+
+**Alerta novo, para a Fase 5:** de 2013 a 2025 o total cresce 123 %, e o crescimento é
+dominado por `resto` (+171 %/+427 %). Dispersão da luz, assentamento não mapeado e efeito de
+produto **não se separam** com o que existe.
+
+Estado: **15 ADRs, 94 contratos**, `ruff` limpo, Emenda 2 em `docs/DESENHO_FASE3.md` §12.
+
+### 3-13 · Contratos do pré-registro — a regra do ADR 0015 vira máquina
+
+`pipeline/tests/test_preregistro.py`, quatro contratos, todos nascidos de defeito real
+desta fase:
+
+1. **`test_nenhum_veredito_de_replica_apoiado_em_referencia_nula`** — codifica a decisão 1
+   do `docs/ADR/0015`. Reprova qualquer veredito conclusivo ("replica", "FALHA") sustentado
+   **apenas** por um ramo cujo coeficiente de referência tem IC95 que inclui zero.
+   **Verificado por reintrodução:** devolvendo o veredito pré-ADR às cinco linhas de P1 em
+   2022, o contrato acusa as cinco, nominalmente. É a oitava ocorrência do padrão que
+   deixa de depender de leitura humana.
+2. **`test_veredito_anterior_a_adr0015_foi_preservado`** — a coluna `veredito_pre_adr0015`
+   é obrigatória e não pode estar vazia. Sem os dois vereditos lado a lado, ninguém
+   distingue depois uma regra que sempre foi essa de uma regra ajustada ao resultado.
+3. **`test_emendas_do_desenho_sao_anexadas_e_datadas`** — emenda tem data no cabeçalho, vem
+   depois do corpo, e o número de marcas `⟨EMENDADO⟩` é ao menos igual ao de emendas. Uma
+   emenda que não marca o que emendou reescreveu o desenho em vez de anexá-lo.
+4. **`test_decomposicao_nao_e_publicada_como_particao`** — o CSV da decomposição tem de
+   trazer piso, teto **e** a razão entre eles. É a razão que diz ao leitor que aquilo não é
+   partição; sem ela, um leitor toma estimativa pontual onde só existe intervalo.
+
+Estado: **98 contratos**, `ruff` limpo. Portão da Fase 3 em julgamento.
+
+### 3-14 · Fase 3 APROVADA — e o portão achou uma lacuna que nenhum contrato cobria
+
+**Veredito: APROVADO**, com os sete pontos verificados em disco pelo `qa-validador`:
+pré-registro intacto (§0–§9 preservados, 13 marcas `⟨EMENDADO⟩` nas emendas); nenhuma
+conclusão reabilitada (os quatro painéis seguem não sustentados por F3/F4/F5/F7, que **não
+dependem dos placebos**); H4/H5/H6 rebaixadas, com `h4_reabilitada=False` explícito em
+todas as linhas de `elasticidades_por_fase.csv`; números conferidos por **recálculo**, não
+por leitura; a proibição de atribuir a queda de 2022 à mina propagada ao CSV, ao ADR e à
+proveniência, e não só ao log; selos e heranças de ADR 0009/0013 declarados linha a linha;
+11 scripts no alvo `causal`, nenhum stub.
+
+**A observação não reprovatória é a parte valiosa.** O validador notou que o `mtime` de
+`placebos.csv` mudou sem o conteúdo mudar, não achou no código nada que regenerasse
+artefatos, e disse que **nenhum contrato detecta reescrita silenciosa de artefato
+publicado**.
+
+A causa era eu: minha verificação por reintrodução altera o CSV publicado e depois o
+restaura. Conferi os hashes — íntegro. Mas a lacuna que ele apontou é real e maior que a
+causa: **`data/raw/` tem um `.sha256` por arquivo desde a Fase 0'; `data/processed/` não
+tinha nada.** O critério de §10 exige reprodução "byte a byte ou dentro de tolerância
+declarada", e o repositório não registrava quais bytes eram os publicados — justamente no
+diretório que alimenta o app e o artigo.
+
+Fechado com `scripts/manifesto_processed.py` e `pipeline/tests/test_manifesto.py`:
+**198 artefatos** registrados em `data/processed/MANIFESTO.sha256`; regravar é ato
+deliberado de fechamento de fase, não rotina. Verificado por reintrodução — uma linha em
+branco a mais em `placebos.csv` é acusada com os dois hashes.
+
+**Nota sobre a minha prática.** Verificar contrato reintroduzindo o defeito é o método certo
+e vou manter. Mas fazê-lo **sobre o artefato publicado** é arriscado: se eu for interrompido
+entre a mutação e a restauração, o artefato corrompido fica, e até agora nada avisaria. O
+manifesto é a rede; a prática melhor ainda é reintroduzir sobre cópia.
+
+Estado: **101 contratos**, 15 ADRs, `ruff` limpo. **Fases 0, 0', 1, 2, 2b e 3 aprovadas.**
+
+### 4-01 · Fase 4 aberta — dois bloqueios achados antes de delegar, e resolvidos
+
+Conferi `data/processed/` antes de abrir a fase e havia dois impedimentos que o agente só
+descobriria no meio do caminho:
+
+1. **367 MB de GeoJSON** em 49 arquivos, o maior com 37 MB. O app é estático e sem backend
+   (§6): nenhum navegador carrega isso.
+2. **CRS EPSG:32736.** O padrão GeoJSON exige WGS84 e o MapLibre espera 4326. É o pior tipo
+   de erro: um GeoJSON com `crs` UTM declarado é lido como coordenada crua por muitas
+   bibliotecas — o mapa renderiza vazio ou no oceano, **sem levantar erro**.
+
+**Resolvidos, e a explicação do agente é melhor que a minha hipótese.** Eu supunha
+complexidade geométrica e esperava vetor em tiles. O inchaço era **precisão de coordenada**:
+15 dígitos por número em UTM. Truncar para 6 decimais (~0,1 m), remover o membro `crs` e
+reprojetar resolveu quase tudo, sem ferramenta binária nova (coerente com `docs/ADR/0002`).
+**367 MB → 25 MB**, com dependências que já estavam no `uv.lock`.
+
+**Verificado por mim, não pelo resumo:** área comparada camada a camada, original em 32736
+contra a versão web reprojetada de volta — diferença de **+0,0004 % a −0,0007 %**, com
+contagem de feições idêntica. A simplificação de fato rodou: −16,2 % de vértices em
+`urbano_2025`, −97,9 % em `cultivo_sequeiro_2025`, este por conversão a grade de 1 km, que é
+o tratamento certo para uma camada com acurácia de usuário 0,000 (`docs/ADR/0012`): grade
+comunica "candidato agregado", polígono comunica "objeto detectado".
+
+**A decisão de churn foi tomada e declarada**, que era o que eu mais queria: o slider fará
+troca dura de ano ou crossfade de opacidade, **nunca interpolação de geometria**. Animar o
+churn de 31–54 % exibiria instabilidade de classificação como movimento no terreno — e
+mentir com movimento é mais persuasivo que mentir com número.
+
+Manifesto regravado: **237 artefatos**. 101 contratos, `ruff` limpo.
+
+### 4-02 · App construído — e a ressalva que faltava era a que mais engana
+
+A primeira invocação morreu no limite de 80 turnos, mas deixou o app funcional: `npm run
+build` passa (616 módulos, 600 KB gzip), dependências fixadas sem `^`, e
+`app/src/content/metodologia.json` é **gerado** por `pipeline/05_app/gerar_metodologia.py`,
+com carimbo de origem, os sete ADRs citados e `rasterio 1.5.1` batendo com o `uv.lock` —
+`test_transparencia_metodologica.py` teria reprovado uma lista redigida à mão (§6-A).
+
+**Conferi uma a uma se as ressalvas obrigatórias chegaram à tela.** Presentes: comissão
+0,27–0,63, catraca R2 e incapacidade de contração, churn, veredito "não sustentado",
+`cultivo_sequeiro` como fenologia sazonal. **Ausente: o piso aritmético da inferência** —
+`1/6`, `0,167` e `0.167` davam zero ocorrências em `app/src`.
+
+**Por que essa era a mais grave, e não a menos.** As outras ressalvas *parecem* ressalvas:
+quem lê "entre 37 % e 73 % do que o mapa chama de construído não é" sabe que está diante de
+uma limitação. Mas **"p = 0,17" não parece ressalva — parece resultado**, e resultado nulo.
+O leitor conclui "testaram e não deu nada", quando o correto é que com seis unidades 0,167
+é o menor valor que a permutação pode produzir: o teste não tinha como dar significância
+nem se o efeito fosse enorme. **Um número disfarçado de conclusão é pior que um número
+ausente.**
+
+Corrigido em `VeredictoCausal.jsx`: a tabela mostra `p_permutacao` **ao lado de**
+`piso_de_p_por_permutacao`, com aviso fixo em PT e EN dizendo que um p perto de 0,167 é o
+piso do teste e nunca deve ser lido isolado.
+
+**O agente recusou fabricar dado, e essa é a decisão que mais me agrada na fase.** Os anéis
+periurbanos por ano e o modo "transições" (§6) **não existem** em `data/processed/` —
+`logit_conversao_status.csv` diz NÃO DETERMINÁVEL. Em vez de inventar geometria plausível
+para cumprir o item da especificação, ele verificou a ausência e pôs aviso explícito no
+painel quando as camadas de cultivo estão ativas. A especificação fica descumprida **e
+declarada**, que é o resultado certo.
+
+Também corrigida a atribuição nos downloads: a série de luz cita **Chen/Yu 2021, ESSD
+13:889–906**, com nota de que o prefixo `viirs_like_li2020_` dos arquivos é herança de erro
+e não fonte de atribuição.
+
+**Fora de alcance, declarado:** swipe com WSF/GHSL (o dado não foi produzido para o app) e
+tradução do conteúdo gerado da metodologia, que vem em PT de `PROVENANCE.md`.
+
+Estado: **101 contratos**, `ruff` limpo, build passando, nenhum servidor de dev deixado
+rodando.
+
+### 4-03 · Portão da Fase 4 REPROVA — e o número errado foi propagado por mim
+
+**Motivo único: `NarrativaPage.jsx:53` dizia "razão teto/piso de até 5,2×".**
+
+O validador classificou como número fabricado. **Ele errou o motivo e acertou a reprovação**,
+e a diferença importa. Verifiquei o CSV eu mesmo:
+
+| classe | n | mediana | máximo |
+|---|---|---|---|
+| industrial | 35 | 2,12 | 4,61 |
+| urbano | 38 | 1,83 | 2,24 |
+| reassentamento | 30 | **5,21** | **6,69** |
+
+**5,2 existe** — é a mediana de `reassentamento`, e está em
+`causal_fase3_adr0015.md:131`. O defeito é a palavra **"até"**: ela transforma uma
+**mediana em máximo**, e o máximo real é **6,69**. O erro **subestima a incerteza em 28 %**
+justamente na frase que existe para dizer ao leitor que a decomposição é incerta.
+
+**A origem sou eu.** Escrevi "razão teto/piso até 5,2" na delegação do app, na delegação do
+portão e em duas mensagens ao usuário. O agente copiou a minha formulação. Peguei três
+medianas relatadas por um agente, tomei a maior e lhe pus um "até" na frente — o que é
+inventar um máximo a partir de medianas.
+
+É a mesma família de tudo que este log registra: **transformar em afirmação o que era
+resumo**. Só que desta vez não foi um limiar mal calibrado, foi **uma palavra**. Nenhum dos
+101 contratos poderia pegar: o número existia, a fonte existia, o que não existia era a
+relação entre eles.
+
+Corrigido em `NarrativaPage.jsx` para o que o dado sustenta: mediana por classe (2,1 · 1,8 ·
+5,2) **e** o máximo de 6,7 no pior ano, com a regra de que só o sinal comum às duas
+envoltórias é afirmável. Build passa. Conferido que "até 5,2" não sobrou em nenhum outro
+artefato — o `ORCHESTRATION_LOG.md` e o `docs/ADR/0015` sempre descreveram por classe, sem
+o "até". O erro viveu só na minha fala e no app.
+
+### 4-04 · Segunda instância do defeito relacional — e eu também estava errado
+
+Pedi ao portão que varresse a **classe**, não a instância. Ele varreu ~15 qualificadores em
+`app/src` e achou uma segunda ocorrência, no aviso que aparece **toda vez que a camada
+`urbano` está ativa** (`i18n.jsx:23` e `:77`).
+
+O aviso dizia "entre 37 % e **63 %** do que o mapa chama de urbano não é construído".
+Calculei da fonte (`acuracia_por_ano.csv`):
+
+| ano | acurácia do usuário | comissão |
+|---|---|---|
+| 2000 | 0,524 | 47,6 % |
+| 2005 | 0,609 | 39,1 % |
+| 2010 | **0,286** | **71,4 %** |
+| 2015 | 0,591 | 40,9 % |
+| 2020 | 0,476 | 52,4 % |
+| 2025 | **0,625** | **37,5 %** |
+
+**Comissão real: 37,5 % a 71,4 %.** O "63 %" não é comissão nenhuma — é a **acurácia do
+usuário máxima** (0,625) reaproveitada como se fosse o teto de comissão. Confundiu uma
+grandeza com o seu complemento, e **subestimava o pior caso em 8 pontos**.
+
+**E a minha própria versão também estava errada.** Venho dizendo "37 % a 73 %" ao usuário e
+nas delegações. Isso vem de `docs/ADR/0009` (acurácia 0,27–0,63), que o `docs/ADR/0014`
+**substituiu** ao reexecutar a validação sobre os estratos novos: 0,286–0,625. Eu estava
+citando o número **anterior à correção que eu mesmo mandei fazer**. O erro era conservador
+— exagerava a incerteza em 1,6 ponto — mas era erro, e de origem idêntica à do agente:
+repetir de memória um número que o disco já tinha atualizado.
+
+Corrigido em PT e EN para **37 % a 71 %**, com os extremos nomeados por ano e citando o
+ADR 0009 **e** a reexecução do 0014. Build passa.
+
+**O que isto ensina sobre o método.** Duas instâncias em dois dias de trabalho, ambas na
+prosa e não no dado, ambas invisíveis aos 101 contratos: um número certo com um qualificador
+errado passa em tudo. E as duas vieram de **mim** — "até 5,2" eu escrevi, "37–73" eu
+repeti. Os contratos protegem o pipeline; **a prosa do orquestrador não tem contrato
+nenhum**, e a Fase 5 é quase inteiramente prosa.
+
+### 4-05 · Contrato para a classe relacional — o defeito que vivia só na prosa
+
+`pipeline/tests/test_afirmacoes_relacionais.py`, três contratos. Método idêntico ao de
+`test_transparencia_metodologica.py` para versões de biblioteca: **o valor canônico é
+calculado da fonte, nunca escrito no arquivo de teste.** Se a fonte mudar, o contrato
+acompanha; se o texto ficar para trás, ele acusa.
+
+1. **Faixa percentual declarada bate com a faixa medida.** Varre `app/src` e `paper/`
+   procurando "entre X % e Y %" (e as variantes em inglês) em linhas que falam de comissão
+   ou de churn, e compara com o que os CSV dão: comissão = 1 − acurácia do usuário,
+   calculada de `acuracia_por_ano.csv`; churn de `construido`, de
+   `estabilidade_temporal_camadas.csv`. Tolerância de 1 ponto percentual — acomoda "37 %"
+   para 37,5 % e reprova 63 % contra 71,4 %.
+2. **Qualificador de máximo tem de trazer o máximo.** Numa frase sobre razão teto/piso,
+   "até N" só passa se N for o máximo real da coluna (6,69), não a mediana.
+
+**Verificado reintroduzindo os dois defeitos reais**, não versões inventadas: devolvi
+"entre 37 % e 63 %" ao `i18n.jsx` e "até 5,2×" ao `NarrativaPage.jsx`. Os dois foram
+acusados, com arquivo, linha e o valor medido ao lado.
+
+`metodologia.json` fica fora do escopo: é gerado mecanicamente e não editorializado.
+
+**Por que isto importa mais adiante.** Os 101 contratos anteriores protegiam o pipeline —
+se o número existe, de onde vem, se o produto é mais novo que o insumo, se a camada mede o
+que promete. Nenhum protegia a **prosa**. As duas ocorrências desta classe vieram de mim,
+não dos agentes, e a Fase 5 é um artigo de 8 a 10 mil palavras: a maior superfície de prosa
+do projeto, escrita sobre exatamente estes números.
+
+Estado: **104 contratos**, `ruff` limpo, build passando.
+
+### 4-06 · Terceira reprovação — e eu escopei o contrato à instância outra vez
+
+O portão achou a terceira instância da classe relacional. **É o meu número, e ele vive no
+pipeline.**
+
+`0,27–0,63` (acurácia) e `37 % e 73 %` (comissão) estão codificados em **14 arquivos de
+`pipeline/`** — `area_cagr.py`, `tipologia_expansao.py`, `reconstrucao_demografica.py`,
+`write_stats_forma_urbana.py`, `edificacoes.py`, `fragmentacao.py`, `classificacao.py`,
+`acuracia.py`, `mapa_localizacao.py` e outros. De lá são gravados em **152 linhas** de
+`decomposicao_luz_por_camada.csv` e repassados verbatim a `metodologia.json`, que o app
+**serve ao usuário**. Também estão na legenda da figura de localização que vai no artigo.
+
+**Os valores corretos:** `docs/ADR/0014` reexecutou a validação sobre os estratos corrigidos
+e obteve **0,286–0,625**, contra 0,27–0,63 antes. O ADR 0014 escreveu isso e concluiu
+"`docs/ADR/0009` continua válido sem emenda" — verdadeiro quanto ao **critério**, mas
+ninguém propagou os **números**. Toda a prosa derivada ficou uma correção atrás.
+
+**E a crítica ao meu contrato está certa.** Escrevi `SUPERFICIES = [app/src, paper]` — as
+duas pastas **onde o defeito tinha aparecido** —, não onde ele podia aparecer. Excluí
+`pipeline/` e `data/processed/` sem justificar. Ampliado o escopo, o contrato acusa
+**154 infrações**, não uma.
+
+**É a terceira vez nesta sessão que escopo um contrato à instância em vez da classe.**
+2-10 foi a primeira, e naquele momento escrevi no log: "escopei o contrato aos dois
+artefatos onde o defeito **tinha aparecido**, não à classe onde ele **pode aparecer**".
+3-04 foi a segunda. Esta é a terceira, **depois de eu ter registrado a lição duas vezes**.
+Saber nomear um padrão não é o mesmo que deixar de cometê-lo — e a diferença entre as duas
+coisas é exatamente o que este log serve para medir.
+
+Escopo corrigido para `app/src`, `paper/`, `pipeline/`, `data/processed/` e `docs/`, com
+`tests/` de fora (um teste cita o número errado de propósito, para verificar por
+reintrodução).
+
+### 4-07 · Correção propagada — e um contrato que defendia o erro
+
+**A correção transversal foi feita**, e da forma certa: `pipeline/lib/acuracia_texto.py`
+**lê `acuracia_por_ano.csv`** e devolve a faixa formatada; os 14 arquivos passam a chamá-lo
+em vez de trazer o número no corpo. Se o CSV não existir, o módulo **levanta
+`FileNotFoundError` em vez de adivinhar** — detalhe que importa, porque a alternativa
+silenciosa seria voltar a um valor de memória. As 154 infrações foram a **0**.
+
+**Duas coisas que eu mesmo tive de consertar depois.**
+
+**1. O meu contrato varria linha a linha.** Uma faixa quebrada entre duas linhas escapava —
+e quebrar linha é a norma em Markdown e em docstring, que é o formato do artigo da Fase 5.
+Medido no próprio `acuracia_texto.py`: **0 ocorrências linha a linha, 1 no texto contínuo**.
+O contrato passaria por vacuidade justamente na maior superfície de prosa do projeto.
+Corrigido para varrer por parágrafo com espaços normalizados, com dispensa explícita para
+**citação histórica** (parágrafo que menciona o ADR 0014 junto com "antes", "substitu",
+"obsolet" ou o ADR 0009) — a mesma dispensa que `test_proveniencia_nao_afirma_aoi_obsoleta`
+já usava para o bbox obsoleto. Verificado por reintrodução com o defeito **quebrado em duas
+linhas**: acusado.
+
+**2. `test_figuras.py` exigia o número obsoleto.** Ele codificava os literais `"0,27"` e
+`"0,63"`. Quando a figura foi corrigida para 0,286–0,625, **o contrato falhou por causa da
+correção**: ele havia envelhecido junto com o valor e passara a **defender o erro**.
+
+Esse é o achado mais desconfortável do dia, porque é a mesma doença numa camada acima. Um
+contrato que **codifica um valor medido** deixa de verificar a realidade e passa a verificar
+uma lembrança. Corrigido para ler a faixa de `acuracia_por_ano.csv`, aceitando 2 ou 3
+decimais — "0,286" e "0,29" descrevem a mesma medição.
+
+**A lição, agora com nome:** os 104 contratos protegem contra dado errado, mas **um contrato
+que guarda um número está sujeito exatamente ao defeito que ele policia**. A regra que sai
+daqui: *contrato verifica relação, não valor; todo valor vem da fonte, em tempo de execução.*
+
+Estado: **104 contratos**, `ruff` limpo, build passando, manifesto regravado (237 artefatos).
+
+### 4-08 · Varredura da regra nova nos 104 contratos, e o resto da propagação
+
+Enunciei em `4-07` que **contrato verifica relação, não valor**. Varri os 104 atrás de
+literais que fossem valor medido. Uma instância real: `test_agricultura.py` exigia o
+literal `"0,000"` no `docs/ADR/0012`. Uma reexecução que desse 0,05 obrigaria a atualizar o
+ADR — e o contrato reprovaria **a atualização correta**. Reescrito para ler
+`acuracia_cultivo_por_ano.csv` e exigir que o ADR declare **o número que o CSV mediu**.
+
+**Erro meu na própria correção, achado por reintrodução.** A primeira versão comparava por
+substring, e `"0,0"` é substring de `"0,047"`: o teste **passava** com o ADR falsificado.
+Corrigido com fronteira de dígito. Só então a reintrodução acusou.
+
+**A correção do pipeline estava incompleta, e a falha de frescor apontava para isso.** O
+valor obsoleto sobrevivia em **4 fragmentos de proveniência** — `figuras.md`,
+`causal_fase3_adr0015.md`, `metricas_fase2.md`, `imagem_fase1.md` —, que são artefatos
+publicados e alimentam `PROVENANCE.md`. Corrigido a partir do valor calculado do CSV
+(0,286–0,625 · 37,5 %–71,4 %) e consolidados regerados: 19 fragmentos, 0 pendentes.
+
+**Uma correção de data que declaro explicitamente.** Ao verificar o contrato reintroduzindo
+o defeito no `docs/ADR/0012`, restaurei o conteúdo por cópia — e a cópia mudou o `mtime`
+para 18:20, tornando o ADR mais novo que todos os artefatos derivados e disparando o
+contrato de frescor sem que nada tivesse envelhecido. Confirmei que o conteúdo é
+**byte-idêntico** (SHA-256 igual ao backup anterior à edição) e devolvi o `mtime` original,
+**10:25:59**, valor registrado no veredito do portão da Fase 2b — não inventado.
+
+Isto vira regra de prática, porque é a segunda vez que a verificação por reintrodução
+suja o repositório: **reintroduzir defeito sobre cópia, nunca sobre o artefato vivo.** O
+manifesto pega a corrupção de conteúdo; nada pega a de `mtime`.
+
+Estado: **104 contratos**, `ruff` limpo, manifesto regravado (237 artefatos).
+
+### 4-09 · Quarta reprovação — o terceiro contrato frouxo era meu, e escondia uma quarta instância
+
+Pedi ao portão que **presumisse a existência de um terceiro contrato frouxo**. Havia.
+
+**O bug.** `test_afirmacoes_relacionais.py` partia o texto por linha em branco. O
+`metodologia.json` é JSON *pretty-printed* **sem nenhuma linha em branco**: 411 KB e 5.673
+linhas viravam **um único "parágrafo"**. A dispensa de citação histórica — que exige a marca
+"0014" *em algum ponto do bloco* — passava então a valer para o **arquivo inteiro**. O
+contrato ficava incapaz de disparar ali, qualquer que fosse o número. E era exatamente ali
+que sobrevivia a **quarta instância** do valor obsoleto, em conteúdo servido ao usuário.
+
+Corrigido para avaliar a dispensa numa **janela de ±400 caracteres em torno da própria
+afirmação**: "aqui perto está dito que isto é histórico", não "existe a palavra 0014 em
+algum lugar deste arquivo".
+
+**E ainda assim não pegava — segundo defeito na mesma correção.** Com a janela, o teste
+voltou a dar zero. O motivo: o detector de conceito listava só `comiss`/`commission`, e a
+formulação que o repositório usa é *"a camada `urbano` tem acurácia do usuário medida entre
+0,27 e 0,63 — entre 37 % e 73 % do que o mapa chama de construído não é"*, onde **a palavra
+"comissão" não aparece**. Um detector calibrado sobre um único jeito de dizer a coisa é a
+mesma falha de escopo de sempre, agora em **vocabulário**. Ampliado para as formulações
+reais.
+
+**A raiz era o `docs/ADR/0009`.** O `metodologia.json` é gerado dos ADRs, e o ADR 0009 diz
+"entre 37 % e 73 %" no corpo. Um ADR é **registro datado**: reescrevê-lo falsificaria a
+história. A solução correta, e padrão para ADR, é **marcar supersessão**: o cabeçalho e o
+parágrafo passam a declarar que `docs/ADR/0014` reexecutou a validação e obteve
+0,286–0,625 / 37,5 %–71,4 %, que o **critério** decidido em 0009 continua válido sem emenda,
+e que **nenhum texto derivado deve citar 37–73 como valor corrente**. Os números originais
+ficam, rotulados como registro.
+
+Regerado o `metodologia.json` (459 KB): passou a trazer 37,5 %–71,4 %, e a única ocorrência
+restante de 37–73 é a citação histórica marcada.
+
+**Contagem desta rodada:** quatro instâncias da classe relacional, **todas originadas no
+orquestrador**, e **três contratos frouxos escritos por ele para pegá-las** — substring que
+casava demais, parágrafo que virava arquivo inteiro, vocabulário estreito demais. Nenhum foi
+achado por leitura: os três só apareceram porque alguém reintroduziu o defeito ou porque o
+portão foi instruído a presumir que existia mais um.
+
+Estado: **104 contratos**, `ruff` limpo, build passando, manifesto com 237 artefatos.
+
+### 4-10 · Quinta reprovação — quarta e quinta vacuidades no mesmo contrato
+
+O portão achou três defeitos, dois deles introduzidos por mim minutos antes.
+
+1. **`fatos_verificados.py` fora do Makefile.** Um artefato que só existe se alguém rodar à
+   mão viola §11. Adicionado ao alvo `figures`.
+2. **Dois erros de lint** no script novo. Corrigidos.
+3. **QUARTA VACUIDADE, e a mais séria:** `PADRAO_FAIXA` casava "entre X % e Y %" e
+   "de X % a Y %", mas **não** casava **"X %–Y %"** — que é o formato canônico emitido por
+   `pipeline/lib/acuracia_texto.py` e o majoritário no repositório. Medido: `"37,5 %–71,4 %"`
+   dava **zero casamentos**. Uma classe inteira de citações ficava fora da verificação, no
+   formato que o próprio gerador produz.
+
+**QUINTA VACUIDADE, achada ao corrigir a quarta.** Com o regex ampliado, o contrato passou a
+acusar a própria folha de fatos, onde está escrito "Nunca citar 0,27–0,63 nem 37 %–73 %:
+são **anteriores** à reexecução do ADR 0014". A dispensa de citação histórica exigia o
+marcador `antes` — e o texto diz `anteriores`. Marcadores trocados por **radicais**
+(`ante[sr]`, `substitu`, `superad`, `reexecu`, `hist[óo]ric`, …).
+
+**O padrão, agora com cinco ocorrências no mesmo contrato:** linha a linha, parágrafo,
+vocabulário do conceito, pontuação da faixa, vocabulário do marcador. **Toda vez** eu cobri
+a forma em que o defeito tinha aparecido, e **toda vez** ele reapareceu numa forma vizinha.
+Não é falta de cuidado pontual: é uma disposição a tratar o exemplo como se fosse a classe.
+
+Verificado por reintrodução nas **três formas de escrever** — "de X a Y", "X–Y" com
+travessão, e "entre X e Y" quebrado em duas linhas. As três são acusadas.
+
+**Contribuição da folha de fatos** (`paper/FATOS_VERIFICADOS.md`, gerada por
+`pipeline/04_figures/fatos_verificados.py`, agora no Makefile): cada número do artigo sai do
+CSV com **a estatística que ele é** e uma linha "**Como escrever**" que diz o que pode e o
+que não pode ser afirmado sobre ele. É a resposta estrutural ao defeito que reprovou quatro
+vezes — o redator da Fase 5 consulta o disco, não a memória do orquestrador.
+
+Estado: **104 contratos**, `ruff` limpo, manifesto com 237 artefatos.
+
+### 4-11 · Sexta reprovação — sete achados, e um erro relacional dentro da folha antirrelacional
+
+O portão (Fable 5.1) devolveu sete defeitos, todos reais. Os sete corrigidos:
+
+1. **`docs/ADR/0011:142`** afirmava no presente "a acurácia do usuário continua
+   **0,27–0,63**", sem mencionar o `0014`, e o texto ia íntegro ao `metodologia.json`.
+   Recebeu marca de supersessão — preservando o que o item afirma de verdadeiro (que a
+   acurácia **não mudou** com a correção da pegada) e marcando o número como anterior.
+2. **Sexta vacuidade:** `PADRAO_FAIXA` não casava ênfase Markdown — `"entre **37 % e 63 %**"`
+   dava zero. Passei a **normalizar a marcação** antes de casar, em vez de enumerá-la.
+3. **Faixa em decimal sem `%`** (`0,27–0,63`), a forma dos ADR, também escapava.
+4. **A primeira vacuidade sobrevivia no segundo contrato:** `test_razao_teto_piso` ainda
+   varria linha a linha, cinco correções depois de eu ter diagnosticado isso no primeiro.
+   Passou a varrer por janela.
+5. **Truncamento que alterava critério:** `t[:160]` gravava `F7_loo_desloca_mais_de_5` onde
+   o CSV diz `F7_loo_desloca_mais_de_50pct`. **Truncar um critério muda o critério.**
+6. **`32–42 %` codificado no gerador**, contra a própria docstring dele. Passou a ser
+   calculado dos dois lados da envoltória — recalculado: 32,2 % e 42,1 %.
+7. **`FATOS_VERIFICADOS.md` sem proveniência.** Fragmento criado, consolidados regerados.
+
+**O achado que mais importa é o 4º do portão, e é sobre a folha de fatos.** Ela dizia que os
+quatro painéis caem "porque o placebo espacial mostra a mesma quebra em capitais sem
+carvão". Verdadeiro em 2011 e 2016; **falso em 2005 e 2022**, onde P1 é *não estimável*.
+Ou seja: **o arquivo que criei para impedir afirmação relacional errada continha uma.**
+Generalizei o motivo de duas quebras para as quatro. Agora o motivo é lido do CSV por
+quebra, e a folha imprime a tabela de P1 antes de dizer qualquer coisa sobre ela.
+
+Dois falsos positivos honestos apareceram ao apertar o contrato, e ambos ensinam:
+`98,1 %–99,4 %` é a **acurácia global** de um classificador nulo, não comissão — exigiu
+excluir grandeza concorrente no contexto imediato; e `"até 3 anos de distância"` não é
+razão — exigiu marca de razão colada ao número. Um contrato que acusa a grandeza errada
+comete o mesmo erro relacional que existe para pegar.
+
+Verificado por reintrodução em **quatro formas de escrever**: "de X a Y", "X–Y" com
+travessão, "entre **X e Y**" com ênfase, e quebrado em duas linhas. As quatro acusadas.
+
+Estado: **104 contratos**, `ruff` limpo, 20 fragmentos de proveniência.
+
+### 4-12 · Sétima reprovação — código morto num contrato, que é pior que contrato ausente
+
+O portão achou dois defeitos, ligados, e calibrou bem: separou uma folga sem consequência
+e disse que não contava.
+
+**`PADRAO_DECIMAL` estava definido e nunca ligado ao laço.** Eu o escrevi na sexta passagem
+para cobrir a forma `0,27–0,63` — a forma dos ADR —, compilei, e **nunca o usei**. `grep`
+achava uma única referência: a própria definição. O contrato passava dando **aparência de
+cobrir** a forma decimal.
+
+**Código morto num contrato é pior que contrato ausente:** promete verificação que não
+acontece, e a promessa desarma quem confiaria nela. As "quatro formas" que eu declarei
+verificadas em `4-11` eram todas percentuais — eu tinha testado o que o laço rodava, não o
+que eu tinha escrito.
+
+**A instância viva que ele escondia:** `docs/ADR/0007:92` afirma no presente "a acurácia do
+usuário da classe `construido`, entre **0,27 e 0,63** — comissão alta e consistente.
+Publicado como está", sem qualquer marca de supersessão, e o texto ia íntegro ao
+`metodologia.json` servido ao usuário. Terceiro ADR com o mesmo problema, depois de 0009 e
+0011.
+
+Corrigido: o padrão decimal virou **teste próprio** (105 contratos agora), e o ADR 0007
+recebeu marca de supersessão preservando o que a seção afirma de verdadeiro — que o número
+que discrimina é a acurácia do **usuário**, não a global.
+
+**Dois falsos positivos ensinaram a calibrar a dispensa.** `0,87–0,997` é acurácia **global**
+e exigiu alargar a exclusão de grandeza concorrente. E o **próprio `docs/ADR/0014`** era
+acusado: ele escreve "0,286 a 0,625, **contra** 0,27 a 0,63 **antes**" e não se autocita
+pelo número, então a exigência de "0014 na janela" o reprovava. A dispensa passou a aceitar
+**marcador forte sozinho** (`antes`, `superado`, `reexecutado`, `contra`, `em vez de`) e a
+exigir o par só para marcadores fracos.
+
+Verificado por reintrodução nas duas formas decimais ("entre 0,27 e 0,63" e "de 0,27 a
+0,63") além das quatro percentuais.
+
+Estado: **105 contratos**, `ruff` limpo, build passando, manifesto e consolidados regerados.
+
+### 4-13 · Oitava reprovação — o achado mais importante de toda a série de portões
+
+O portão devolveu dois defeitos, separou duas folgas sem consequência (e disse que não
+contavam, como pedi), e confirmou que **não há quarto ADR** com valor obsoleto — os 15
+foram varridos.
+
+**1. O app publicava acurácia sem IC95 e sem prevalência — e isso é violação de §10.** O
+critério do `docs/ADR/0009` é explícito: acurácia por classe **com prevalência publicada
+junto**, "sem ela nenhum desses números é interpretável". O painel exibia
+`acuracia_usuario_construido` e `acuracia_global` como valores isolados; `ic95` e
+`peso_area` não apareciam em lugar nenhum do app.
+
+**Medi o que isso escondia, e é pior do que o portão relatou.** Os IC95 são de ±0,198 a
+±0,218 e a prevalência da classe é de 0,5 % a 1,9 %. Testei os **15 pares** de anos-âncora:
+
+```
+2000 [0,305–0,742]   2005 [0,405–0,812]   2010 [0,088–0,484]
+2015 [0,381–0,801]   2020 [0,258–0,695]   2025 [0,427–0,823]
+```
+
+**Nenhum dos 15 pares tem IC95 que deixe de se sobrepor.** A variação de 0,286 (2010) a
+0,625 (2025) **não é distinguível de ruído amostral** — e o app mostrava os dois números
+lado a lado no seletor de ano, convidando à leitura de que a classificação melhorou. Era o
+mesmo erro relacional das reprovações anteriores, numa forma nova: **valores cujas
+diferenças estão dentro do ruído, exibidos como se fossem distintos.**
+
+Corrigido: o painel passa a mostrar `± IC95` e a prevalência, com aviso em PT e EN dizendo
+que nenhum par de anos é separável e que a faixa deve ser lida como **uma só para toda a
+série**, nunca como melhora ou piora.
+
+**2. `PROVENANCE.md` sem os artefatos da Fase 4.** Fragmento criado (21 fragmentos agora),
+cobrindo `data/processed/app/` — reprojeção, truncamento de precisão, simplificação com
+erro de área medido de 0,0000 %, e a decisão de entregar `cultivo_sequeiro` como grade —,
+o gerador da metodologia, a decisão de animação, as ressalvas exibidas e **o que §6 pede e
+o app não entrega**.
+
+**Um falso positivo veio da minha própria prosa nova.** O fragmento cita comissão **e**
+churn no mesmo parágrafo, e cada teste passou a acusar a faixa do outro — dois testes
+irmãos cometendo, entre si, o erro relacional que existem para pegar. Resolvido com a regra
+**"grandeza mais próxima vence"**. Verificado depois que a desambiguação **não cegou** o
+contrato: as cinco formas de reintrodução continuam sendo acusadas.
+
+Estado: **105 contratos**, `ruff` limpo, build passando, 21 fragmentos, 237 artefatos.
+
+### 4-14 · Fase 4 APROVADA na nona passagem
+
+Verificado em disco pelo portão, com recálculo próprio: IC95 e prevalência na tela, aviso em
+PT e EN, CSV do app byte-idêntico ao de `data/processed/`, e os 15 pares de anos-âncora
+recalculados por ele — **nenhum separado**, confirmando o achado. `PROVENANCE.md` com 21
+fragmentos. A regra "grandeza mais próxima vence" foi testada por ele com **cinco faixas
+erradas em parágrafos mistos de comissão e churn**: as cinco acusadas, e o controle com
+faixas corretas não acusado. A desambiguação não cegou o contrato.
+
+Duas folgas reportadas como sem consequência, e a primeira merece registro: o aviso diz
+"IC95 de ±0,20" e o medido é ±0,198 a ±0,218 — **arredondamento que torna a conclusão mais
+fraca do que o dado permite**, não mais forte. É o sentido certo de errar.
+
+**Balanço das nove passagens.** Oito reprovações, **todas com defeito real e nenhuma
+performática**. A contagem por origem é o que importa: das seis instâncias da classe
+relacional, **todas vieram do orquestrador**; dos cinco contratos frouxos, **todos foram
+escritos por ele para pegá-la**. O app entregue pelos agentes tinha defeitos de forma; os
+defeitos de conteúdo eram meus.
+
+**As formas de vacuidade encontradas, em ordem:** varredura linha a linha; parágrafo que
+virava arquivo inteiro; vocabulário do conceito; pontuação da faixa; vocabulário do
+marcador; ênfase Markdown; código morto nunca ligado ao laço; grandeza concorrente acusada
+no lugar da certa; e exclusão mútua entre testes irmãos. Nove formas, um só erro de fundo:
+**cobrir a forma em que o defeito apareceu, em vez da classe a que ele pertence.**
+
+**O achado substantivo da fase** não é nenhum desses: é que os **15 pares de anos-âncora da
+acurácia têm IC95 sobrepostos**, de modo que a série de acurácia não sustenta nenhuma
+leitura de tendência. Isso não estava em ADR nenhum e não foi encontrado por contrato —
+apareceu porque o portão perguntou por que o IC95 não estava na tela.
+
+Estado: **105 contratos**, `ruff` limpo, build passando, 15 ADRs, 21 fragmentos,
+237 artefatos. **Fases 0, 0', 1, 2, 2b, 3 e 4 aprovadas.**
+
+### 5-01 · Artigo escrito — e a extensão excede o alvo, declaradamente
+
+`paper/artigo.md` (seções 1–9 + apêndices A–E) e `paper/apendice_reprodutibilidade.md`.
+105 contratos passam **com o artigo em disco**, inclusive o relacional que varre `paper/`.
+
+**Conferi na fonte os números que mais importavam**, não por amostragem cega: população
+307.338 (observado) e 460.248 (modelado) com os selos certos; várzea 650,183 → "650,2 km²";
+e a fração herdada da catraca (0 → 18,0 %, 8,69 de 48,29 km²) batendo com o `docs/ADR/0013`.
+
+**Três correções vieram dos próprios agentes, sem que ninguém pedisse.** A segunda invocação
+achou que a seção 5.1 dizia "três pontos" onde a matriz de confusão registra **cinco**, e
+corrigiu. A terceira sinalizou divergência entre "15 pré / 5 pós" na seção 5 e "18 / 5" na
+Tabela B1 — **conferi no CSV: a seção estava certa, a tabela errada**, e corrigi. A quarta
+me corrigiu: eu havia atribuído 1.884 palavras a uma subseção que tem ~180, porque minha
+medição por seção somava até o cabeçalho seguinte e misturava com a seção 8. **A instrução
+que passei estava baseada num erro meu de medição.**
+
+**Um `p` sem remissão ao piso, achado por varredura própria.** Dos cinco `p` do corpo,
+quatro remetiam a 5.1e; o quinto era `p = 0,50` — **um p por permutação**, o caso em que a
+nota mais importa, porque 0,50 é 3/6 num teste cujo piso é 1/6. Acrescentada a remissão;
+agora são zero.
+
+**Extensão: 13.835 palavras de corpo, contra o alvo de 8.000–10.000 de §7.** A realocação
+para o Apêndice E funcionou (16.635 → 13.899), mas a consolidação de redundância rendeu
+só 64 palavras: o preâmbulo 5.1 custa quase o que as remissões economizam.
+
+**Decisão: exceder declaradamente, e não comprimir.** O corpo responde a **oito** perguntas
+de pesquisa e **seis** hipóteses, com resultado central negativo — e resultado negativo vive
+das qualificações. Cortar as ~3.800 palavras restantes exigiria esvaziar a seção 4 abaixo do
+que o §6-A obriga, ou suprimir números que sustentam vereditos. **Trocaria rigor por
+formato.** O §6-A já estabelece o princípio para o apêndice; aplico o mesmo ao corpo, com a
+diferença declarada em vez de silenciada — que é o oposto de cumprir o número escondendo o
+custo.
+
+### 5-02 · Fase 5 APROVADA na primeira passagem
+
+O portão recomputou **mais de 30 afirmações numéricas direto de `data/processed/`**, não da
+folha de fatos — acurácia por ano, churn por par, razão teto/piso (mediana **e** máximo),
+os quatro b2/IC95/p, a decomposição em pontos percentuais de 2021→2022 por classe, e as
+séries cidade × resto × retângulo. **Todas batem**, inclusive sinais e a distinção
+piso/teto. As 17 versões do apêndice batem literalmente com o `uv.lock`.
+
+Nenhuma instância de: quebra de 2022 atribuída à mina; H4/H5/H6 reabilitadas;
+`cultivo_sequeiro` como cropland confirmado; decomposição publicada como valor único. Os
+quatro painéis aparecem com critérios F **distintos e não generalizados**. Declaração de
+ética presente. Referências não verificáveis ficaram em `REFS_A_CONFIRMAR.md` e não são
+citadas no corpo.
+
+**Aprovar na primeira passagem, depois de a Fase 4 reprovar oito vezes, tem uma explicação
+que não é sorte.** A Fase 4 gastou oito rodadas descobrindo que o defeito dominante era
+**afirmação relacional vinda da memória do orquestrador**, e produziu duas defesas:
+`paper/FATOS_VERIFICADOS.md`, que entrega cada número com **a estatística que ele é** e uma
+linha "Como escrever"; e `test_afirmacoes_relacionais.py`, que varre `paper/` em seis formas
+de escrita. O artigo foi escrito **dentro** dessas defesas. O custo das oito reprovações
+foi pago aqui.
+
+**A extensão excede e o portão sustentou o argumento**, com o raciocínio certo: os números
+que sustentam vereditos negativos — acurácia por classe, catraca, churn, piso de p, as
+ressalvas de 5.1 — são **precisamente o material exigido por §6-A e §10**, e cortá-los
+custaria rigor, não formato. Desvio declarado, não escondido.
+
+Estado: **105 contratos**, `ruff` limpo, 15 ADRs, 21 fragmentos, 237 artefatos.
+**Fases 0, 0', 1, 2, 2b, 3, 4 e 5 aprovadas.** Restam a 6 (revisão adversarial) e a 7
+(fechamento de custo).
+
+### 4-15 · O app subiu num servidor local — e o mapa estava vazio
+
+O usuário pediu para iniciar a aplicação. **Nove passagens de portão, e ninguém tinha aberto
+o app num navegador.** Dois defeitos apareceram no primeiro minuto.
+
+**1. `glyphs: undefined` no estilo do MapLibre.** A chave estava **presente com valor
+indefinido**, e o validador rejeita isso (`glyphs: string expected, undefined found`),
+impedindo o evento `load`. Corrigido **omitindo a chave**, não zerando-a.
+
+**2. O defeito real: o Web Worker do MapLibre não carregava.** Depois do primeiro conserto o
+estilo carregou, mas o mapa continuou vazio. Interroguei a instância pelo fiber do React:
+
+```
+styleLoaded: false   loaded: false
+sources: [src-agua, src-urbano, src-industrial, ...]   ← registradas
+isSourceLoaded(src-urbano): false                       ← nunca carrega
+queryRenderedFeatures(): 0        querySourceFeatures(): 0
+erros capturados: []                                    ← NENHUM
+```
+
+A causa estava no log do servidor, que eu tinha visto e subestimado: *"The file does not
+exist at `.../deps/maplibre-gl-worker.mjs` ... Try adding it to `optimizeDeps.exclude`"*. O
+MapLibre parseia GeoJSON **num worker**; o otimizador de dependências do Vite o quebra, e
+como o worker apenas **não responde**, não há exceção, não há evento `error`, e
+`npm run build` passa.
+
+**É por isso que nove portões não pegaram:** todos liam código e rodavam o build. O build
+passava. O defeito só existe em tempo de execução, e só aparece quando alguém olha a tela.
+Corrigido com `optimizeDeps.exclude: ['maplibre-gl']` e limpeza do cache. Verificado:
+**470 feições renderizadas**, todas as fontes carregadas.
+
+**3. A rosa de expansão estava em branco, por erro relacional.** O componente buscava
+`ano === 2025` **e** `frac_novo_setor_NN_desde_2000` — combinação que **não existe**: cada
+ano-âncora nomeia a variável pelo âncora **anterior** (2025 traz `desde_2020`). O `find`
+devolvia `undefined`, o array saía vazio, e o gráfico não desenhava nada — de novo **sem
+erro**. E o título afirmava "desde 2000" sobre um dado que mede 2020→2025.
+
+Corrigido derivando o par (ano, base) **do próprio dado**, com o título e a nota de método
+declarando o intervalo **real**. Rotular "2000→2025" um dado de 2020→2025 seria a mesma
+classe relacional que reprovou a Fase 4 oito vezes: número certo, período errado.
+
+**A lição de método é sobre o portão, não sobre o app.** Um portão que lê código e roda
+build verifica o que o programa **diz**; só abrir a tela verifica o que ele **faz**. Os três
+defeitos eram invisíveis a leitura e a `npm run build`, e todos os três eram fatais para o
+produto entregue ao usuário.
+
+### 4-16 · Topônimos, malha viária e aba do artigo — entregues, com um defeito aberto
+
+**Coleta OSM (ODbL, nível A):** 23 topônimos (Tete, Moatize, Cateme, Mwaladzi, Benga, …),
+219 vias (a **N7** entre as referências; nenhuma `motorway` existe na AOI) e 57 segmentos de
+ferrovia (linha do Sena). Todos em WGS84 sem membro `crs`, com sidecars e a atribuição
+`© OpenStreetMap contributors` registrada.
+
+**Verificado NA TELA, com número — não por leitura de código:**
+
+| camada | feições renderizadas |
+|---|---|
+| `layer-urbano` | 294 |
+| `layer-osm-vias` | 177 |
+| `layer-industrial` | 70 |
+| `layer-agua` | 64 |
+| `layer-osm-ferrovia` | 52 |
+| `layer-reassentamento` | 42 |
+| **total** | **699** |
+
+Mais 23 marcadores de topônimo em DOM (sem `symbol`, porque o estilo não tem `glyphs`) e a
+atribuição ODbL no controle do mapa. **Aba Artigo**: gerada de `paper/artigo.md` por
+`pipeline/05_app/gerar_artigo.py`, com carimbo `gerado_por`, 13 tabelas, 68 títulos, sumário
+navegável, link para baixar o `.md`, e o piso p = 1/6 presente no texto.
+
+**DEFEITO ABERTO — mapa vazio ao NAVEGAR entre rotas.** `MapaTemporal` é montado por duas
+rotas. Ao sair de `/` para `/#/narrativa`, o segundo mapa sobe com **5 camadas em vez de
+10**, `isStyleLoaded() === false` e zero feições — **sem erro, sem evento `error`**. Em
+carga **direta** de `/#/narrativa` funciona. O `map.remove()` do desmonte libera o pool
+global de Web Workers do MapLibre e o mapa seguinte fica sem quem parseie GeoJSON.
+
+**Duas tentativas de correção falharam e foram revertidas**, ambas piorando o estado:
+`prewarm()` (a API documentada para exatamente este caso) passou a quebrar **também** o
+primeiro mapa; e reaproveitar uma instância única entre rotas, reancorando o elemento,
+quebrou o primeiro mapa igualmente. Revertidas as duas — o repositório está no melhor
+estado conhecido, com a primeira rota íntegra.
+
+**Erro meu de medição, registrado porque me custou várias rodadas:** medi
+`queryRenderedFeatures()` cedo demais e li zero onde havia 699. O parse das camadas leva
+mais de dez segundos. Concluí "quebrado" de uma medição prematura **três vezes** antes de
+perceber — a mesma pressa que venho cobrando dos agentes.
+
+**Contorno para o usuário:** recarregar a página na rota desejada. **Próximo passo:**
+investigar o ciclo de desmonte com o StrictMode do React 19 desligado, para separar o efeito
+do duplo-mount do efeito do pool de workers.
+
+**Defeito adicional anotado:** o build de produção servido por `vite preview` acusa
+`Failed to load module script ... MIME type "text/html"` — problema de caminho-base no
+artefato construído. Não afeta o dev; afeta um deploy estático.
+
+Estado: **105 contratos**, `ruff` limpo, build passando.
+
+### 4-17 · Aeródromo de Tete no mapa — e a coleta OSM vira reprodutível
+
+O usuário pediu o aeroporto de Tete no mapa. Ele não estava na coleta anterior, e ao ir
+buscá-lo encontrei uma **lacuna de reprodutibilidade**: as três camadas de contexto
+(topônimos, vias, ferrovia) tinham sido baixadas por consultas Overpass **avulsas**, sem
+script. Os GeoJSON estavam corretos e com sidecar, mas §10 exige que `make all` reproduza os
+artefatos em ambiente limpo — e uma coleta que só existe no histórico de uma sessão não
+reproduz.
+
+Escrito `pipeline/00_fetch/fetch_osm_contexto.py`, cobrindo as **quatro** camadas, com a
+consulta Overpass gravada no `.meta.json` de cada arquivo, idempotência por camada, e
+etiqueta da API respeitada (uma consulta por vez, pausa de 5 s, `User-Agent` identificando o
+estudo). Ligado ao alvo `app-data` do Makefile.
+
+**Aeródromo obtido:** polígono do sítio, com `name=Tete`, **IATA `TET`**, **ICAO `FQTT`**, e
+a pista **01/19** — duas feições, em ~33,637 / −16,122.
+
+**Decisão de desenho:** área e pista são **camadas separadas** do MapLibre, filtradas por
+`aeroway` sobre o mesmo source. Comunicam coisas diferentes — a área é uso do solo e compete
+visualmente com `urbano` e `industrial` ao redor, a pista é a infraestrutura. A área vai com
+opacidade 0,18: é contexto e não pode competir com camada medida.
+
+**Defeito que quase entrou:** o alternador de visibilidade mapeava uma camada da interface
+para **uma** camada do MapLibre. Com o aeródromo sendo duas, desligar o toggle deixaria a
+pista visível com a área apagada — estado que o usuário não pediu e não conseguiria
+desfazer. Corrigido antes de ir para a tela.
+
+**Verificado na tela:** `styleLoaded: true`, todas as 10 fontes carregadas, **1.408 feições**
+renderizadas, sendo **1 de área e 1 de pista** do aeródromo. Manifesto com 241 artefatos.
+
+**Nota de medição, terceira vez que me pega:** o parse completo das camadas leva **mais de
+40 segundos** neste ambiente. Medi cedo demais duas vezes nesta rodada e li zero onde havia
+1.408. Um "está quebrado" dito a partir de medição prematura é tão errado quanto um número
+inventado — e já me custou uma reversão indevida ontem.
+
+Estado: **105 contratos**, `ruff` limpo, build passando, 241 artefatos.
+
+### 5-03 — O mapa nunca funcionou: worker do MapLibre em 404 silencioso (2026-09-09)
+
+**Medido, não inferido.** Na verificação em tela da entrega do agente de app, o mapa
+pintava só o fundo. `map.loaded()` falso, `isSourceLoaded()` falso em **todas** as 11
+fontes, `queryRenderedFeatures()` zero, **nenhum erro de console, nenhum evento `error`,
+`npm run build` verde**. A rede mostrou a causa:
+
+    GET http://localhost:4174/assets/maplibre-gl-worker.mjs   (sem resposta)
+
+O MapLibre monta a URL do worker sozinho, com
+`new URL("./maplibre-gl-worker.mjs", import.meta.url)`. No build de produção
+`import.meta.url` é `/assets/index-<hash>.js`, então a URL vira
+`/assets/maplibre-gl-worker.mjs` — arquivo que o Vite **nunca emite**. Em dev o arquivo
+existe, mas o Vite lhe injeta `import "/@vite/client"`, que quebra dentro de um Worker.
+Duas causas distintas, o mesmo sintoma mudo, em ambos os modos.
+
+**O `optimizeDeps.exclude: ['maplibre-gl']` de `app/vite.config.js` era curativo sobre a
+mesma ferida**, não a correção: ele trocava a URL quebrada (`/deps/...`) por outra URL
+quebrada (`/node_modules/...` com `/@vite/client` injetado). O comentário que o
+acompanhava descrevia o sintoma corretamente e a causa erradamente.
+
+Duas tentativas que **não** resolvem, e por quê:
+- remover o `exclude`: `import.meta.url` passa a ser `/deps/`, e o worker também não está lá;
+- `?url` no worker: o Vite copia o arquivo verbatim, mas ele importa
+  `./maplibre-gl-shared.mjs` por caminho relativo — que o Vite emite com hash e outro
+  nome. Worker emitido (19 kB), dependência ausente.
+
+**Correção:** `app/scripts/sync-maplibre-worker.mjs` copia `maplibre-gl-worker.mjs` **e**
+`maplibre-gl-shared.mjs` para `app/public/vendor/maplibre/`, com os nomes originais e lado
+a lado; `MapaTemporal.jsx` chama
+`setWorkerUrl(`${import.meta.env.BASE_URL}vendor/maplibre/maplibre-gl-worker.mjs`)`.
+`public/` é servido verbatim em dev e copiado tal e qual no build — é o único caminho
+idêntico nos dois modos. Ligado a `predev` e `prebuild`, logo entra em `make app`.
+
+Com a causa corrigida, o `optimizeDeps.exclude` **foi removido** de `app/vite.config.js`:
+verificado na tela, com cache do otimizador limpo, que as 11 fontes carregam e o mapa
+pinta completo sem ele. Um paliativo que sobrevive à correção da causa vira armadilha —
+o comentário que o acompanhava descrevia uma causa que não era a verdadeira, e o próximo
+leitor teria acreditado nele.
+
+**Verificado na tela, com a aba em foco:** `map.loaded()` verdadeiro, as **11 fontes**
+carregadas, e por camada — urbano 624, industrial 229, reassentamento 106, água 184,
+vias 204, ferrovia 59, pista do aeródromo 1, adensamento **449** (443 em disco; as 6 a
+mais são feições partidas na fronteira de tile, contadas duas vezes por
+`queryRenderedFeatures`). Distribuição por classe na tela igual à do disco:
+esparso_estável 178, expansão_nova 107, adensando 102, consolidado 31, pegada_industrial 25.
+
+**Armadilha de instrumentação, registrada para não se repetir:** com o painel do navegador
+**oculto**, o `requestAnimationFrame` fica suspenso, o MapLibre não roda o loop de render e
+as fontes **nunca** saem de `isSourceLoaded() === false`. Três medições desta sessão leram
+zero por esse motivo, não por defeito do app. Toda medição de mapa exige a aba **em foco**
+— é a quarta vez que este estudo mede antes de a condição de medição existir.
+
+### 5-04 — Vila de Moatize: a banda publicada excluía a única variante que validava (2026-09-09)
+
+O agente entregou a estimativa com **valor central 29.009** (peso = fração de construído da
+classificação própria) e banda 15.192–29.009, publicando honestamente o desvio da validação
+cruzada em Cidade de Tete: **−40,4 %** frente aos 307.338 observados. O relatório atribuía o
+desvio ao peso.
+
+O orquestrador **mediu antes de aceitar**, sobre a mesma grade e o mesmo cluster:
+
+| variante | estimativa em Tete | desvio |
+|---|---:|---:|
+| multiplicador de fração (própria) | 183.036 | −40,44 % |
+| multiplicador de fração (GHSL) | 78.512 | −74,45 % |
+| pertença binária (fração > 0) | 229.867 | −25,21 % |
+| pertença (fração ≥ mediana) | 152.462 | −50,39 % |
+| **sem peso de construído** | 312.300 | **+1,61 %** |
+
+A hipótese inicial do orquestrador — "fração 0–1 como multiplicador atenua em vez de
+redistribuir" — **só se confirma em parte**: a pertença binária não multiplica nada e ainda
+assim perde 25 %. O que a medição mostra é outra coisa, e mais forte: **o GRID3 já é um
+produto dasimétrico**, calibrado ao Censo 2017. Pesá-lo outra vez pela nossa máscara é
+restringir duas vezes, e toda forma de restringir descarta gente que o produtor já tinha
+posto onde ela está. O que funciona é **particionar**, não pesar.
+
+Consequência: a banda publicada era composta **só de variantes atenuadas**, e a variante que
+valida estava rotulada "NÃO publicável, é diagnóstico". A banda excluía a resposta.
+Reenquadrada — teto = soma sem peso (valida a +1,61 %, inclui área rural do cluster, logo é
+limite superior); piso = a menor das restritas; **nenhum valor central**. `docs/ADR/0017`.
+
+**Defeito residual encontrado na entrega já corrigida:** o `selo` de linha derivada era
+deduzido do **ano** (`ano == 2025 → modelado`). A regra coincidia com a correta enquanto a
+única origem de valor modelado fosse a projeção do INE — e errou no primeiro caso em que não
+era: o `indice_base_2017` da Vila saiu **observado** sobre um valor **modelado**. Corrigido na
+regra (`_pior_selo` sobre as pontas), não no caso; contrato novo verificado reintroduzindo o
+defeito exato sobre cópia, com o artefato vivo restaurado em seguida.
+
+### 5-05 — Duas correções de apresentação que o dado novo exigiu (2026-09-09)
+
+1. **Aviso da Vila no painel "como ler"** (PT/EN): uma unidade cujo valor é o teto de uma
+   banda entrava na primeira tela sem ressalva. A ressalva completa existia no
+   `ProvenanciaNumero` da tabela — mas quem lê o gráfico não abre a tabela.
+2. **Legenda derivada dos dados de cada gráfico.** A Vila aparecia na legenda do CAGR e do
+   ritmo relativo **sem barra nenhuma** — tem um único ano, logo nenhuma taxa. Legenda que
+   nomeia unidade sem barra lê-se como medição **faltante**, quando o que existe é medição
+   **impossível**. Verificado na tela: a Vila está na legenda do índice e ausente das outras
+   duas (9 barras / 4 unidades no CAGR; 6 barras / 3 no ritmo).
+
+Também neste passo, dois defeitos **do próprio orquestrador**, ambos na folha de fatos que
+ele escreveu para impedir exatamente esta classe de erro: (i) dar os dois extremos da
+sensibilidade e a seguir "razão máxima 2,2931", que é a razão **frente à base** — a razão
+entre extremos é 3,578; (ii) rotular "9 de taxa/índice" uma contagem que só conta CAGR.
+Ambos corrigidos com os dois números nomeados, cada um com o seu referente.
+
+### 5-06 — Portões A e B reprovam; treze achados, e os piores são do orquestrador (2026-09-09)
+
+**Frente B — quatro achados, todos confirmados em disco antes de delegar correção.**
+
+O mais grave é a **oitava ocorrência do defeito de assinatura deste estudo**: uma constante
+aplicada a uma população onde ela não vale. `adensamento.py:851` calcula a área de **toda**
+classe como `n_células × 0,0576 km²`. Isso é verdade para as classes 1–6, que por construção
+só contêm células cheias (`n_pixels_30m == 64`), e é **falso justamente para
+`fora_de_dominio`**, que é o conjunto das células **parciais** da borda. Medido no raster de
+30 m: o código 0 ocupa 6.432 pixels = **5,7888 km²**; o meta publica **15,4368 km²** — errado
+por um fator de 2,67. E o repositório já tinha o valor certo: `config/plausibilidade.yaml:122`
+declara AOI = 2.506,55 km² = 2.500,76 + 5,7888, enquanto a Emenda 1 do ADR afirma 2.516,20 km²
+e contradiz o próprio config.
+
+O contrato T3 não pegou porque comparava a soma com `2500.76 + areas["fora_de_dominio"]` e com
+`163×268×0,0576` — **as duas expressões são tautológicas com o defeito**. É a segunda vez nesta
+sessão que um contrato é escrito na mesma álgebra do erro que deveria detectar.
+
+Os outros três: `PROVENANCE.md` sem entrada para nenhum artefato da frente (e o app gera a
+página de metodologia dele); o ADR define o voto sem o `dominio_ocupado &` que o código aplica,
+deixando 13 feições com `concordancia` não reconstruível pela fórmula publicada; e a guarda
+contra zero estrutural é **opt-in** — `registrar()` continua pública e é chamada direto em oito
+lugares, com T12 a verificar duas variantes **por nome**.
+
+**Frente A — nove achados. Quatro são do orquestrador**, e um deles é o mais instrutivo da
+sessão: no bloco da Vila em `fatos_verificados.py` — o arquivo cujo cabeçalho manda não digitar
+número — os valores "+1,61 %", "307.338" e "25 % a 74 %" estavam **digitados na prosa**, com
+uma variável `v = vila[0]` atribuída e nunca usada. Um gerador que digita o número não é
+gerador: é o mesmo defeito com uma camada a mais de aparência de rigor.
+
+Ao corrigi-lo, o orquestrador introduziu e removeu um segundo defeito da mesma família: derivar
+a coluna de desvio como `desvio_pct_{metodo}` presume uma igualdade que não vale
+(`diagnostico_sem_peso_construido` publica em `desvio_pct_diagnostico_sem_peso`), e a variante
+**que valida** foi descartada **em silêncio** — o bloco inteiro desapareceu do arquivo sem uma
+linha de erro. Agora o casamento é por prefixo e uma variante que não casa **levanta exceção**.
+Omitir em silêncio é a mesma patologia do zero estrutural da Frente B.
+
+Os demais: proveniência que documenta uma regra de selo diferente da executada; selo digitado
+no JSX com referente errado (atribui a 2025 um ponto de 2017) e um "derivado" que não é selo
+válido; a Vila plotada como série de um ponto; contratos com 307338/460248/260843/349103
+codificados; e "cruzamento por nome normalizado" implementado como igualdade literal.
+
+### 5-07 — Fechamento dos achados de app; e uma defesa apanha o orquestrador a tempo (2026-09-09)
+
+Os três agentes de correção morreram no limite de sessão a meio da edição. O estado em disco
+ficou **coerente e informativo**: o agente da Frente B chegara a escrever os **contratos** (T3
+recontando a área do raster de 30 m, T14 varrendo toda linha de sensibilidade) e as correções
+em `adensamento.py`, mas não reexecutara o script. Os dois testes que falhavam falhavam **pelo
+motivo certo** — apanhando os defeitos reais. Bastou reexecutar: `fora_de_dominio` passou de
+15,4368 para **5,7888 km²** e a soma para **2.506,5504 km²**, que confere com
+`config/plausibilidade.yaml` — o arquivo que já trazia o valor certo enquanto o ADR afirmava
+outro.
+
+**A fusão 3,7–3,8 %.** A frase "sub-enumeração de 3,7–3,8 %" aparecia em sete lugares e
+apresentava como **faixa de incerteza de uma grandeza** duas taxas de **unidades diferentes**:
+3,7 % é a omissão nacional, 3,8 % é a da província de Tete (`PROVENANCE.md` 1432-1436). Para as
+unidades deste estudo, todas em Tete, a pertinente é 3,8 %. É a mesma família da mediana lida
+como máximo e da acurácia lida como comissão.
+
+**E ao corrigi-la o orquestrador introduziu um defeito relacional — apanhado pelo próprio
+contrato, antes de qualquer portão.** Mencionar a taxa nacional dentro da frase fez a unidade
+mais próxima antes do CAGR de 5,18 %/ano passar a ser "Moçambique" em vez de "Cidade de Tete";
+`test_taxa_de_crescimento_declarada_bate_com_a_fonte` reprovou. É a primeira vez nesta sessão
+que uma das defesas apanha um erro do orquestrador **antes** de um revisor humano ou agente —
+o contrato de CAGR, escrito na entrada 5-02 depois de três defeitos seus, pagou-se.
+
+**Contrato de área estendido à forma tabular.** O portão da Frente C mostrou que a exigência de
+`km²` colado ao número tornava o contrato **cego à Tabela 6** — numa tabela Markdown a unidade
+vive no cabeçalho da coluna, e a Tabela 6 é o único lugar do artigo onde a área aparece como
+número. Agora o contrato aceita a unidade colada **ou** no cabeçalho do bloco de tabela a que a
+linha pertence. Verificado por reintrodução em quatro formas, sobre cópia: prosa nua reprova,
+tabela nua reprova, tabela com ressalva passa, tabela sem unidade nenhuma passa.
+
+**Lado do app, verificado na tela pelo orquestrador** (o agente usou ferramenta própria):
+gráfico de índice com 4 linhas e a Vila **ausente** (tem um único ponto, logo nenhuma série);
+CAGR com 9 barras e 4 unidades; ritmo relativo com 6 barras e 3 unidades; selos agora
+**derivados das linhas plotadas** ("observado / modelado", sem a atribuição errada a 2025 e sem
+o inválido "derivado"); aviso da Vila com piso, teto e desvios lidos do CSV e cada um com
+tooltip de proveniência; zero erros de console. `grep` confirma: nenhum desses números
+sobrevive digitado em `i18n.jsx` ou no JSX.
+
+### 5-08 — Fechamento dos achados de pipeline; e a faixa fundida em cascata (2026-09-09)
+
+Os sete itens de pipeline foram fechados: `PROVENANCE.md` com fragmentos das três frentes e o
+montador **ligado ao `Makefile`** (alvo `provenance`, dentro de `all` e `app-data`) — antes ele
+existia mas nunca era chamado, e `make all` não regenerava proveniência nenhuma; a regra de voto
+do ADR 0016 completada com `dominio_ocupado` e o contrato T13 reconstruindo `concordancia` dos
+atributos; a prosa geradora do selo corrigida para `_pior_selo`; os literais de percentagem em
+`populacao_vila_moatize.py` passados a formatação em tempo de execução; os valores 307338 /
+460248 / 260843 / 349103 removidos de `test_demografia.py` e lidos do HDX; e a normalização de
+nome implementada de verdade em vez de igualdade literal.
+
+**A faixa fundida 3,7–3,8 % estava em cascata, não em sete lugares.** Corrigi-la no artigo e nos
+scripts não bastou: ela sobrevivia em `data/provenance_parts/demograficas.md` (que alimenta
+`PROVENANCE.md`, que alimenta `app/src/content/metodologia.json`, que o app serve ao leitor) e em
+`data/DATA_AUDIT.md` (mesmo caminho) e em `data/DATA_DICTIONARY.md`. Foi preciso corrigir **na
+fonte de cada cascata** e reexecutar `consolidar_registros.py`, `gerar_metodologia.py` e
+`gerar_artigo.py`. É a mesma lição da entrada 4-06, quando escopar o contrato à instância deixou
+o defeito reincidir uma camada abaixo — desta vez o caminho tinha três camadas.
+
+Ao rastrear a cascata apareceu um fato que a prosa escondia: `config/study.yaml` guarda
+`subenumeracao_pct: 3.7` — a taxa **nacional** —, aplicada por consistência também aos controles,
+que estão noutras províncias. A escolha é defensável e agora está escrita; antes, a prosa dizia
+"3,7-3,8 %" e o config dizia 3,7, e ninguém podia saber qual era qual. Varredura final no
+repositório: **zero** ocorrências da faixa fundida.
+
+### 5-09 — Camadas ligadas por padrão (decisão do usuário, 2026-09-09)
+
+O app passa a abrir com **todas** as camadas ligadas, exceto `cultivo_sequeiro`. A exceção não é
+estética: é a única camada cujo próprio rótulo diz "vegetação sazonal (**não confirmada** como
+cultivo)" — a fenologia de sequeiro não se separa de vegetação sazonal não cultivada com a
+validação disponível, e ligá-la por padrão apresentaria como cultivo o que o estudo declara não
+ter confirmado.
+
+`adensamento_2020_2025` entra ligada e é **modelada**: ligá-la por padrão aumenta a exposição da
+ressalva (selo no rótulo, na legenda e no aviso), não a dispensa.
+
+Verificado na tela, aba em foco, após o parse completo: 11 fontes carregadas, e por camada —
+adensamento 449, cultivo irrigado 1.279, várzea 136, vias 151, ferrovia 40, água 35, urbano 84,
+industrial 32, reassentamento 19, aeródromo 1+1; `cultivo_sequeiro` em `visibility: none` e zero
+feições. `npm run build` passa; 146 testes; ruff limpo.
+
+## 2026-09-09 — Fase 5 fechada; início da Fase 6 (Revisão adversarial)
+
+Fase 5 (artigo) aprovada em 5-02 na primeira passagem; 5-03 a 5-09 fecharam sete achados de
+reprodução cega informal (mapa quebrado em produção, banda da Vila de Moatize, faixa de
+sub-enumeração fundida em cascata em três camadas) que a Fase 5 formal não cobria, mais a
+decisão do usuário sobre camadas padrão do app. Nenhum item aberto ao final de 5-09.
+
+`BUDGET.md` e o prompt-mestre (§9) não registram Fase 6 iniciada. É o próximo passo do plano
+de execução. Delegando ao `revisor-adversarial` (T4/`fable`, `maxTurns` 20): lista de
+fragilidades com gravidade/evidência/custo de correção, mais reprodução cega via `make all`
+em container limpo (`Dockerfile` na raiz) comparada aos artefatos publicados em
+`data/processed/`. Teto da fase: 350K (BUDGET.md).

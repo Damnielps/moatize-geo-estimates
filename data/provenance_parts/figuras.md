@@ -40,7 +40,7 @@ sha256 de cada insumo — este fragmento resume o que já está lá, não o subs
   aqui e registrada em `docs/ADR/`.
 - **Honestidade cartográfica (obrigatória, embutida na figura, não só no texto):**
   1. Legenda com advertência textual: a camada `urbano` tem acurácia do usuário
-     medida entre 0,27 e 0,63 por ano-âncora (`docs/ADR/0009`) — entre 37% e 73% do
+     medida entre 0,286 e 0,625 por ano-âncora (`docs/ADR/0009`) — entre 37,5% e 71,4% do
      que o mapa chama de construído não é. A camada é insumo classificado, não
      cadastro.
   2. Rodapé: a série temporal de área construída (não plotada nesta figura, que é um

@@ -81,6 +81,9 @@ PROVENANCE_FRAGMENT = REPO_ROOT / "data" / "provenance_parts" / "demografia_fase
 sys.path.insert(0, str(REPO_ROOT / "pipeline" / "01_imagery"))
 import classificacao as cls  # noqa: E402  (import depende do sys.path acima)
 
+sys.path.insert(0, str(REPO_ROOT / "pipeline" / "lib"))
+import acuracia_texto  # noqa: E402
+
 MARCADOR_INICIO = "<!-- SECAO_DEMOGRAFIA_FASE2_INICIO -->"
 MARCADOR_FIM = "<!-- SECAO_DEMOGRAFIA_FASE2_FIM -->"
 
@@ -149,9 +152,12 @@ def montar_nucleo() -> list[dict]:
     nota_2017 = (
         "Contagem residente do IV RGPH 2017 reprocessada pelo COD-PS (CC BY-IGO, nível A "
         "independente do documento do INE, que é nível C — data/DATA_AUDIT.md §0.1). NÃO "
-        "ajustada pela subenumeração de 3,7-3,8% (verificado: o total do quadro provincial "
-        "bate com a 'População Residente' não ajustada, não com o total ajustado da brochura "
-        "nacional — data/provenance_parts/demograficas.md)."
+        "ajustada pela sub-enumeração: para a Província de Tete (unidade pertinente a este "
+        "estudo, todas as suas unidades sendo em Tete) a taxa é 3,8%; a taxa nacional é uma "
+        "grandeza distinta, 3,7% — não são duas medidas da mesma coisa, e não se fundem numa "
+        "faixa (verificado: o total do quadro provincial bate com a 'População Residente' não "
+        "ajustada, não com o total ajustado da brochura nacional — "
+        "data/provenance_parts/demograficas.md)."
     )
     nota_2025 = (
         "Projeção institucional do INE, não recontagem. Método de projeção não publicado no "
@@ -490,8 +496,9 @@ def dasimetria_tete_2017() -> tuple[list[dict], np.ndarray | None, dict | None]:
                     "correlação pixel a pixel entre o peso da classificação própria e o peso "
                     "GHSL dentro do cluster de Tete. Baixa correlação indicaria que os métodos "
                     "não só discordam da área total, mas também de ONDE a população deveria "
-                    "ser alocada — a acurácia do usuário de 0,27-0,63 (ADR 0009) é a explicação "
-                    "mais provável para qualquer divergência observada aqui."
+                    "ser alocada — a comissão medida "
+                    f"({acuracia_texto.nota_comissao_construido()}) é a explicação mais "
+                    "provável para qualquer divergência observada aqui."
                 ),
             }
         )
@@ -537,9 +544,9 @@ def salvar_raster_dasimetrico(raster: np.ndarray, perfil: dict) -> None:
             "urbano∪reassentamento de 2015 e 2020"
         ),
         "advertencia_incerteza": (
-            "o peso carrega a acurácia do usuário da classe construído medida em ADR 0009 "
-            "(0,27-0,63): comissão alta significa que parte do peso pode estar em pixels que "
-            "não são de fato construídos, deslocando a densidade implícita. Ver "
+            f"o peso carrega a comissão medida na classe construído: "
+            f"{acuracia_texto.nota_comissao_construido()} Parte do peso pode estar em "
+            "pixels que não são de fato construídos, deslocando a densidade implícita. Ver "
             "populacao_dasimetrica_sensibilidade.csv para o teste de sensibilidade GHSL/WSF."
         ),
         "restricao_geografica": (

@@ -2,7 +2,7 @@
 ## Reconstrução demográfica e domiciliar (§5.3, Fase 2)
 
 Script: `pipeline/02_metrics/reconstrucao_demografica.py`.
-Gerado em 2026-09-08.
+Gerado em 2026-09-09.
 
 ### Núcleo A — o que existe
 

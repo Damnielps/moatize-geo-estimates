@@ -1,0 +1,20 @@
+{
+  "url": "https://dataverse.harvard.edu/api/access/datafile/13295271",
+  "download_date": "2026-09-08T17:05:14.232450+00:00",
+  "size_bytes": 2132,
+  "license": "CC0 1.0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0",
+  "level": "nao classificado - cabe ao auditor-dados",
+  "source_page": "https://doi.org/10.7910/DVN/YGIVCD",
+  "citation": "Chen, Z., Yu, B., et al. (2020/2025). \"The global NPP-VIIRS-like nighttime light data (Version 2) for 1992-2025.\" Harvard Dataverse, V10. DOI: 10.7910/DVN/YGIVCD",
+  "selo": "observado",
+  "ano": 2015,
+  "anos_cobertos": "2015",
+  "resolucao_deg": 0.004491576420597608,
+  "unidade_aproximada_m": 500,
+  "cidade_controle": "xaixai",
+  "centro_lat": -25.044,
+  "centro_lon": 33.641,
+  "buffer_deg": 0.15,
+  "nota": "Recortado da AOI (buffer 0.15 graus em torno do centro geografico da cidade, coordenadas verificadas por Nominatim pelo orquestrador) via GDAL /vsizip/ a partir do zip global 2015_Version2.zip (datafile id 13295271); arquivo global nao mirrorado inteiro."
+}

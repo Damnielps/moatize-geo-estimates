@@ -86,6 +86,11 @@ def test_todo_script_de_etapa_implementada_esta_no_grafo(makefile):
 
     O artefato que ele produz só existe porque alguém o rodou à mão — e §10 exige o
     contrário.
+
+    A exigência é estar **em algum alvo**, não no alvo mapeado para o diretório: a
+    classificação de cultivo (§5.6) vive em `01_imagery/` porque é classificação de
+    imagem, mas quem a executa é o alvo `agri` da Fase 2b. Amarrar diretório a alvo
+    seria impor uma arrumação que §11.1 não pede.
     """
     problemas = []
     for diretorio, alvo in ETAPAS.items():
@@ -102,8 +107,9 @@ def test_todo_script_de_etapa_implementada_esta_no_grafo(makefile):
             # `fetch` roda o diretório inteiro em laço, não script a script.
             if alvo == "fetch" and ("00_fetch/*" in receita or "for s in" in receita):
                 continue
-            if script.name not in receita:
-                problemas.append(f"{diretorio}/{script.name} não é chamado pelo alvo '{alvo}'")
+            # Basta ser chamado por qualquer alvo — o Makefile inteiro é o grafo.
+            if script.name not in makefile:
+                problemas.append(f"{diretorio}/{script.name} não é chamado por nenhum alvo")
     assert not problemas, "; ".join(problemas)
 
 

@@ -20,7 +20,9 @@ ultrapassar a ordem de grandeza de "quarteirão" usada por Angel et al. Não há
 verdade de campo para calibrar o raio nesta AOI; sensibilidade a essa escolha
 não foi testada e fica registrada como limite.
 
-## Por que isto é publicável apesar da comissão de 0,27-0,63 (ADR 0009)
+## Por que isto é publicável apesar da comissão medida na classe `construido`
+## (docs/ADR/0009; valor reexecutado em docs/ADR/0014 — ver
+## `pipeline/lib/acuracia_texto.py`, não transcrito aqui)
 
 O item 2 das restrições herdadas diz: "direção da expansão e tipologia tendem
 a ser robustas [à comissão]; área absoluta e densidade, não." O raciocínio:
@@ -183,7 +185,12 @@ def linhas(estudo: dict, epsg: int) -> list[dict]:
                             if n_novo == 0
                             else (
                                 "proporção sensível a comissão do mapa; tende a "
-                                "inflar leapfrog (ver docstring do módulo)."
+                                "inflar leapfrog (ver docstring do módulo). "
+                                "RESSALVA DE CHURN (docs/ADR/0013): a identidade "
+                                "pixel a pixel de `urbano` troca 31–54% entre "
+                                "anos-âncora — a área é utilizável, a localização "
+                                "não. Toda tipologia depende de QUAL pixel mudou, "
+                                "logo herda essa instabilidade."
                             )
                         ),
                     }

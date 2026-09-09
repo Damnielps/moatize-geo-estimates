@@ -53,3 +53,10 @@ app/.vite/
 
 # uv
 .uv/
+
+# Worker do MapLibre copiado para `app/public/` por `app/scripts/sync-maplibre-worker.mjs`
+# (pré-dev e pré-build). É cópia verbatim de `node_modules/maplibre-gl/dist/`, derivável
+# do `package-lock.json` com a versão fixa — mesma razão pela qual §6-A manda GERAR a
+# lista de dependências do lockfile em vez de escrevê-la: um artefato derivável versionado
+# é uma segunda fonte da verdade, que envelhece em silêncio.
+app/public/vendor/

@@ -33,6 +33,45 @@ DERIVACOES: dict[str, list[str]] = {
     "data/processed/acuracia_por_ano.csv": [
         "data/processed/validacao/rotulos_interpretados.csv",
     ],
+    "data/processed/cultivo_por_ano.csv": [
+        "data/processed/imagery/vegetacao_*_30m_32736.tif",
+        "data/processed/imagery/solo_exposto_*_30m_32736.tif",
+        "data/processed/imagery/ndvi_amplitude_*_30m_32736.tif",
+    ],
+    "data/processed/imagery/varzea_30m_32736.tif": [
+        "data/raw/copernicus_dem_glo30_S17_00_E033_00.tif",
+        "data/raw/copernicus_dem_glo30_S17_00_E034_00.tif",
+        "data/raw/hydrorivers_af_v10.gdb.zip",
+    ],
+    "data/processed/cultivo_varzea_por_ano.csv": [
+        "data/processed/imagery/varzea_30m_32736.tif",
+        "data/processed/imagery/cultivo_sequeiro_*_30m_32736.tif",
+        "data/processed/imagery/cultivo_irrigado_*_30m_32736.tif",
+    ],
+    "data/processed/acuracia_cultivo_por_ano.csv": [
+        "data/processed/validacao/rotulos_interpretados_cultivo.csv",
+    ],
+    "data/processed/imagery/adensamento_2020_2025_240m_32736.tif": [
+        "data/processed/imagery/urbano_*_30m_32736.tif",
+        "data/processed/imagery/reassentamento_*_30m_32736.tif",
+        "data/processed/imagery/industrial_*_30m_32736.tif",
+        "data/raw/viirs_like_*_tete_aoi.tif",
+        "data/raw/open_buildings_v3_aoi.csv",
+    ],
+    "data/processed/adensamento_2020_2025_por_unidade.csv": [
+        "data/processed/imagery/urbano_*_30m_32736.tif",
+        "data/processed/imagery/reassentamento_*_30m_32736.tif",
+        "data/processed/imagery/industrial_*_30m_32736.tif",
+        "data/raw/viirs_like_*_tete_aoi.tif",
+        "data/raw/open_buildings_v3_aoi.csv",
+    ],
+    "data/processed/adensamento_sensibilidade.csv": [
+        "data/processed/imagery/urbano_*_30m_32736.tif",
+        "data/processed/imagery/reassentamento_*_30m_32736.tif",
+        "data/processed/imagery/industrial_*_30m_32736.tif",
+        "data/raw/viirs_like_*_tete_aoi.tif",
+        "data/raw/open_buildings_v3_aoi.csv",
+    ],
 }
 
 # Folga para diferenças de sistema de arquivos e execuções encadeadas no mesmo segundo.

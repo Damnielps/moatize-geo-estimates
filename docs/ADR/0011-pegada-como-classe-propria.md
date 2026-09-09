@@ -141,6 +141,11 @@ que responde à objeção de que os parâmetros teriam sido ajustados até passa
 - **`data/processed/acuracia_por_ano.csv` é idêntico**, verificado por diff. A acurácia do
   usuário de `construido` continua **0,27–0,63** e `docs/ADR/0009` continua valendo sem
   alteração.
+  > **Valor superado (registro histórico).** Esta faixa é a medição vigente na data
+  > deste ADR. `docs/ADR/0014` reexecutou a validação sobre os estratos corrigidos e
+  > obteve **0,286–0,625** (comissão 37,5 %–71,4 %). O que este item afirma — que a
+  > acurácia **não mudou** com a correção da pegada — continua verdadeiro; o número
+  > que o ilustra é anterior à reexecução e não deve ser citado como corrente.
 - **§10 não regride: `urbano` dentro dos polígonos de mineração = 0,0000 km² em todos os
   anos.** As seis camadas continuam mutuamente exclusivas e `urbano ⊆ construido`.
 - **`docs/ADR/0008` não é afetado:** a série de tendência de área construída continua

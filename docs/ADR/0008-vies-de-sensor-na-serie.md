@@ -153,3 +153,42 @@ contrato `test_faixa_plausivel_dos_indices_normalizados` cobrava de
 teve de respeitar, porque derivava a família do índice do primeiro token do nome
 do arquivo; agora a família é resolvida pelo nome inteiro e a amplitude tem
 contrato próprio (`test_faixa_plausivel_da_amplitude_fenologica`).
+
+---
+
+## Emenda de 2026-09-08 — o WSF também é monotônico por construção
+
+Este ADR retirou a série própria do papel de série de tendência e pôs o **WSF Evolution** no
+lugar. `docs/ADR/0013` mostra que essa substituição resolveu menos do que parecia.
+
+**O WSF Evolution é uma série de ano de primeira detecção do assentamento.** O valor de cada
+pixel é o ano em que o assentamento foi detectado pela primeira vez. Por definição, a área
+acumulada até o ano *t* **nunca decresce** — a monotonicidade é uma propriedade do formato do
+dado, não uma observação sobre a cidade.
+
+Ou seja: a mesma crítica que `docs/ADR/0013` faz à regra R2 da classificação própria — que a
+união cumulativa transforma qualquer sinal ruidoso em curva crescente — **vale para o WSF**.
+Eu o vinha tratando como referência limpa desde este ADR, e ele não é.
+
+### O que muda
+
+1. **O WSF passa a ser lido como taxa de primeira detecção, não como estoque.** É o que ele
+   mede. A quantidade defensável é `n_pixels_detectados(t)` — quantos pixels foram detectados
+   pela primeira vez naquele ano —, não o acumulado.
+2. **As quebras de 2005 e 2011 de §5.4 são estimadas sobre essa taxa.** Uma quebra na taxa de
+   primeira detecção é interpretável: significa que a cidade passou a incorporar solo mais
+   rápido. Uma quebra no acumulado não é: o acumulado cresce por construção.
+3. **Nenhuma conclusão sobre "aceleração do estoque de área construída" se sustenta** com as
+   fontes disponíveis. Registrado como limitação de fonte, não do método: nem a classificação
+   própria (regra R2), nem o WSF (formato do dado) fornecem estoque sem monotonicidade
+   imposta.
+4. **H1, reformulada por `docs/ADR/0003` em termos de área, precisa da mesma precisão:** ela
+   passa a ser hipótese sobre a **taxa de incorporação de solo**, não sobre o estoque.
+
+### O que não muda
+
+O achado central deste ADR — viés de detecção de +1,25 %/ano, da mesma ordem do efeito
+procurado, medido por degradação de 2015 à capacidade de observação de 2000 — **continua
+válido e continua sendo o motivo de a série própria não servir como tendência**. A emenda
+acrescenta que a alternativa escolhida tem um problema **diferente**, não que o problema
+original tenha desaparecido.

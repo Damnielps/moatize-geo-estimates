@@ -1,0 +1,13 @@
+referencia,ano_referencia,ano_cultivo,camada,area_mapa_km2,area_referencia_km2,jaccard,recall_sobre_referencia
+GLAD_Global_Cropland,2003,2005,cultivo_sequeiro,358.671,19.895,0.001,0.0196
+GLAD_Global_Cropland,2003,2005,cultivo_irrigado,16.389,19.895,0.0686,0.1171
+GLAD_Global_Cropland,2007,2005,cultivo_sequeiro,358.671,17.956,0.0007,0.0138
+GLAD_Global_Cropland,2007,2005,cultivo_irrigado,16.389,17.956,0.0976,0.1701
+GLAD_Global_Cropland,2011,2010,cultivo_sequeiro,760.501,20.989,0.0011,0.0398
+GLAD_Global_Cropland,2011,2010,cultivo_irrigado,152.651,20.989,0.0433,0.3436
+GLAD_Global_Cropland,2015,2015,cultivo_sequeiro,398.902,24.991,0.0018,0.0309
+GLAD_Global_Cropland,2015,2015,cultivo_irrigado,42.66,24.991,0.1287,0.3087
+GLAD_Global_Cropland,2019,2020,cultivo_sequeiro,421.7,40.063,0.0006,0.0066
+GLAD_Global_Cropland,2019,2020,cultivo_irrigado,34.552,40.063,0.1445,0.2352
+ESA_WorldCover,2020,2020,cultivo_sequeiro,421.7,42.467,0.0043,0.0463
+ESA_WorldCover,2020,2020,cultivo_irrigado,34.552,42.467,0.0327,0.0574

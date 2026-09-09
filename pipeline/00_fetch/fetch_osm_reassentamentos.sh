@@ -26,7 +26,7 @@ SHA_FILE="$OUTPUT_FILE.sha256"
 META_FILE="$OUTPUT_FILE.meta.json"
 FORCE="${1:-}"
 
-UA="tete-moatize-research/1.0 (contato: damniel@gmail.com; uso academico nao comercial)"
+UA="tete-moatize-research/1.0 (+https://github.com/Damnielps/moatize-geo-estimates; uso academico nao comercial)"
 NOMINATIM="https://nominatim.openstreetmap.org/search"
 OVERPASS="https://overpass.kumi.systems/api/interpreter"
 

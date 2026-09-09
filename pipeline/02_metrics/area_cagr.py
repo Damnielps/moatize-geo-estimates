@@ -16,8 +16,9 @@
    (`urbano`/`industrial`/`reassentamento`), nos 6 anos-âncora. É a única
    fonte que separa as três camadas mutuamente exclusivas — é o que ADR 0008
    diz que ela ainda serve para fazer. Toda área desta série carrega a
-   acurácia do usuário medida em `acuracia_por_ano.csv` (0,27–0,63): entre
-   37% e 73% do que o mapa chama de construído não é. Marcada
+   acurácia do usuário medida em `acuracia_por_ano.csv` (docs/ADR/0009;
+   valor reexecutado em docs/ADR/0014 — ver `pipeline/lib/acuracia_texto.py`
+   para o número corrente, não transcrito aqui). Marcada
    `confiavel_para_tendencia=False` sempre — a magnitude não deve entrar em
    CAGR nem em comparação entre anos como se fosse medição repetida do mesmo
    fenômeno com erro constante.
@@ -44,6 +45,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _common as c
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import acuracia_texto
 
 ANOS_IMAGEM = None  # preenchido de config/study.yaml em main()
 ANO_FIM_WSF = 2015
@@ -226,8 +230,8 @@ def _linha_classificacao(
             else "Soma da camada 'industrial' inteira (já é uma unidade, sem split espacial)."
         ),
         "nota": (
-            "Área SENSÍVEL à comissão medida (acuracia_por_ano.csv: acurácia do "
-            "usuário de construído = 0,27-0,63, ADR 0009). Não usar para CAGR nem para "
+            f"Área SENSÍVEL à comissão medida ({acuracia_texto.nota_comissao_construido()}) "
+            "Não usar para CAGR nem para "
             "'quanto cresceu' — só para a PROPORÇÃO entre camadas no mesmo ano/unidade. "
             + nota
         ).strip(),

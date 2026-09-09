@@ -68,6 +68,9 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _common as c
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import acuracia_texto
+
 UNIDADES = ["tete", "moatize_vila", "cateme", "mwaladzi"]
 ANO_EPOCH_APROX = 2023
 ANO_DENOMINADOR_AREA = 2020
@@ -186,9 +189,9 @@ def linhas(estudo: dict, epsg: int) -> list[dict]:
                 (
                     f"Denominador: área construída (classificação própria, ano "
                     f"{ANO_DENOMINADOR_AREA}, urbano+industrial+reassentamento) = "
-                    f"{area_km2_u:.4f} km2 — SENSÍVEL à comissão medida (acurácia do "
-                    "usuário 0,27-0,63, ADR 0009) porque o denominador vem da "
-                    "classificação própria, não do WSF. "
+                    f"{area_km2_u:.4f} km2 — SENSÍVEL à comissão medida "
+                    f"({acuracia_texto.nota_comissao_construido()}) porque o denominador "
+                    "vem da classificação própria, não do WSF. "
                     + (
                         "sem área construída na unidade nesse ano — densidade indefinida"
                         if area_km2_u == 0

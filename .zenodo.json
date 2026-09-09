@@ -1,0 +1,21 @@
+{
+  "title": "Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025",
+  "upload_type": "software",
+  "description": "<p>Pipeline reproduzível, aplicação web e artigo sobre como o ciclo carbonífero de Moatize (concessão à Vale em 2006, operação em 2011, mina de Benga/Riversdale/ICVL a partir de 2012, Corredor Logístico de Nacala) alterou a trajetória demográfica, a forma urbana, a base econômica e a agricultura urbana e periurbana de Tete e Moatize (província de Tete, Moçambique) entre 1997 e 2025, incluindo o reassentamento de cerca de 1.300 famílias.</p><p>Toda estimativa publicada deriva exclusivamente de fontes de nível A (acesso aberto, licença que permite uso, redistribuição e obras derivadas): classificação própria de imagens Landsat/Sentinel-2, WSF Evolution (DLR), GHSL (JRC), HDX COD-AB/COD-PS, série de luzes noturnas NPP-VIIRS-like (Chen, Z., Yu, B. et al. 2021) e fontes públicas de cobertura do solo (GLAD Cropland, ESA WorldCover, CGLS-LC100, ESRI/Impact Observatory). Não inclui microdados de acesso controlado. O repositório documenta explicitamente onde o conjunto de fontes de nível A é insuficiente ou onde a classificação não atingiu desempenho aceitável (ver <code>data/DATA_AUDIT.md</code> e os ADRs em <code>docs/ADR/</code>) em vez de publicar um número sem essa ressalva.</p><p>Código sob licença MIT; dados derivados (<code>data/processed/</code>) sob CC BY 4.0, com as citações exigidas pelas fontes primárias listadas em <code>data/LICENSES.md</code>.</p>",
+  "creators": [
+    { "name": "Pessini Sobreira, Daniel" }
+  ],
+  "license": "CC-BY-4.0",
+  "access_right": "open",
+  "language": "por",
+  "keywords": [
+    "urbanização", "mineração", "carvão", "Moatize", "Tete", "Moçambique",
+    "reassentamento", "agricultura urbana", "sensoriamento remoto", "economia de enclave",
+    "mining", "urbanization", "Mozambique", "remote sensing", "involuntary resettlement"
+  ],
+  "related_identifiers": [
+    { "identifier": "https://github.com/Damnielps/moatize-geo-estimates", "relation": "isSupplementTo", "resource_type": "software", "scheme": "url" },
+    { "identifier": "https://Damnielps.github.io/moatize-geo-estimates", "relation": "isSupplementedBy", "resource_type": "other", "scheme": "url" }
+  ],
+  "notes": "Fontes primárias e níveis A/B/C documentados em data/LICENSES.md e data/DATA_AUDIT.md. O arquivo depositado contém o pipeline, o front-end e os agregados publicados (data/processed); não contém dados de nível B (IPUMS, Planet NICFI, microdados DHS)."
+}

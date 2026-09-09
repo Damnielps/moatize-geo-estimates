@@ -45,8 +45,10 @@ Duas decisões desta rodada, ambas correções de desenho:
 - **Acurácia global 0,87–1,00**, acima da meta de §10 em todos os anos — mas a
   meta não discrimina aqui: o estrato `nao_construido` é 98–99,5 % da AOI, e um
   mapa que errasse toda a classe construída ainda teria AG ≈ 0,98.
-- **Acurácia do usuário de `construido`: 0,27–0,63.** Comissão alta e
-  consistente. É o número que importa e é o que reprova.
+- **Acurácia do usuário de `construido`: 0,286–0,625** (ADR 0009; valor
+  reexecutado sobre os estratos corrigidos em ADR 0014 — ver
+  `data/processed/acuracia_por_ano.csv`). Comissão entre 37,5 % e 71,4 %, alta
+  e consistente. É o número que importa e é o que reprova.
 - **Acurácia do produtor não é utilizável neste n.** Um único ponto do estrato
   `nao_construido` carrega ~4,1 % da área da AOI no estimador.
 - **Kappa 0,09–0,77**, abaixo da meta de 0,70 em 2010, 2015 e 2020.

@@ -304,3 +304,43 @@ substantiva feita na rodada anterior: o conjunto A responde majoritariamente a �
 permite testar H5; H6 permanece parcialmente testável, limitado pela ausência de
 tabulações domiciliares desagregadas para Tete/Moatize (Censos 2007/2017) e pela
 localização ainda pendente dos catálogos de IOF 2014/15 e 2019/20.
+
+---
+
+## RECONCILIAÇÃO OBRIGATÓRIA — 2026-09-08
+
+> **As avaliações de suficiência acima são da Fase 0' e foram FALSIFICADAS POR MEDIÇÃO.**
+> Elas julgavam **disponibilidade de dado**; o que veio depois mediu **desempenho da
+> classificação**, e o resultado é pior que a expectativa. Onde este fragmento diz que uma
+> hipótese é testável, vale o que segue.
+
+**`cultivo_sequeiro` NÃO é defensável** (`docs/ADR/0012`, confirmado após a correção de raiz
+em `docs/ADR/0014`):
+
+| métrica | valor |
+|---|---|
+| acurácia do usuário | **0,000** |
+| kappa | **−0,065** (pior que aleatório) |
+| Jaccard contra GLAD Cropland e ESA WorldCover | **0,001 a 0,002** |
+| área classificada × área do GLAD na mesma AOI | 359–761 km² × **~20 km²** |
+
+A correção de `docs/ADR/0014` resolveu a classe de água e as classes de cobertura e **não**
+melhorou o cultivo — o que localiza a falha na **abordagem fenológica bianual**, não nos
+limiares, e **reforça** o ADR 0012.
+
+**`cultivo_irrigado`** é utilizável com ressalva: acurácia do usuário 0,556 ± 0,344,
+Jaccard 0,043–0,098.
+
+### Consequência para as hipóteses
+
+- **H5 — sustentada FRACAMENTE, não "respondível".** O único apoio é o enriquecimento
+  relativo em várzea: `cultivo_irrigado` aparece 2 a 3 vezes mais concentrado na zona de
+  várzea que `cultivo_sequeiro`, em 4 dos 6 anos-âncora. É sinal de razão entre classes, não
+  medida de área agrícola — e a classe de sequeiro, que é o termo de comparação, tem
+  acurácia nula.
+- **H6 — SEM RESPOSTA.** Não é lacuna de dado domiciliar, como este fragmento supunha na
+  Fase 0': é que **a série de área de cultivo que sustentaria a hipótese tem kappa negativo
+  e não mede cropland**. Nenhuma leitura de "a agricultura urbana cresceu no bust" se
+  sustenta com o que existe.
+- **Pergunta 8 de §1** fica respondível apenas na parte de **localização de várzea** e de
+  cultivo irrigado com ressalva. "Quanto ocupam" e "como evoluíram" não são respondíveis.

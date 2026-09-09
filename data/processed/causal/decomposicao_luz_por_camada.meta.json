@@ -1,0 +1,42 @@
+{
+  "artefato": "decomposicao_luz_por_camada.csv",
+  "origem": "pipeline/03_causal/decomposicao_luz.py",
+  "mandato": "docs/DESENHO_FASE3.md §2.3; docs/ADR/0015 decisao 4",
+  "luz": "Chen, Z., Yu, B. et al. (2021) ESSD 13:889-906, DOI 10.5194/essd-13-889-2021; Harvard Dataverse 10.7910/DVN/YGIVCD (CC0). Prefixo 'viirs_like_li2020_' e heranca de erro (EMENDA E2), NAO e Li et al. 2020.",
+  "camadas": "data/processed/imagery/{industrial,urbano,reassentamento}_<ancora>_30m_32736.tif",
+  "resolucoes": {
+    "luz_graus": 0.00449157642059761,
+    "luz_m_aprox": 500,
+    "camada_m": 30,
+    "pixels_de_camada_por_pixel_de_luz": 278
+  },
+  "agregacao": "mascara 0/1 reamostrada para a grade da luz por MEDIA (= fracao de area da celula), rasterio.warp.reproject Resampling.average",
+  "exclusividade_mutua_apos_agregacao": {
+    "2000": {
+      "max_soma_fracoes": 0.9955937266349792,
+      "n_pixels_luz_com_2_ou_mais_classes": 0
+    },
+    "2020": {
+      "max_soma_fracoes": 1.0,
+      "n_pixels_luz_com_2_ou_mais_classes": 28
+    },
+    "2005": {
+      "max_soma_fracoes": 1.0,
+      "n_pixels_luz_com_2_ou_mais_classes": 0
+    },
+    "2010": {
+      "max_soma_fracoes": 1.0,
+      "n_pixels_luz_com_2_ou_mais_classes": 22
+    },
+    "2015": {
+      "max_soma_fracoes": 1.0,
+      "n_pixels_luz_com_2_ou_mais_classes": 27
+    },
+    "2025": {
+      "max_soma_fracoes": 1.0,
+      "n_pixels_luz_com_2_ou_mais_classes": 32
+    }
+  },
+  "determinismo": "nenhum processo estocastico; config/seeds.yaml nao e consumido",
+  "selos": "observado so onde ano == ano-ancora da mascara; interpolado nos demais"
+}

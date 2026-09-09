@@ -1,61 +1,64 @@
 #!/usr/bin/env python3
 """
-fetch_glad_cropland.py — Download e verificação idempotente de GLAD Global Cropland.
+fetch_glad_cropland.py — Download idempotente de GLAD Global Cropland, recortado na AOI.
 
 GLAD Global Cropland (Potapov et al. 2021, Nature Food 3, 19-28, DOI
-10.1038/s43016-021-00429-z — corrigido em T3; o DOI 10.1038/s41597-022-01292-5
-usado em versões anteriores deste script NÃO resolve):
+10.1038/s43016-021-00429-z — confirmado via doi.org, redireciona para
+nature.com/articles/s43016-021-00429-z):
 
-- Página do produtor: https://glad.umd.edu/dataset/croplands
-- Download real (confirmado por HTTP 200 em 2026-09-07, após redirect 301):
+- Página do produtor: https://glad.umd.edu/dataset/croplands (HTTP 200)
+- Licença: CC-BY 4.0, declarada na página do produtor.
+- Download real (HEAD 200 confirmado em 2026-09-08), mosaico regional "SE"
+  (Sudeste da África, cobre a AOI Tete-Moatize):
   https://gladxfer.umd.edu/Potapov/Global_Crop/Data/Global_cropland_SE_<ANO>.tif
-  (mosaico regional "SE" = Sudeste da África, cobre a AOI Tete-Moatize)
 - Resolução: 30 m
-- Anos disponíveis: 2003, 2007, 2011, 2015, 2019 (compostos quinquenais reais —
-  NÃO 2000/2004/2008/2012/2016, erro corrigido em T3)
+- Anos disponíveis (compostos quinquenais reais): 2003, 2007, 2011, 2015, 2019
 - Formato: GeoTIFF
-- Licença: CC-BY 4.0
+
+Cada mosaico regional "SE" tem ~684 MB (confirmado por Content-Length). Em vez de
+baixar o arquivo inteiro para depois recortar em 02_metrics, este script usa leitura
+em janela via GDAL `/vsicurl/` (rasterio) para trazer só a AOI de config/study.yaml
+(§ regra de fetch: "não traga tile global inteiro se der para recortar"), com uma
+margem de 0.02 grau (~2 km) para não cortar em cima da borda.
 
 AOI: lida de config/study.yaml em tempo de execução (§11.2.1). Nunca fixar aqui.
 
 Saída:
-  data/raw/glad_cropland_<ano>_se.tif
-  data/raw/glad_cropland_<ano>_se.tif.sha256
-  data/raw/glad_cropland_<ano>_se.tif.meta.json
+  data/raw/glad_cropland_<ano>_aoi.tif
+  data/raw/glad_cropland_<ano>_aoi.tif.sha256
+  data/raw/glad_cropland_<ano>_aoi.tif.meta.json
 
-Comportamento (idempotente e falho-explícito, §11.2.2 e regra de fetch do orquestrador):
-  1. Se o arquivo local existe: recalcula o hash e compara contra o hash gravado no
-     .sha256 já existente. Diverge -> falha (sys.exit(1)), NÃO sobrescreve.
-  2. Se não existe: baixa via streaming HTTP. Qualquer status HTTP != 200, timeout,
-     ou erro de rede -> falha (sys.exit(1)) e NÃO grava .sha256/.meta.json (o script
-     nunca registra sucesso sem ter baixado o arquivo).
-  3. Ao baixar com sucesso: grava o arquivo, calcula sha256, grava <arquivo>.sha256
-     no formato "<hash>  <nome>" (compatível com `shasum -c`) e <arquivo>.meta.json.
+Comportamento (idempotente e falho-explícito, §11.2.2):
+  1. Se o arquivo local existe com .sha256 íntegro: pula.
+  2. Se não existe: abre a fonte remota via /vsicurl/, lê a janela da AOI (+ margem) e
+     grava localmente. Qualquer falha de rede/HTTP -> sys.exit(1), sem gravar sidecars.
 """
 
 import hashlib
 import json
 import sys
-import urllib.error
-import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 
+import rasterio
 from _config import carregar_aoi
+from rasterio.windows import from_bounds
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_RAW = PROJECT_ROOT / "data" / "raw"
 
 ANOS = [2003, 2007, 2011, 2015, 2019]
+MARGEM_GRAUS = 0.02
 
 SOURCE_PAGE = "https://glad.umd.edu/dataset/croplands"
 DOWNLOAD_BASE = "https://gladxfer.umd.edu/Potapov/Global_Crop/Data"
 LICENSE = "CC-BY 4.0"
+LICENSE_URL = "https://glad.umd.edu/dataset/croplands"
 CITATION = (
     "Potapov, P., Turubanova, S., Hansen, M.C., Tyukavina, A., Zalles, V., Khan, A., "
-    "Song, X.-P., Pickens, A., Shen, Q., Cortez, J. (2021). \"Global maps of cropland "
+    'Song, X.-P., Pickens, A., Shen, Q., Cortez, J. (2021). "Global maps of cropland '
     "extent and change show accelerated cropland expansion in the twenty-first "
-    "century.\" Nature Food 3, 19-28. DOI 10.1038/s43016-021-00429-z"
+    'century." Nature Food 3, 19-28. DOI 10.1038/s43016-021-00429-z'
 )
 
 
@@ -78,42 +81,28 @@ def write_meta(filepath: Path, url: str, ano: int, aoi: dict) -> None:
         "download_date": datetime.now(UTC).isoformat(),
         "size_bytes": filepath.stat().st_size,
         "license": LICENSE,
+        "license_url": LICENSE_URL,
         "level": "A",
+        "selo": "observado",
         "source_page": SOURCE_PAGE,
         "ano": ano,
+        "anos_cobertos": f"composto quinquenal centrado em {ano}",
         "aoi_bbox": aoi,
         "citation": CITATION,
-        "nota": "Mosaico regional 'SE' (nao recortado para a AOI); recorte em 02_metrics.",
+        "nota": (
+            f"Recortado da AOI (+{MARGEM_GRAUS} grau de margem) via leitura em janela "
+            "GDAL /vsicurl/ no momento do fetch; o arquivo global 'SE' NÃO foi "
+            "mirrorado inteiro."
+        ),
     }
     meta_path = filepath.with_name(filepath.name + ".meta.json")
     meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def download(url: str, dest: Path) -> None:
-    """Baixa `url` para `dest` via streaming. Levanta exceção em qualquer falha."""
-    req = urllib.request.Request(url, headers={"User-Agent": "tete-moatize-fetch/1.0"})
-    tmp = dest.with_suffix(dest.suffix + ".part")
-    try:
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            if resp.status != 200:
-                raise RuntimeError(f"HTTP {resp.status} para {url}")
-            with tmp.open("wb") as out:
-                while True:
-                    chunk = resp.read(1 << 20)
-                    if not chunk:
-                        break
-                    out.write(chunk)
-        tmp.replace(dest)
-    finally:
-        if tmp.exists():
-            tmp.unlink()
-
-
 def fetch_one(ano: int, aoi: dict) -> bool:
-    """Retorna True em sucesso (arquivo presente e validado), False em falha."""
-    filename = f"glad_cropland_{ano}_se.tif"
+    filename = f"glad_cropland_{ano}_aoi.tif"
     filepath = DATA_RAW / filename
-    url = f"{DOWNLOAD_BASE}/Global_cropland_SE_{ano}.tif"
+    remote_url = f"{DOWNLOAD_BASE}/Global_cropland_SE_{ano}.tif"
     sidecar = filepath.with_name(filepath.name + ".sha256")
 
     if filepath.exists() and sidecar.exists():
@@ -121,26 +110,52 @@ def fetch_one(ano: int, aoi: dict) -> bool:
         digest = compute_sha256(filepath)
         if len(registrado) < 2 or registrado[0] != digest:
             print(
-                f"ERRO [{ano}]: hash de {filename} não confere com {sidecar.name}",
-                file=sys.stderr,
+                f"ERRO [{ano}]: hash de {filename} não confere com {sidecar.name}", file=sys.stderr
             )
             return False
         print(f"OK [{ano}]: {filename} já presente e íntegro (hash confere).")
         return True
 
-    print(f"Baixando [{ano}]: {url}")
+    vsi_url = f"/vsicurl/{remote_url}"
+    print(f"Lendo janela AOI [{ano}]: {remote_url}")
     try:
-        download(url, filepath)
-    except (urllib.error.URLError, RuntimeError, TimeoutError, OSError) as exc:
-        print(f"ERRO [{ano}]: falha ao baixar {url}: {exc}", file=sys.stderr)
+        with rasterio.open(vsi_url) as src:
+            win = from_bounds(
+                aoi["xmin"] - MARGEM_GRAUS,
+                aoi["ymin"] - MARGEM_GRAUS,
+                aoi["xmax"] + MARGEM_GRAUS,
+                aoi["ymax"] + MARGEM_GRAUS,
+                src.transform,
+            )
+            data = src.read(1, window=win)
+            out_transform = src.window_transform(win)
+            profile = src.profile.copy()
+            profile.update(
+                height=data.shape[0],
+                width=data.shape[1],
+                transform=out_transform,
+                compress="deflate",
+            )
+            tmp = filepath.with_suffix(filepath.suffix + ".part")
+            with rasterio.open(tmp, "w", **profile) as dst:
+                dst.write(data, 1)
+            tmp.replace(filepath)
+    except Exception as exc:
+        print(f"ERRO [{ano}]: falha ao ler/recortar {remote_url}: {exc}", file=sys.stderr)
+        tmp = filepath.with_suffix(filepath.suffix + ".part")
+        if tmp.exists():
+            tmp.unlink()
         if filepath.exists():
             filepath.unlink()
         return False
 
     digest = compute_sha256(filepath)
     write_sha256(filepath, digest)
-    write_meta(filepath, url, ano, aoi)
-    print(f"OK [{ano}]: {filename} baixado, {filepath.stat().st_size} bytes, sha256={digest}")
+    write_meta(filepath, remote_url, ano, aoi)
+    print(
+        f"OK [{ano}]: {filename} gravado (recorte AOI), "
+        f"{filepath.stat().st_size} bytes, sha256={digest}"
+    )
     return True
 
 

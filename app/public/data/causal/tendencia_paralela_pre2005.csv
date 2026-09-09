@@ -1,0 +1,5 @@
+painel,teste,estimavel,F,p_wild_cluster_bootstrap,n_clusters,veredito_F1,nota,ano_base,F_conjunta_leads,max_leads_consecutivos_com_IC_excluindo_zero,leads,veredito_F2,motivo_nao_estimavel
+A_area_WSF,T1,True,1.0078132476899804,0.5954045954045954,6.0,nao dispara,"6 clusters: assintotico invalido; wild cluster bootstrap (Rademacher), seed 97531, 1000 reamostragens. Um F que nao rejeita nao e evidencia de paralelismo.",,,,,,
+A_area_WSF,T2,True,,0.4435564435564436,,,,2004.0,0.8914643542305304,1.0,"[[1993, 0.5064, -0.246, 1.2588], [1994, -0.4102, -1.3508, 0.5304], [1995, 0.1178, -0.9352, 1.1708], [1996, 0.4666, -0.8085, 1.7417], [1997, -0.4891, -1.5652, 0.5869], [1998, -0.0178, -0.9174, 0.8817], [1999, -1.3642, -2.0727, -0.6557], [2000, -0.5922, -1.4993, 0.315], [2001, -0.2188, -0.7028, 0.2651], [2002, 1.069, -0.0662, 2.2042], [2003, 0.9367, 0.1468, 1.7266]]",nao dispara,
+B_luz_HARM,T1,False,,,,,,,,,,,pre-janela de 3 pontos; interacoes unidade x t nao identificaveis
+B_luz_HARM,T2,False,,,,,,,,,,,pre-janela de 3 pontos

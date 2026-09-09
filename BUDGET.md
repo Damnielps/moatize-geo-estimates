@@ -144,3 +144,80 @@ Nada consumido. **Os tetos de T3 estão subdimensionados**: as Fases 0' e 1 most
 reformulação de desenho custa 150–230K por rodada, e que ela costuma aparecer *depois* da
 primeira entrega, não antes. O teto de T3 na Fase 3 (600K) comporta duas ou três rodadas —
 provavelmente pouco para uma fase que é inteiramente desenho causal.
+
+### Fase 2b — fechamento (2026-09-08)
+
+Teto: T1 40K · T2 700K · T3 250K · T4 40K · **total 1.030K**.
+
+**Consumo não fechado com o mesmo rigor das fases anteriores.** As Fases 0', 1 e 2 foram
+tabuladas somando os `subagent_tokens` das notificações de tarefa, uma a uma, durante a
+execução. Na Fase 2b esse acúmulo se perdeu na compactação de contexto, e `cost_ledger.csv`
+continua **não instrumentado** — o payload de `SubagentStop` não traz modelo nem tokens
+(ORCHESTRATION_LOG.md 0-14). Preencher a tabela agora seria estimar e apresentar como
+medido, que é exatamente o que este estudo proíbe nos dados. Fica declarado como lacuna.
+
+O que é observável: a fase teve **três passagens de portão** (duas reprovações), a
+**reabertura da Fase 1 pela segunda vez** (`docs/ADR/0014`, três instâncias do mesmo
+defeito de limiar absoluto) e a **reexecução completa da classificação** nos seis
+anos-âncora. Pelo padrão das três fases medidas — 101%, 122%, 120% — e por esta ter tido
+mais reaberturas que qualquer outra, o teto de 1.030K quase certamente foi excedido.
+
+**Consequência para o planejamento, que é o uso real deste arquivo:** a instrumentação de
+custo precisa sair de dependência de notificação lida em tempo real. Enquanto ela não
+existir, os fechamentos de fase são auditáveis apenas enquanto a sessão durar — e uma
+sessão longa é justamente onde o custo importa.
+
+### Fase 3 — fechamento (2026-09-08)
+
+Teto: T1 20K · T2 150K · T3 600K · T4 150K · **total 920K**.
+
+**Consumo não instrumentado**, pelo mesmo motivo da Fase 2b: `cost_ledger.csv` continua sem
+modelo e sem tokens no payload do `SubagentStop`. Pelas notificações lidas em sessão, a fase
+teve pelo menos **oito invocações** (coleta T1 reprovada, coleta T2, complemento de tile,
+auditoria, desenho pré-registrado, estimação, arbitragem adversarial, execução do ADR 0015)
+mais o portão — bem acima do que o teto comporta.
+
+**Onde o teto errou, e não foi no escopo.** O plano supunha uma fase de desenho causal. O
+que aconteceu: uma coleta inteira que não estava prevista (as luzes noturnas nunca tinham
+sido baixadas, embora o ADR 0013 as designasse série primária), duas reprovações de coleta,
+um download morto pelo próprio orquestrador, um defeito de timeout que fez 5 de 7 anos
+falharem em silêncio, e uma arbitragem adversarial.
+
+**Padrão em quatro fases medidas ou estimadas:** 0' 101 %, 1 122 %, 2 120 %, 2b e 3
+excedidas sem medição. A causa é sempre a mesma e já é previsível: **defeito descoberto
+durante a execução, exigindo reabrir o que parecia pronto.** Um orçamento que suponha zero
+reabertura erra por 20 % ou mais, de forma sistemática — e a Fase 3 mostra que erra mais
+quando a fase depende de dado que ninguém verificou existir.
+
+### Fase 4 — fechamento (2026-09-08)
+
+Teto: **1.000K**. **Consumo não instrumentado**, como em 2b e 3.
+
+**Nove passagens de portão, oito reprovações.** Nenhuma foi por rigor performático: todas
+apontaram defeito com instância viva em disco, e as duas últimas acharam problemas
+substantivos (acurácia publicada sem IC95, violando §10; e a não separabilidade dos 15 pares
+de anos, que nenhum ADR registrava).
+
+**O que o orçamento não previa, e é a lição:** o custo dominante da fase não foi construir o
+app — foi **descobrir que os defeitos de conteúdo vinham do orquestrador**, e que os
+contratos escritos para pegá-los tinham eles próprios o mesmo defeito. Nove formas distintas
+de vacuidade num único arquivo de teste.
+
+**Padrão em cinco fases:** 0' 101 %, 1 122 %, 2 120 %, 2b/3/4 excedidas sem medição. Um
+orçamento que suponha zero reabertura erra por 20 % ou mais, sistematicamente — e erra
+muito mais quando a fase depende de prosa, porque prosa não tem contrato até alguém escrever
+um, e o primeiro que se escreve costuma ser frouxo.
+
+### Fase 5 — fechamento (2026-09-08)
+
+Teto: **1.120K**. Consumo não instrumentado. Quatro invocações de redação (uma perdida por
+limite de sessão do modelo, sem edição) mais o portão.
+
+**Aprovada na primeira passagem**, contra oito reprovações da Fase 4. A diferença não é
+sorte: a Fase 4 pagou o custo de descobrir que o defeito dominante era afirmação relacional
+vinda da memória do orquestrador, e produziu a folha de fatos gerada e o contrato que varre
+`paper/`. O artigo foi escrito dentro dessas defesas.
+
+**Lição de orçamento:** uma fase que constrói defesa contra uma classe de erro parece
+estourar sozinha, mas está pagando pela fase seguinte. Medir fases isoladamente esconde
+isso.

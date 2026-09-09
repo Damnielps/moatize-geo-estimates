@@ -41,6 +41,6 @@
   ],
   "estimador_previsto": "Olofsson et al. (2014), estratificado pelo mapa",
   "aviso": "este arquivo não contém rótulo de referência; ver rotulos_interpretados.csv",
-  "data_geracao": "2026-09-08T12:39:55.854753+00:00",
+  "data_geracao": "2026-09-08T14:47:49.405598+00:00",
   "script": "pipeline/01_imagery/amostras_validacao.py"
 }

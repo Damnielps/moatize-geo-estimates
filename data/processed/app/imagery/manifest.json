@@ -1,0 +1,1288 @@
+{
+  "camadas": {
+    "adensamento_2020_2025": {
+      "ano": [
+        2020,
+        2025
+      ],
+      "area_km2_final": 134.8992,
+      "area_km2_original": 134.8992,
+      "arquivo": "imagery/adensamento_2020_2025.geojson",
+      "bytes_antes": 355227,
+      "bytes_depois": 229407,
+      "camada": "adensamento",
+      "caveats": {
+        "adr_0016_areas_por_classe": {
+          "area_dominio_km2": 2500.76,
+          "areas_km2": {
+            "adensando": 15.3216,
+            "consolidado": 19.6416,
+            "esparso_estavel": 44.1792,
+            "expansao_nova": 10.3104,
+            "fora_de_dominio": 15.4368,
+            "pegada_industrial": 45.4464,
+            "vazio_estavel": 2365.8624
+          },
+          "fonte": "idem",
+          "nota": "Domínio = aritmética de grade (n_pixels_30m == 64), não estimativa — ver config/plausibilidade.yaml, camada adensamento."
+        },
+        "adr_0016_risco_r2_correlacao_sinais": {
+          "nota": "S1 = ECDF_2025(f) - ECDF_2020(f) e S3 = ECDF_OB(fp) - ECDF_2020(f) partilham ECDF_2020(f). Uma célula com f_2020 subestimado tende a votar duas vezes. Medido pela variante `sem_S3` do CSV de sensibilidade.",
+          "risco": "S1 e S3 partilham f_2020 — votos não são independentes"
+        },
+        "adr_0016_risco_r3_sem_esvaziamento": {
+          "nota": "Não existe classe `desadensando`: o método é incapaz de povoá-la (S1 só pode subir, catraca R2 de `urbano`). A ausência dela não significa ausência do fenômeno no terreno.",
+          "risco": "camada não detecta esvaziamento (S1 censurado por baixo pela catraca R2 de urbano)"
+        },
+        "adr_0016_risco_r6_janela_s3": {
+          "nota": "Open Buildings v3 é epoch único (~2021-2023), sem série. A parcela do voto de concordância que vem de S3 não cobre 2023-2025.",
+          "risco": "janela real de S3 é 2020 -> ~2023, não 2020->2025"
+        },
+        "adr_0016_selo_modelado": {
+          "fonte": "data/processed/imagery/adensamento_2020_2025_240m_32736.tif.meta.json (docs/ADR/0016)",
+          "nota": "Síntese de classificação própria + luz noturna de terceiros + edificações de terceiros, sob cortes por quantil escolhidos a priori — não é observação. NÃO somar `adensando` com `expansao_nova` numa única figura (são respostas distintas).",
+          "periodo": [
+            2020,
+            2025
+          ],
+          "quantis_declarados": {
+            "Q_ALTO": 0.8,
+            "Q_BAIXO": 0.2,
+            "Q_INDUSTRIAL": 0.5,
+            "TAU": 0.7
+          },
+          "quantis_realizados": {
+            "Q_ALTO": 0.890625,
+            "Q_BAIXO": 0.03125,
+            "Q_INDUSTRIAL": 0.75,
+            "TAU_s1": 0.00743604997025582,
+            "TAU_s2": 0.0011167536018750423,
+            "TAU_s3": 0.35293075077498537
+          },
+          "selo": "modelado"
+        },
+        "adr_0016_sensibilidade": {
+          "fonte": "data/processed/adensamento_sensibilidade.csv (docs/ADR/0016 §Decisão-9)",
+          "nota": "Razão de área da classe `adensando` entre as variantes de ±1 decil de TAU/Q_ALTO/Q_BAIXO e a base. Fora de [0,5; 2,0]: publica-se só padrão espacial e ordem de grandeza, nunca a área pontual.",
+          "publicavel_como": "padrao_espacial",
+          "razao_maxima_1_decil": 2.2931,
+          "regime_publicacao": "publicada só como padrão espacial e ordem de grandeza, NÃO como área (razão em (2.0, 5.0])",
+          "variantes": [
+            {
+              "area_adensando_km2": 15.3216,
+              "nota": "TAU=0.70, Q_ALTO=0.80, Q_BAIXO=0.20, grade 240 m",
+              "variante": "base"
+            },
+            {
+              "area_adensando_km2": 21.5424,
+              "nota": "TAU=0.6 — variante ±1 decil",
+              "variante": "tau_060"
+            },
+            {
+              "area_adensando_km2": 6.6816,
+              "nota": "TAU=0.8 — variante ±1 decil",
+              "variante": "tau_080"
+            },
+            {
+              "area_adensando_km2": 13.9968,
+              "nota": "Q_ALTO=0.7 — variante ±1 decil",
+              "variante": "qalto_070"
+            },
+            {
+              "area_adensando_km2": 15.9552,
+              "nota": "Q_ALTO=0.9 — variante ±1 decil",
+              "variante": "qalto_090"
+            },
+            {
+              "area_adensando_km2": 23.904,
+              "nota": "Q_BAIXO=0.1 — variante ±1 decil",
+              "variante": "qbaixo_010"
+            },
+            {
+              "area_adensando_km2": 11.6352,
+              "nota": "Q_BAIXO=0.3 — variante ±1 decil",
+              "variante": "qbaixo_030"
+            },
+            {
+              "area_adensando_km2": 23.2704,
+              "nota": "Grade 480 m (16x16 pixels de 30 m = agregação 2x2 ESTRITA sobre a grade de 240 m); S2 e S3 RECALCULADOS nesta resolução (ECDF sobre o novo domínio de células) — teste de escala, não de amputação de sinal (corrigido em 2026-09-09, ver Emenda 1 do ADR).",
+              "variante": "grade_480m"
+            },
+            {
+              "area_adensando_km2": 15.552,
+              "nota": "Open Buildings filtrado a confidence >= mediana do recorte (0.7915)",
+              "variante": "ob_conf_mediana"
+            },
+            {
+              "area_adensando_km2": 3.2832,
+              "nota": "Exige concordância 3 de 3 sinais, em vez de 2 de 3",
+              "variante": "concordancia_3de3"
+            },
+            {
+              "area_adensando_km2": 6.912,
+              "nota": "S2 (luz) zerado — concordância decidida só por S1 e S3 (que partilham f_2020, risco R2)",
+              "variante": "sem_S2"
+            },
+            {
+              "area_adensando_km2": 7.5456,
+              "nota": "S3 (Open Buildings) zerado — mede o efeito do risco R2 (S1/S3 partilham minuendo)",
+              "variante": "sem_S3"
+            },
+            {
+              "area_adensando_km2": 13.536,
+              "nota": "S1 sobre data/interim/estabilidade/bruta_construido_* (rótulo bruto do RF, pré-R1/R2, EXPERIMENTAL); S2 e S3 permanecem ATIVOS e inalterados — a comparação com a base isola o efeito de R1/R2 em S1, não o número de sinais (corrigido em 2026-09-09, ver Emenda 1 do ADR) — diagnóstico, não publicável como resultado (§Alternativa d do ADR)",
+              "variante": "bruta_experimental"
+            }
+          ]
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 443,
+      "n_features_depois": 443,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "agua_2000": {
+      "ano": 2000,
+      "area_km2_final": 30.3408,
+      "area_km2_original": 30.3408,
+      "arquivo": "imagery/agua_2000.geojson",
+      "bytes_antes": 355105,
+      "bytes_depois": 135090,
+      "camada": "agua",
+      "caveats": {},
+      "erro_area_pct": 0.0,
+      "n_features_antes": 156,
+      "n_features_depois": 156,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "agua_2005": {
+      "ano": 2005,
+      "area_km2_final": 31.9428,
+      "area_km2_original": 31.9428,
+      "arquivo": "imagery/agua_2005.geojson",
+      "bytes_antes": 316061,
+      "bytes_depois": 111078,
+      "camada": "agua",
+      "caveats": {},
+      "erro_area_pct": 0.0,
+      "n_features_antes": 67,
+      "n_features_depois": 67,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "agua_2010": {
+      "ano": 2010,
+      "area_km2_final": 36.8262,
+      "area_km2_original": 36.8262,
+      "arquivo": "imagery/agua_2010.geojson",
+      "bytes_antes": 365515,
+      "bytes_depois": 136633,
+      "camada": "agua",
+      "caveats": {},
+      "erro_area_pct": 0.0,
+      "n_features_antes": 131,
+      "n_features_depois": 131,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "agua_2015": {
+      "ano": 2015,
+      "area_km2_final": 37.2663,
+      "area_km2_original": 37.2663,
+      "arquivo": "imagery/agua_2015.geojson",
+      "bytes_antes": 384050,
+      "bytes_depois": 146872,
+      "camada": "agua",
+      "caveats": {},
+      "erro_area_pct": 0.0,
+      "n_features_antes": 190,
+      "n_features_depois": 190,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "agua_2020": {
+      "ano": 2020,
+      "area_km2_final": 39.9591,
+      "area_km2_original": 39.9591,
+      "arquivo": "imagery/agua_2020.geojson",
+      "bytes_antes": 384675,
+      "bytes_depois": 144389,
+      "camada": "agua",
+      "caveats": {},
+      "erro_area_pct": 0.0,
+      "n_features_antes": 152,
+      "n_features_depois": 152,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "agua_2025": {
+      "ano": 2025,
+      "area_km2_final": 41.2209,
+      "area_km2_original": 41.2209,
+      "arquivo": "imagery/agua_2025.geojson",
+      "bytes_antes": 429449,
+      "bytes_depois": 160810,
+      "camada": "agua",
+      "caveats": {},
+      "erro_area_pct": 0.0,
+      "n_features_antes": 180,
+      "n_features_depois": 180,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "cultivo_irrigado_2000": {
+      "ano": 2000,
+      "area_km2_final": 47.1024,
+      "area_km2_original": 47.1024,
+      "arquivo": "imagery/cultivo_irrigado_2000.geojson",
+      "bytes_antes": 4313399,
+      "bytes_depois": 2147434,
+      "camada": "cultivo_irrigado",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.5556,
+          "confiabilidade": "defensavel_com_ressalva",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.3443,
+          "nota": "Acurácia do usuário 0,556 (IC95 ±0,344; n=9/12, 2020, único ano validado). Positivo e acima do acaso, mas IC95 amplo — sustenta leitura qualitativa e ordem de grandeza, não número pontual preciso."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 6718,
+      "n_features_depois": 6718,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "cultivo_irrigado_2005": {
+      "ano": 2005,
+      "area_km2_final": 16.389,
+      "area_km2_original": 16.389,
+      "arquivo": "imagery/cultivo_irrigado_2005.geojson",
+      "bytes_antes": 1553387,
+      "bytes_depois": 765447,
+      "camada": "cultivo_irrigado",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.5556,
+          "confiabilidade": "defensavel_com_ressalva",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.3443,
+          "nota": "Acurácia do usuário 0,556 (IC95 ±0,344; n=9/12, 2020, único ano validado). Positivo e acima do acaso, mas IC95 amplo — sustenta leitura qualitativa e ordem de grandeza, não número pontual preciso."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 2320,
+      "n_features_depois": 2320,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "cultivo_irrigado_2010": {
+      "ano": 2010,
+      "area_km2_final": 152.6508,
+      "area_km2_original": 152.6508,
+      "arquivo": "imagery/cultivo_irrigado_2010.geojson",
+      "bytes_antes": 8837688,
+      "bytes_depois": 4247541,
+      "camada": "cultivo_irrigado",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.5556,
+          "confiabilidade": "defensavel_com_ressalva",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.3443,
+          "nota": "Acurácia do usuário 0,556 (IC95 ±0,344; n=9/12, 2020, único ano validado). Positivo e acima do acaso, mas IC95 amplo — sustenta leitura qualitativa e ordem de grandeza, não número pontual preciso."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 12014,
+      "n_features_depois": 12014,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "cultivo_irrigado_2015": {
+      "ano": 2015,
+      "area_km2_final": 42.66,
+      "area_km2_original": 42.66,
+      "arquivo": "imagery/cultivo_irrigado_2015.geojson",
+      "bytes_antes": 3619846,
+      "bytes_depois": 1787835,
+      "camada": "cultivo_irrigado",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.5556,
+          "confiabilidade": "defensavel_com_ressalva",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.3443,
+          "nota": "Acurácia do usuário 0,556 (IC95 ±0,344; n=9/12, 2020, único ano validado). Positivo e acima do acaso, mas IC95 amplo — sustenta leitura qualitativa e ordem de grandeza, não número pontual preciso."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 5554,
+      "n_features_depois": 5554,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "cultivo_irrigado_2020": {
+      "ano": 2020,
+      "area_km2_final": 34.5519,
+      "area_km2_original": 34.5519,
+      "arquivo": "imagery/cultivo_irrigado_2020.geojson",
+      "bytes_antes": 3496483,
+      "bytes_depois": 1778132,
+      "camada": "cultivo_irrigado",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.5556,
+          "confiabilidade": "defensavel_com_ressalva",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.3443,
+          "nota": "Acurácia do usuário 0,556 (IC95 ±0,344; n=9/12, 2020, único ano validado). Positivo e acima do acaso, mas IC95 amplo — sustenta leitura qualitativa e ordem de grandeza, não número pontual preciso."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 5725,
+      "n_features_depois": 5725,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "cultivo_irrigado_2025": {
+      "ano": 2025,
+      "area_km2_final": 107.4843,
+      "area_km2_original": 107.4843,
+      "arquivo": "imagery/cultivo_irrigado_2025.geojson",
+      "bytes_antes": 10962234,
+      "bytes_depois": 5558176,
+      "camada": "cultivo_irrigado",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.5556,
+          "confiabilidade": "defensavel_com_ressalva",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.3443,
+          "nota": "Acurácia do usuário 0,556 (IC95 ±0,344; n=9/12, 2020, único ano validado). Positivo e acima do acaso, mas IC95 amplo — sustenta leitura qualitativa e ordem de grandeza, não número pontual preciso."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 17824,
+      "n_features_depois": 17824,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "cultivo_sequeiro_2000": {
+      "ano": 2000,
+      "area_km2_final": 576.5526,
+      "area_km2_original": 576.5526,
+      "arquivo": "imagery/cultivo_sequeiro_2000.geojson",
+      "bytes_antes": 23930510,
+      "bytes_depois": 656989,
+      "camada": "cultivo_sequeiro",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.0,
+          "confiabilidade": "candidata_nao_confirmada",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.0,
+          "nota": "Acurácia do usuário 0,000 (IC95 ±0,000; n=8/12, 2020, único ano validado). NENHUM ponto confirmado como cultivo pelo intérprete visual; Jaccard ~0 contra GLAD/WorldCover em TODOS os anos. Rotular como 'vegetação de fenologia sazonal acentuada, candidata a cultivo OU savana natural', nunca como cultivo confirmado. Camada OFF por padrão no app."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 23141,
+      "n_features_depois": 2299,
+      "representacao": "grade_regular_1000m",
+      "tolerancia_simplificacao_m": null
+    },
+    "cultivo_sequeiro_2005": {
+      "ano": 2005,
+      "area_km2_final": 358.6707,
+      "area_km2_original": 358.6707,
+      "arquivo": "imagery/cultivo_sequeiro_2005.geojson",
+      "bytes_antes": 18120413,
+      "bytes_depois": 634988,
+      "camada": "cultivo_sequeiro",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.0,
+          "confiabilidade": "candidata_nao_confirmada",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.0,
+          "nota": "Acurácia do usuário 0,000 (IC95 ±0,000; n=8/12, 2020, único ano validado). NENHUM ponto confirmado como cultivo pelo intérprete visual; Jaccard ~0 contra GLAD/WorldCover em TODOS os anos. Rotular como 'vegetação de fenologia sazonal acentuada, candidata a cultivo OU savana natural', nunca como cultivo confirmado. Camada OFF por padrão no app."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 20771,
+      "n_features_depois": 2222,
+      "representacao": "grade_regular_1000m",
+      "tolerancia_simplificacao_m": null
+    },
+    "cultivo_sequeiro_2010": {
+      "ano": 2010,
+      "area_km2_final": 760.5009,
+      "area_km2_original": 760.5009,
+      "arquivo": "imagery/cultivo_sequeiro_2010.geojson",
+      "bytes_antes": 23615825,
+      "bytes_depois": 660121,
+      "camada": "cultivo_sequeiro",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.0,
+          "confiabilidade": "candidata_nao_confirmada",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.0,
+          "nota": "Acurácia do usuário 0,000 (IC95 ±0,000; n=8/12, 2020, único ano validado). NENHUM ponto confirmado como cultivo pelo intérprete visual; Jaccard ~0 contra GLAD/WorldCover em TODOS os anos. Rotular como 'vegetação de fenologia sazonal acentuada, candidata a cultivo OU savana natural', nunca como cultivo confirmado. Camada OFF por padrão no app."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 20209,
+      "n_features_depois": 2310,
+      "representacao": "grade_regular_1000m",
+      "tolerancia_simplificacao_m": null
+    },
+    "cultivo_sequeiro_2015": {
+      "ano": 2015,
+      "area_km2_final": 398.9025,
+      "area_km2_original": 398.9025,
+      "arquivo": "imagery/cultivo_sequeiro_2015.geojson",
+      "bytes_antes": 22492848,
+      "bytes_depois": 669262,
+      "camada": "cultivo_sequeiro",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.0,
+          "confiabilidade": "candidata_nao_confirmada",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.0,
+          "nota": "Acurácia do usuário 0,000 (IC95 ±0,000; n=8/12, 2020, único ano validado). NENHUM ponto confirmado como cultivo pelo intérprete visual; Jaccard ~0 contra GLAD/WorldCover em TODOS os anos. Rotular como 'vegetação de fenologia sazonal acentuada, candidata a cultivo OU savana natural', nunca como cultivo confirmado. Camada OFF por padrão no app."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 26084,
+      "n_features_depois": 2342,
+      "representacao": "grade_regular_1000m",
+      "tolerancia_simplificacao_m": null
+    },
+    "cultivo_sequeiro_2020": {
+      "ano": 2020,
+      "area_km2_final": 421.7004,
+      "area_km2_original": 421.7004,
+      "arquivo": "imagery/cultivo_sequeiro_2020.geojson",
+      "bytes_antes": 22802878,
+      "bytes_depois": 574193,
+      "camada": "cultivo_sequeiro",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.0,
+          "confiabilidade": "candidata_nao_confirmada",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.0,
+          "nota": "Acurácia do usuário 0,000 (IC95 ±0,000; n=8/12, 2020, único ano validado). NENHUM ponto confirmado como cultivo pelo intérprete visual; Jaccard ~0 contra GLAD/WorldCover em TODOS os anos. Rotular como 'vegetação de fenologia sazonal acentuada, candidata a cultivo OU savana natural', nunca como cultivo confirmado. Camada OFF por padrão no app."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 25539,
+      "n_features_depois": 2009,
+      "representacao": "grade_regular_1000m",
+      "tolerancia_simplificacao_m": null
+    },
+    "cultivo_sequeiro_2025": {
+      "ano": 2025,
+      "area_km2_final": 633.8484,
+      "area_km2_original": 633.8484,
+      "arquivo": "imagery/cultivo_sequeiro_2025.geojson",
+      "bytes_antes": 36937895,
+      "bytes_depois": 689219,
+      "camada": "cultivo_sequeiro",
+      "caveats": {
+        "adr_0012_confiabilidade": {
+          "acuracia_usuario_2020": 0.0,
+          "confiabilidade": "candidata_nao_confirmada",
+          "fonte": "data/processed/acuracia_cultivo_por_ano.csv (docs/ADR/0012)",
+          "ic95_2020": 0.0,
+          "nota": "Acurácia do usuário 0,000 (IC95 ±0,000; n=8/12, 2020, único ano validado). NENHUM ponto confirmado como cultivo pelo intérprete visual; Jaccard ~0 contra GLAD/WorldCover em TODOS os anos. Rotular como 'vegetação de fenologia sazonal acentuada, candidata a cultivo OU savana natural', nunca como cultivo confirmado. Camada OFF por padrão no app."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 42307,
+      "n_features_depois": 2412,
+      "representacao": "grade_regular_1000m",
+      "tolerancia_simplificacao_m": null
+    },
+    "industrial_2000": {
+      "ano": 2000,
+      "area_km2_final": 0.0,
+      "area_km2_original": 0.0,
+      "arquivo": "imagery/industrial_2000.geojson",
+      "bytes_antes": 161,
+      "bytes_depois": 42,
+      "camada": "industrial",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 0.0,
+          "area_sem_permanencia_km2": 0.0,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 0,
+      "n_features_depois": 0,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 0.0
+    },
+    "industrial_2005": {
+      "ano": 2005,
+      "area_km2_final": 0.0,
+      "area_km2_original": 0.0,
+      "arquivo": "imagery/industrial_2005.geojson",
+      "bytes_antes": 161,
+      "bytes_depois": 42,
+      "camada": "industrial",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 0.0,
+          "area_sem_permanencia_km2": 0.0,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 0,
+      "n_features_depois": 0,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 0.0
+    },
+    "industrial_2010": {
+      "ano": 2010,
+      "area_km2_final": 7.4313,
+      "area_km2_original": 7.4313,
+      "arquivo": "imagery/industrial_2010.geojson",
+      "bytes_antes": 231220,
+      "bytes_depois": 109955,
+      "camada": "industrial",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 7.431,
+          "area_sem_permanencia_km2": 7.431,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 285,
+      "n_features_depois": 285,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "industrial_2015": {
+      "ano": 2015,
+      "area_km2_final": 31.5459,
+      "area_km2_original": 31.5459,
+      "arquivo": "imagery/industrial_2015.geojson",
+      "bytes_antes": 326002,
+      "bytes_depois": 138604,
+      "camada": "industrial",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 31.546,
+          "area_sem_permanencia_km2": 31.546,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 244,
+      "n_features_depois": 244,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "industrial_2020": {
+      "ano": 2020,
+      "area_km2_final": 41.4936,
+      "area_km2_original": 41.4936,
+      "arquivo": "imagery/industrial_2020.geojson",
+      "bytes_antes": 402260,
+      "bytes_depois": 171600,
+      "camada": "industrial",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 41.494,
+          "area_sem_permanencia_km2": 41.494,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 293,
+      "n_features_depois": 293,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "industrial_2025": {
+      "ano": 2025,
+      "area_km2_final": 56.6757,
+      "area_km2_original": 56.6757,
+      "arquivo": "imagery/industrial_2025.geojson",
+      "bytes_antes": 373078,
+      "bytes_depois": 155143,
+      "camada": "industrial",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 56.676,
+          "area_sem_permanencia_km2": 56.676,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 228,
+      "n_features_depois": 228,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "reassentamento_2000": {
+      "ano": 2000,
+      "area_km2_final": 0.0,
+      "area_km2_original": 0.0,
+      "arquivo": "imagery/reassentamento_2000.geojson",
+      "bytes_antes": 165,
+      "bytes_depois": 42,
+      "camada": "reassentamento",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 0.0,
+          "area_sem_permanencia_km2": 0.0,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 0,
+      "n_features_depois": 0,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 0.0
+    },
+    "reassentamento_2005": {
+      "ano": 2005,
+      "area_km2_final": 0.0,
+      "area_km2_original": 0.0,
+      "arquivo": "imagery/reassentamento_2005.geojson",
+      "bytes_antes": 165,
+      "bytes_depois": 42,
+      "camada": "reassentamento",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 0.0,
+          "area_sem_permanencia_km2": 0.0,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 0,
+      "n_features_depois": 0,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 0.0
+    },
+    "reassentamento_2010": {
+      "ano": 2010,
+      "area_km2_final": 1.2042,
+      "area_km2_original": 1.2042,
+      "arquivo": "imagery/reassentamento_2010.geojson",
+      "bytes_antes": 31925,
+      "bytes_depois": 11114,
+      "camada": "reassentamento",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 1.204,
+          "area_sem_permanencia_km2": 1.204,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 3,
+      "n_features_depois": 3,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "reassentamento_2015": {
+      "ano": 2015,
+      "area_km2_final": 1.6461,
+      "area_km2_original": 1.6461,
+      "arquivo": "imagery/reassentamento_2015.geojson",
+      "bytes_antes": 70850,
+      "bytes_depois": 30411,
+      "camada": "reassentamento",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 1.646,
+          "area_sem_permanencia_km2": 1.646,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 69,
+      "n_features_depois": 69,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "reassentamento_2020": {
+      "ano": 2020,
+      "area_km2_final": 0.7038,
+      "area_km2_original": 0.7038,
+      "arquivo": "imagery/reassentamento_2020.geojson",
+      "bytes_antes": 43742,
+      "bytes_depois": 21520,
+      "camada": "reassentamento",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 0.704,
+          "area_sem_permanencia_km2": 0.704,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 63,
+      "n_features_depois": 63,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "reassentamento_2025": {
+      "ano": 2025,
+      "area_km2_final": 1.089,
+      "area_km2_original": 1.089,
+      "arquivo": "imagery/reassentamento_2025.geojson",
+      "bytes_antes": 74743,
+      "bytes_depois": 36611,
+      "camada": "reassentamento",
+      "caveats": {
+        "adr_0013_catraca": {
+          "area_publicada_km2": 1.089,
+          "area_sem_permanencia_km2": 1.089,
+          "fonte": "data/processed/pegada_por_ano.csv (docs/ADR/0013)",
+          "fracao_herdada": 0.0,
+          "nota": "docs/ADR/0013 item 5 recomenda remover a permanência (R2) de `industrial` e `reassentamento` (mina fecha e reabilita; povoado pode ser abandonado, e R2 torna abandono indetectável por construção). Decisão de reprocessar a série é do orquestrador da Fase 3, não deste script — o número acima é só a exposição do que já está publicado."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 106,
+      "n_features_depois": 106,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "solo_exposto_2000": {
+      "ano": 2000,
+      "camada": "solo_exposto",
+      "fonte_intocada": "data/processed/imagery/solo_exposto_2000.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 41x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "solo_exposto_2005": {
+      "ano": 2005,
+      "camada": "solo_exposto",
+      "fonte_intocada": "data/processed/imagery/solo_exposto_2005.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 41x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "solo_exposto_2010": {
+      "ano": 2010,
+      "camada": "solo_exposto",
+      "fonte_intocada": "data/processed/imagery/solo_exposto_2010.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 41x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "solo_exposto_2015": {
+      "ano": 2015,
+      "camada": "solo_exposto",
+      "fonte_intocada": "data/processed/imagery/solo_exposto_2015.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 41x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "solo_exposto_2020": {
+      "ano": 2020,
+      "camada": "solo_exposto",
+      "fonte_intocada": "data/processed/imagery/solo_exposto_2020.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 41x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "solo_exposto_2025": {
+      "ano": 2025,
+      "camada": "solo_exposto",
+      "fonte_intocada": "data/processed/imagery/solo_exposto_2025.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 41x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "urbano_2000": {
+      "ano": 2000,
+      "area_km2_final": 13.806,
+      "area_km2_original": 13.806,
+      "arquivo": "imagery/urbano_2000.geojson",
+      "bytes_antes": 462969,
+      "bytes_depois": 190694,
+      "camada": "urbano",
+      "caveats": {
+        "adr_0009_comissao": {
+          "acuracia_usuario_construido": 0.5238,
+          "comissao_estimada": 0.4762,
+          "fonte": "data/processed/acuracia_por_ano.csv (docs/ADR/0009)",
+          "ic95": 0.2184
+        },
+        "adr_0013_catraca": {
+          "area_publicada_km2": 14.044,
+          "estoque_sustentado_pelo_ano_km2": 14.044,
+          "fonte": "data/processed/causal/decomposicao_permanencia_urbano.csv (docs/ADR/0013)",
+          "fracao_estoque_herdada": 0.0,
+          "nota": "Série não-decrescente por construção (regra R2 de permanência); incapaz de mostrar contração. fracao_estoque_herdada é a parcela do estoque publicado NÃO detectada pela classificação do próprio ano — só herdada da união com anos anteriores."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 344,
+      "n_features_depois": 344,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "urbano_2005": {
+      "ano": 2005,
+      "area_km2_final": 20.4777,
+      "area_km2_original": 20.4777,
+      "arquivo": "imagery/urbano_2005.geojson",
+      "bytes_antes": 661751,
+      "bytes_depois": 272387,
+      "camada": "urbano",
+      "caveats": {
+        "adr_0009_comissao": {
+          "acuracia_usuario_construido": 0.6087,
+          "comissao_estimada": 0.3913,
+          "fonte": "data/processed/acuracia_por_ano.csv (docs/ADR/0009)",
+          "ic95": 0.2037
+        },
+        "adr_0013_catraca": {
+          "area_publicada_km2": 20.732,
+          "estoque_sustentado_pelo_ano_km2": 20.732,
+          "fonte": "data/processed/causal/decomposicao_permanencia_urbano.csv (docs/ADR/0013)",
+          "fracao_estoque_herdada": 0.0,
+          "nota": "Série não-decrescente por construção (regra R2 de permanência); incapaz de mostrar contração. fracao_estoque_herdada é a parcela do estoque publicado NÃO detectada pela classificação do próprio ano — só herdada da união com anos anteriores."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 473,
+      "n_features_depois": 473,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "urbano_2010": {
+      "ano": 2010,
+      "area_km2_final": 28.1592,
+      "area_km2_original": 28.1592,
+      "arquivo": "imagery/urbano_2010.geojson",
+      "bytes_antes": 724824,
+      "bytes_depois": 293733,
+      "camada": "urbano",
+      "caveats": {
+        "adr_0009_comissao": {
+          "acuracia_usuario_construido": 0.2857,
+          "comissao_estimada": 0.7143,
+          "fonte": "data/processed/acuracia_por_ano.csv (docs/ADR/0009)",
+          "ic95": 0.1978
+        },
+        "adr_0013_catraca": {
+          "area_publicada_km2": 28.264,
+          "estoque_sustentado_pelo_ano_km2": 28.546,
+          "fonte": "data/processed/causal/decomposicao_permanencia_urbano.csv (docs/ADR/0013)",
+          "fracao_estoque_herdada": 0.0343,
+          "nota": "Série não-decrescente por construção (regra R2 de permanência); incapaz de mostrar contração. fracao_estoque_herdada é a parcela do estoque publicado NÃO detectada pela classificação do próprio ano — só herdada da união com anos anteriores."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 477,
+      "n_features_depois": 477,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "urbano_2015": {
+      "ano": 2015,
+      "area_km2_final": 37.278,
+      "area_km2_original": 37.278,
+      "arquivo": "imagery/urbano_2015.geojson",
+      "bytes_antes": 896906,
+      "bytes_depois": 361701,
+      "camada": "urbano",
+      "caveats": {
+        "adr_0009_comissao": {
+          "acuracia_usuario_construido": 0.5909,
+          "comissao_estimada": 0.4091,
+          "fonte": "data/processed/acuracia_por_ano.csv (docs/ADR/0009)",
+          "ic95": 0.2099
+        },
+        "adr_0013_catraca": {
+          "area_publicada_km2": 36.761,
+          "estoque_sustentado_pelo_ano_km2": 36.393,
+          "fonte": "data/processed/causal/decomposicao_permanencia_urbano.csv (docs/ADR/0013)",
+          "fracao_estoque_herdada": 0.061,
+          "nota": "Série não-decrescente por construção (regra R2 de permanência); incapaz de mostrar contração. fracao_estoque_herdada é a parcela do estoque publicado NÃO detectada pela classificação do próprio ano — só herdada da união com anos anteriores."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 522,
+      "n_features_depois": 522,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "urbano_2020": {
+      "ano": 2020,
+      "area_km2_final": 39.4551,
+      "area_km2_original": 39.4551,
+      "arquivo": "imagery/urbano_2020.geojson",
+      "bytes_antes": 891651,
+      "bytes_depois": 360770,
+      "camada": "urbano",
+      "caveats": {
+        "adr_0009_comissao": {
+          "acuracia_usuario_construido": 0.4762,
+          "comissao_estimada": 0.5238,
+          "fonte": "data/processed/acuracia_por_ano.csv (docs/ADR/0009)",
+          "ic95": 0.2184
+        },
+        "adr_0013_catraca": {
+          "area_publicada_km2": 39.206,
+          "estoque_sustentado_pelo_ano_km2": 36.105,
+          "fonte": "data/processed/causal/decomposicao_permanencia_urbano.csv (docs/ADR/0013)",
+          "fracao_estoque_herdada": 0.1274,
+          "nota": "Série não-decrescente por construção (regra R2 de permanência); incapaz de mostrar contração. fracao_estoque_herdada é a parcela do estoque publicado NÃO detectada pela classificação do próprio ano — só herdada da união com anos anteriores."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 530,
+      "n_features_depois": 530,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "urbano_2025": {
+      "ano": 2025,
+      "area_km2_final": 43.1028,
+      "area_km2_original": 43.1028,
+      "arquivo": "imagery/urbano_2025.geojson",
+      "bytes_antes": 959404,
+      "bytes_depois": 392165,
+      "camada": "urbano",
+      "caveats": {
+        "adr_0009_comissao": {
+          "acuracia_usuario_construido": 0.625,
+          "comissao_estimada": 0.375,
+          "fonte": "data/processed/acuracia_por_ano.csv (docs/ADR/0009)",
+          "ic95": 0.1979
+        },
+        "adr_0013_catraca": {
+          "area_publicada_km2": 42.838,
+          "estoque_sustentado_pelo_ano_km2": 39.604,
+          "fonte": "data/processed/causal/decomposicao_permanencia_urbano.csv (docs/ADR/0013)",
+          "fracao_estoque_herdada": 0.1799,
+          "nota": "Série não-decrescente por construção (regra R2 de permanência); incapaz de mostrar contração. fracao_estoque_herdada é a parcela do estoque publicado NÃO detectada pela classificação do próprio ano — só herdada da união com anos anteriores."
+        }
+      },
+      "erro_area_pct": 0.0,
+      "n_features_antes": 622,
+      "n_features_depois": 622,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "varzea": {
+      "ano": null,
+      "area_km2_final": 650.1825,
+      "area_km2_original": 650.1825,
+      "arquivo": "imagery/varzea.geojson",
+      "bytes_antes": 7101118,
+      "bytes_depois": 2620477,
+      "camada": "varzea",
+      "caveats": {},
+      "erro_area_pct": 0.0,
+      "n_features_antes": 1490,
+      "n_features_depois": 1490,
+      "representacao": "poligono_simplificado",
+      "tolerancia_simplificacao_m": 15
+    },
+    "vegetacao_2000": {
+      "ano": 2000,
+      "camada": "vegetacao",
+      "fonte_intocada": "data/processed/imagery/vegetacao_2000.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 32x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "vegetacao_2005": {
+      "ano": 2005,
+      "camada": "vegetacao",
+      "fonte_intocada": "data/processed/imagery/vegetacao_2005.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 32x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "vegetacao_2010": {
+      "ano": 2010,
+      "camada": "vegetacao",
+      "fonte_intocada": "data/processed/imagery/vegetacao_2010.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 32x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "vegetacao_2015": {
+      "ano": 2015,
+      "camada": "vegetacao",
+      "fonte_intocada": "data/processed/imagery/vegetacao_2015.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 32x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "vegetacao_2020": {
+      "ano": 2020,
+      "camada": "vegetacao",
+      "fonte_intocada": "data/processed/imagery/vegetacao_2020.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 32x entre anos)",
+      "status": "excluida_do_app"
+    },
+    "vegetacao_2025": {
+      "ano": 2025,
+      "camada": "vegetacao",
+      "fonte_intocada": "data/processed/imagery/vegetacao_2025.geojson",
+      "motivo": "classe intermediária de cobertura, fora das camadas de mapa pedidas em §6; instabilidade ADR 0013 item 3 (fator 32x entre anos)",
+      "status": "excluida_do_app"
+    }
+  },
+  "camadas_contexto": {
+    "osm_aerodromo": {
+      "arquivo": "imagery/osm_aerodromo.geojson",
+      "atribuicao_exigida": "© OpenStreetMap contributors",
+      "camada": "osm_aerodromo",
+      "descricao": "Aeródromo de Tete / Chingodzi (IATA TET, ICAO FQTT) e pista — OpenStreetMap",
+      "fonte": "OpenStreetMap (Geofabrik Moçambique), data/LICENSES.md",
+      "fonte_bruta": "data/raw/osm_aerodromo_aoi.geojson",
+      "licenca": "ODbL 1.0 — © OpenStreetMap contributors",
+      "n_features": 2,
+      "reprojetado": false,
+      "simplificado": false
+    },
+    "osm_ferrovia": {
+      "arquivo": "imagery/osm_ferrovia.geojson",
+      "atribuicao_exigida": "© OpenStreetMap contributors",
+      "camada": "osm_ferrovia",
+      "descricao": "Ferrovia (linha do Sena) — OpenStreetMap",
+      "fonte": "OpenStreetMap (Geofabrik Moçambique), data/LICENSES.md",
+      "fonte_bruta": "data/raw/osm_ferrovia_aoi.geojson",
+      "licenca": "ODbL 1.0 — © OpenStreetMap contributors",
+      "n_features": 57,
+      "reprojetado": false,
+      "simplificado": false
+    },
+    "osm_lugares": {
+      "arquivo": "imagery/osm_lugares.geojson",
+      "atribuicao_exigida": "© OpenStreetMap contributors",
+      "camada": "osm_lugares",
+      "descricao": "Topônimos (cidades, vilas, povoados) — OpenStreetMap",
+      "fonte": "OpenStreetMap (Geofabrik Moçambique), data/LICENSES.md",
+      "fonte_bruta": "data/raw/osm_lugares_aoi.geojson",
+      "licenca": "ODbL 1.0 — © OpenStreetMap contributors",
+      "n_features": 23,
+      "reprojetado": false,
+      "simplificado": false
+    },
+    "osm_vias": {
+      "arquivo": "imagery/osm_vias.geojson",
+      "atribuicao_exigida": "© OpenStreetMap contributors",
+      "camada": "osm_vias",
+      "descricao": "Rede rodoviária (trunk/primary/secondary/tertiary) — OpenStreetMap",
+      "fonte": "OpenStreetMap (Geofabrik Moçambique), data/LICENSES.md",
+      "fonte_bruta": "data/raw/osm_vias_aoi.geojson",
+      "licenca": "ODbL 1.0 — © OpenStreetMap contributors",
+      "n_features": 219,
+      "reprojetado": false,
+      "simplificado": false
+    }
+  },
+  "churn_pares_temporais": {
+    "2000-2005__agua": {
+      "churn": 0.908,
+      "classe": "agua",
+      "jaccard": 0.092,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2000-2005",
+      "razao_area_t1_sobre_t": 1.0424
+    },
+    "2000-2005__construido": {
+      "churn": 0.4749,
+      "classe": "construido",
+      "jaccard": 0.5251,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2000-2005",
+      "razao_area_t1_sobre_t": 1.4113
+    },
+    "2000-2005__solo_exposto": {
+      "churn": 0.1411,
+      "classe": "solo_exposto",
+      "jaccard": 0.8589,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2000-2005",
+      "razao_area_t1_sobre_t": 0.9923
+    },
+    "2000-2005__vegetacao": {
+      "churn": 0.7376,
+      "classe": "vegetacao",
+      "jaccard": 0.2624,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2000-2005",
+      "razao_area_t1_sobre_t": 1.0322
+    },
+    "2005-2010__agua": {
+      "churn": 0.9152,
+      "classe": "agua",
+      "jaccard": 0.0848,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2005-2010",
+      "razao_area_t1_sobre_t": 6.1901
+    },
+    "2005-2010__construido": {
+      "churn": 0.4734,
+      "classe": "construido",
+      "jaccard": 0.5266,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2005-2010",
+      "razao_area_t1_sobre_t": 1.3964
+    },
+    "2005-2010__solo_exposto": {
+      "churn": 0.7609,
+      "classe": "solo_exposto",
+      "jaccard": 0.2391,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2005-2010",
+      "razao_area_t1_sobre_t": 0.2475
+    },
+    "2005-2010__vegetacao": {
+      "churn": 0.8625,
+      "classe": "vegetacao",
+      "jaccard": 0.1375,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2005-2010",
+      "razao_area_t1_sobre_t": 6.9722
+    },
+    "2010-2015__agua": {
+      "churn": 0.9625,
+      "classe": "agua",
+      "jaccard": 0.0375,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2010-2015",
+      "razao_area_t1_sobre_t": 0.2663
+    },
+    "2010-2015__construido": {
+      "churn": 0.5443,
+      "classe": "construido",
+      "jaccard": 0.4557,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2010-2015",
+      "razao_area_t1_sobre_t": 1.5608
+    },
+    "2010-2015__solo_exposto": {
+      "churn": 0.8203,
+      "classe": "solo_exposto",
+      "jaccard": 0.1797,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2010-2015",
+      "razao_area_t1_sobre_t": 0.3175
+    },
+    "2010-2015__vegetacao": {
+      "churn": 0.2063,
+      "classe": "vegetacao",
+      "jaccard": 0.7937,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2010-2015",
+      "razao_area_t1_sobre_t": 1.1815
+    },
+    "2015-2020__agua": {
+      "churn": 0.975,
+      "classe": "agua",
+      "jaccard": 0.025,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2015-2020",
+      "razao_area_t1_sobre_t": 8.2895
+    },
+    "2015-2020__construido": {
+      "churn": 0.4152,
+      "classe": "construido",
+      "jaccard": 0.5848,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2015-2020",
+      "razao_area_t1_sobre_t": 0.7741
+    },
+    "2015-2020__solo_exposto": {
+      "churn": 0.9089,
+      "classe": "solo_exposto",
+      "jaccard": 0.0911,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2015-2020",
+      "razao_area_t1_sobre_t": 10.3212
+    },
+    "2015-2020__vegetacao": {
+      "churn": 0.698,
+      "classe": "vegetacao",
+      "jaccard": 0.302,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2015-2020",
+      "razao_area_t1_sobre_t": 0.3041
+    },
+    "2020-2025__agua": {
+      "churn": 0.736,
+      "classe": "agua",
+      "jaccard": 0.264,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2020-2025",
+      "razao_area_t1_sobre_t": 2.0423
+    },
+    "2020-2025__construido": {
+      "churn": 0.31,
+      "classe": "construido",
+      "jaccard": 0.69,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2020-2025",
+      "razao_area_t1_sobre_t": 0.9891
+    },
+    "2020-2025__solo_exposto": {
+      "churn": 0.2556,
+      "classe": "solo_exposto",
+      "jaccard": 0.7444,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2020-2025",
+      "razao_area_t1_sobre_t": 1.3026
+    },
+    "2020-2025__vegetacao": {
+      "churn": 0.8075,
+      "classe": "vegetacao",
+      "jaccard": 0.1925,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2020-2025",
+      "razao_area_t1_sobre_t": 0.2234
+    }
+  },
+  "crs_origem": "EPSG:32736",
+  "crs_saida": "EPSG:4326 (RFC 7946, sem membro crs)",
+  "erro_area_maximo_pct": 1.0,
+  "gerado_por": "pipeline/05_app/build_web_assets.py",
+  "precisao_coordenada_decimais": 6,
+  "tolerancia_candidatos_m": [
+    15,
+    10,
+    5,
+    2,
+    1,
+    0.5,
+    0.1,
+    0
+  ]
+}

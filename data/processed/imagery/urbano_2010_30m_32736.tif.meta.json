@@ -4,11 +4,11 @@
   "arquivo_raster": "data/processed/imagery/urbano_2010_30m_32736.tif",
   "arquivo_vetor": "data/processed/imagery/urbano_2010.geojson",
   "n_poligonos_vetor": 477,
-  "area_km2": 28.2636,
-  "n_pixels": 31404,
+  "area_km2": 28.1592,
+  "n_pixels": 31288,
   "resolucao_m": 30,
   "crs": "EPSG:32736",
-  "metodo": "Random Forest com protocolo único em todos os anos (config/seeds.yaml -> random_forest); rótulos de treino ancorados no WSF Evolution e em limiares físicos fixos; features incluem as métricas fenológicas chuva-seca.",
+  "metodo": "Random Forest com protocolo único em todos os anos (config/seeds.yaml -> random_forest); rótulos de treino ancorados no WSF Evolution e em limiares físicos (o de vegetação relativo à mediana da paisagem do ano, docs/ADR/0014); features incluem as métricas fenológicas chuva-seca.",
   "ordem_precedencia": "industrial > reassentamento > urbano",
   "natureza": "cobertura classificada",
   "diagnostico_pegada": null,
@@ -19,41 +19,46 @@
   "papel_wsf": "semente de treino (não é validação — ver docstring do script)",
   "papel_ghsl": "referência independente de concordância (não entra em treino)",
   "selo": "observado",
-  "data_processamento": "2026-09-08T12:48:22.980351+00:00",
-  "commit_git": "desconhecido (git indisponível)",
+  "data_processamento": "2026-09-08T14:46:17.131408+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
   "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "hash_config_seeds_yaml": "3bd52590e495f4eeb8327c17eeefaa9b4c2b1c78c827ebfc70edddacfad0997f",
   "script": "pipeline/01_imagery/classificacao.py",
   "info_treino_rf": {
-    "n_amostras_treino": 200378,
+    "n_amostras_treino": 200000,
     "n_disponivel_por_classe": {
-      "agua": 1541,
-      "vegetacao": 2028143,
-      "solo_exposto": 501653,
+      "agua": 39062,
+      "vegetacao": 277807,
+      "solo_exposto": 2252433,
       "construido": 34548
     },
     "n_amostrado_por_classe": {
-      "agua": 500,
-      "vegetacao": 158293,
-      "solo_exposto": 38868,
-      "construido": 2717
+      "agua": 2988,
+      "vegetacao": 20981,
+      "solo_exposto": 173354,
+      "construido": 2677
     },
     "importancia_features": {
-      "ndvi": 0.4330295250382635,
-      "ndbi": 0.041476673187156976,
-      "mndwi": 0.02088435817828568,
-      "ndwi": 0.1476902889289093,
-      "evi": 0.16108973296467832,
-      "ndvi_chuva": 0.009504687554339598,
-      "ndvi_amplitude": 0.0042752702861089086,
-      "blue": 0.037226878329561175,
-      "green": 0.022867484691704312,
-      "red": 0.06754498428067059,
-      "nir": 0.011187056207391785,
-      "swir16": 0.01417258205962744,
-      "swir22": 0.029050478293302536
+      "ndvi": 0.3687992728039357,
+      "ndbi": 0.05301124998329458,
+      "mndwi": 0.03494782449669593,
+      "ndwi": 0.1500752926509493,
+      "evi": 0.1405657539699807,
+      "ndvi_chuva": 0.014846939081357936,
+      "ndvi_amplitude": 0.005888231305380558,
+      "blue": 0.030677426015020253,
+      "green": 0.02169056668816358,
+      "red": 0.07211919492322398,
+      "nir": 0.03474311692941381,
+      "swir16": 0.031058903568511417,
+      "swir22": 0.041576227584072374
     },
     "estrategia_amostragem": "proporcional_ao_prior",
-    "fonte_rotulos": "positivos = WSF Evolution erodido 3x3 (WSF <= min(ano, 2015)); negativos = partição exaustiva por limiares físicos fixos, fora de uma faixa de guarda de 150 m em torno de qualquer WSF construído e fora de mineração/reassentamento. Nenhum percentil da própria imagem."
+    "limiar_vegetacao": {
+      "mediana_ndvi_seca_pool_negativo": 0.3638306260108948,
+      "limiar_vegetacao_ndvi_seca_do_ano": 0.4729798138141632,
+      "razao_verde_vegetacao": 1.3
+    },
+    "fonte_rotulos": "positivos = WSF Evolution erodido 3x3 (WSF <= min(ano, 2015)); negativos = partição exaustiva, fora de uma faixa de guarda de 150 m em torno de qualquer WSF construído e fora de mineração/reassentamento. `agua` por limiar canônico de Xu 2006 (MNDWI > 0 e NDWI > 0); `vegetacao` por RAZÃO à mediana de NDVI(seca) da paisagem do próprio ano (>= 1.3 x mediana = 0.4730 neste ano), docs/ADR/0014 — NÃO é limiar absoluto nem percentil da imagem."
   }
 }

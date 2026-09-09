@@ -1,0 +1,25 @@
+{
+  "url": "https://io-10m-annual-lulc.s3.us-west-2.amazonaws.com/36L_2018.tif",
+  "download_date": "2026-09-08T13:16:06.830179+00:00",
+  "size_bytes": 27591,
+  "license": "CC-BY 4.0",
+  "license_url": "https://registry.opendata.aws/io-lulc/",
+  "level": "A",
+  "selo": "observado",
+  "source_page": "https://registry.opendata.aws/io-lulc/",
+  "dataset": "ESRI/Impact Observatory 10m Annual LULC",
+  "ano": 2018,
+  "anos_cobertos": "2018",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0,
+    "crs": "EPSG:4326"
+  },
+  "citation": "Karra, K., Kontgis, C., Statman-Weil, Z., Mazzariello, J.C., Mathis, M., Brumby, S.P. (2021). \"Global land use/land cover with Sentinel-2 and deep learning.\" IGARSS 2021. Impact Observatory, Microsoft, Esri (2023, atualizado anualmente). \"Sentinel-2 10m Land Use/Land Cover Time Series.\"",
+  "celula_mgrs_gzd": "36L",
+  "resolution_m": 10,
+  "crs_nativo": "EPSG:32736",
+  "nota": "Recortado da AOI (+2000 m de margem, em EPSG:32736) via leitura em janela GDAL /vsicurl/ no momento do fetch; o tile inteiro da célula GZD 36L (~200-250 MB) NÃO foi mirrorado."
+}

@@ -77,6 +77,79 @@ camadas:
       - {ano_min: 2000, ano_max: 2030, min_km2: 5.0, max_km2: 200.0,
          nota: "a AOI tem ~2.500 km²; construído acima de 200 km² (8% da AOI) indica confusão com solo exposto, o defeito que reprovou a primeira classificação"}
 
+  cultivo_sequeiro:
+    descricao: >-
+      Recorte fenológico DENTRO de `solo_exposto` (amplitude de NDVI chuva-seca alta,
+      relativa à mediana da paisagem do ano) — candidata a cultivo de sequeiro OU savana
+      herbácea/arbustiva sazonal, NÃO confirmado como cropland (docs/ADR/0012)
+    justificativa: >-
+      Validação própria por interpretação visual (`acuracia_cultivo_por_ano.csv`, 2020):
+      acurácia do usuário **0,000** (n=8 pontos decidíveis de 12 amostrados) — nenhum
+      ponto que o mapa chama de `cultivo_sequeiro` foi confirmado como tal pelo
+      intérprete. docs/ADR/0012 declara a camada NÃO defensável como cropland com a
+      fenologia bianual disponível; ela mede "vegetação de fenologia sazonal acentuada".
+      A faixa abaixo cobre só ordem de grandeza (0–35% da AOI de ~2.500 km²) e NÃO
+      confere confiabilidade temática — essa é a acurácia acima, que é ruim e está
+      declarada. Nenhuma referência externa (GLAD Cropland/ESA WorldCover) estava
+      disponível em `data/raw/` no momento desta execução.
+    faixas:
+      - {ano_min: 2000, ano_max: 2030, min_km2: 0.0, max_km2: 900.0,
+         nota: "só ordem de grandeza (até 35% da AOI); a série oscila fortemente por instabilidade herdada da Fase 1 (cultivo_por_ano.csv) — não é critério de acurácia temática, que é 0,000 (docs/ADR/0012)"}
+
+  cultivo_irrigado:
+    descricao: >-
+      Recorte fenológico DENTRO de `vegetacao` (amplitude de NDVI chuva-seca baixa,
+      relativa à mediana da paisagem do ano) — verde persistente candidato a irrigação
+      ou cultivo de vazante; inclui mata ripária não distinguida (docs/ADR/0012)
+    justificativa: >-
+      Validação própria por interpretação visual (`acuracia_cultivo_por_ano.csv`, 2020):
+      acurácia do usuário 0,556 (IC95 ±0,344; n=9 pontos decidíveis de 12 amostrados) —
+      positiva e acima do acaso, mas com intervalo largo (docs/ADR/0012). A camada é
+      mais enriquecida em várzea do que `cultivo_sequeiro` em 4 dos 6 anos-âncora
+      (`cultivo_varzea_por_ano.csv`), coerente com cultivo de vazante/irrigado perto de
+      água. A faixa cobre só ordem de grandeza.
+    faixas:
+      - {ano_min: 2000, ano_max: 2030, min_km2: 0.0, max_km2: 700.0,
+         nota: "só ordem de grandeza (até 28% da AOI); acurácia do usuário medida é 0,556 ± 0,344 (n=9, ano único 2020) — ver docs/ADR/0012"}
+
+  adensamento:
+    descricao: "Adensamento 2020-2025 por concordância de três sinais (posto de fração construída, tendência de luz, resíduo de edificações) — docs/ADR/0016"
+    justificativa: >-
+      O domínio (43.416 células de 240 m, n_pixels_30m == 64) é aritmética de grade, não
+      estimativa: a grade canônica tem 1299x2144 pixels de 30 m; 2144/8 = 268 exato e
+      1299/8 = 162,375, logo 162 linhas completas x 268 colunas = 43.416 células de
+      0,0576 km2, somando 2.500,76 km2. As 268 células parciais da borda sul
+      (5,79 km2, 0,23% da AOI) saem do domínio por construção (n_pixels_30m < 64), não
+      por corte de qualidade. A faixa "faixas" abaixo cobre só a soma de TODAS as classes
+      2-6 (tudo que não é fora_de_dominio) contra esse domínio conhecido a priori — é
+      um contrato de aritmética de grade, não de acurácia temática. A confiabilidade
+      por classe está em faixas_por_classe, como fração do domínio (D+, §Decisão-9 do
+      ADR), e é verificada por pipeline/tests/test_adensamento.py, não por este
+      contrato genérico (o esquema de plausibilidade.yaml aqui não tem noção de classe
+      dentro de um único raster multi-classe).
+    faixas:
+      - {ano_min: 2020, ano_max: 2020, min_km2: 2000.0, max_km2: 2600.0,
+         nota: "soma de todas as classes 2-6 (tudo exceto fora_de_dominio); domínio conhecido a priori = 2.500,76 km2"}
+    faixas_por_classe:
+      # Fração do domínio (D+ = 2.500,76 km2), não área absoluta — os cortes são
+      # relativos à paisagem do próprio ano (docs/ADR/0016 §Decisão-2), logo a fração
+      # de cada classe é a única grandeza estável entre execuções.
+      fora_de_dominio: {min_fracao: 0.0, max_fracao: 0.02,
+        nota: "268 células parciais da borda sul, ~0,23% da AOI — teto folgado a 2%"}
+      vazio_estavel: {min_fracao: 0.50, max_fracao: 0.99,
+        nota: "construído é minoria da AOI (~1-2%); a maior parte do domínio fica abaixo do piso Q_BAIXO nos dois anos"}
+      esparso_estavel: {min_fracao: 0.0, max_fracao: 0.10,
+        nota: "faixa média de f_2020 sem concordância de sinais"}
+      adensando: {min_fracao: 0.0, max_fracao: 0.10,
+        nota: "publicada como padrão espacial (razão de sensibilidade fora de [0.5,2.0] — ver emenda do ADR), não como área pontual"}
+      expansao_nova: {min_fracao: 0.0, max_fracao: 0.05,
+        nota: "cruza o piso Q_BAIXO entre 2020 e 2025"}
+      consolidado: {min_fracao: 0.0, max_fracao: 0.05,
+        nota: "já pleno (f_2020 >= Q_ALTO) no início da janela"}
+      pegada_industrial: {min_fracao: 0.0, max_fracao: 0.05,
+        nota: "fracao_industrial acima do quantil Q_INDUSTRIAL das células industriais"}
+
+
 # Regra de escape: uma camada pode sair da faixa se um ADR explicar por quê. Declare aqui
 # o número do ADR e o contrato passa a exigir que ele exista e mencione a camada.
 excecoes: {}

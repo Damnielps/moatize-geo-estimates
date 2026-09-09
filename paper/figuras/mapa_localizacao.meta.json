@@ -12,15 +12,15 @@
     ],
     "urbano": [
       "data/processed/imagery/urbano_2025.geojson",
-      "e9542772dcec3758672c590c0495eac4080af7b5f94a2ff5654b1a00694a182c"
+      "cbe48067e85781f958c1b2252e0229e257d8b19eeace6b3d5445772dd8dbb4da"
     ],
     "industrial": [
       "data/processed/imagery/industrial_2025.geojson",
-      "0003cd3886b68254ae65c4920296f0753733c0d6519c0d776a1e0242b511213d"
+      "9dc001ed2e2c8c49a91f4a586fa6ac907e52ba0cc7706389375a6d22a4e8b1f3"
     ],
     "reassentamento_poligonos": [
       "data/processed/imagery/reassentamento_2025.geojson",
-      "67bf2daaaab4173b5a36f37d9eb427fc919a29c0a92f723e8bd344b09b08ee7f"
+      "4de20f3591ec22c0e5aaf62780b5aa271b0ba3391b5956947d3d0671d0e3f1a4"
     ],
     "reassentamentos_pontos": [
       "data/raw/reassentamentos.geojson",
@@ -32,15 +32,15 @@
     ]
   },
   "script": "pipeline/04_figures/mapa_localizacao.py",
-  "commit_git": "desconhecido (git indisponível)",
+  "commit_git": "0a6af052325c4005420ec22513435b0b4ec1ff77",
   "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "crs_mapa_principal": "EPSG:32736",
   "crs_encartes": "EPSG:4326",
   "selo": "observado",
   "ressalvas": [
-    "Camada 'urbano' com acurácia do usuário 0,27–0,63 por ano (docs/ADR/0009) — não é cadastro.",
+    "Camada 'urbano' com acurácia do usuário de `construido` = 0,286–0,625 (docs/ADR/0009; reexecutado em docs/ADR/0014): entre 37,5 % e 71,4 % do que o mapa chama de construído não é. Não é cadastro.",
     "Série temporal de área construída é do WSF Evolution, não da classificação própria (docs/ADR/0008).",
     "'25 de Setembro' sem geometria localizável em fonte aberta — não representado no mapa, não inventado."
   ],
-  "data_geracao": "2026-09-08T13:05:35.576560+00:00"
+  "data_geracao": "2026-09-09T20:45:23.851861+00:00"
 }

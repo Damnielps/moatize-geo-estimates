@@ -1,0 +1,13 @@
+{
+  "fonte": "OpenStreetMap via Overpass API",
+  "url": "https://overpass-api.de/api/interpreter",
+  "descricao": "Aeródromo de Tete (Chingodzi) e pistas. Infraestrutura de conexão do enclave minerário — relevante à leitura de §1, pergunta 5",
+  "licenca_observada": "ODbL 1.0",
+  "atribuicao_exigida": "© OpenStreetMap contributors",
+  "consulta_overpass": "[out:json][timeout:180];\n(\nnode[\"aeroway\"=\"aerodrome\"](-16.400000000000002,33.45,-15.95,34.15);\n          way[\"aeroway\"=\"aerodrome\"](-16.400000000000002,33.45,-15.95,34.15);\n          relation[\"aeroway\"=\"aerodrome\"](-16.400000000000002,33.45,-15.95,34.15);\n          way[\"aeroway\"=\"runway\"](-16.400000000000002,33.45,-15.95,34.15);\n);\nout geom;",
+  "download_date": "2026-09-09T11:04:45+00:00",
+  "n_features": 2,
+  "crs": "EPSG:4326 (RFC 7946, sem membro crs declarado)",
+  "selo": "contexto",
+  "nota": "Camada de contexto para leitura do mapa. NAO sustenta numero publicado; classificacao de nivel A/B/C cabe ao auditor-dados."
+}

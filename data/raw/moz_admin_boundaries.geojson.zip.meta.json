@@ -1,0 +1,14 @@
+{
+  "url": "https://data.humdata.org/dataset/5e8d83a5-1210-49be-b7d9-cf286dbc15df/resource/f1d97232-4cb5-4083-b3cc-d192aa9bdcfe/download/moz_admin_boundaries.geojson.zip",
+  "download_date": "2026-09-08T16:54:42Z",
+  "size_bytes": 61310853,
+  "license": "Creative Commons Attribution for Intergovernmental Organisations (CC BY-IGO)",
+  "license_url": "http://creativecommons.org/licenses/by/3.0/igo/legalcode",
+  "level": "PENDENTE (classificacao e papel do auditor-dados)",
+  "source_page": "https://data.humdata.org/dataset/cod-ab-moz",
+  "dataset_source_declarado": "INE - Instituto Nacional de Estatistica (declarado pelo HDX/CKAN API, nao verificado no site do INE)",
+  "citation": "OCHA/HDX COD-AB Mozambique (moz_admin_boundaries), fonte declarada INE",
+  "resolucao": "poligonos administrativos ADM0-ADM3",
+  "selo": "observado",
+  "nota": "Baixado via CKAN API package_show?id=cod-ab-moz; contem ADM0-3, P-codes; extrair para ler P-codes reais das 5 capitais de controle."
+}

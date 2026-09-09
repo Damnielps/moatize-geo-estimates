@@ -22,8 +22,8 @@
   },
   "definicao_amplitude": "NDVI(chuva nov(A-1)-abr(A)) - NDVI(seca mai-out(A))",
   "catalogo_stac": "https://planetarycomputer.microsoft.com/api/stac/v1",
-  "data_processamento": "2026-09-08T01:53:03.225620+00:00",
-  "commit_git": "desconhecido (git indisponível)",
+  "data_processamento": "2026-09-08T14:30:59.761770+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
   "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "script": "pipeline/01_imagery/compostos_chuva.py"
 }

@@ -5,8 +5,8 @@
   "nivel_fonte": "A",
   "fonte_populacao": "HDX COD-PS 2017 (data/raw/hdx_cod-ps-moz_admpop_adm2_2017_v2.csv)",
   "fonte_peso": "classificação própria (pipeline/01_imagery), média das máscaras urbano∪reassentamento de 2015 e 2020",
-  "advertencia_incerteza": "o peso carrega a acurácia do usuário da classe construído medida em ADR 0009 (0,27-0,63): comissão alta significa que parte do peso pode estar em pixels que não são de fato construídos, deslocando a densidade implícita. Ver populacao_dasimetrica_sensibilidade.csv para o teste de sensibilidade GHSL/WSF.",
+  "advertencia_incerteza": "o peso carrega a comissão medida na classe construído: acurácia do usuário de `construido` = 0,286–0,625 (docs/ADR/0009; reexecutado em docs/ADR/0014): entre 37,5 % e 71,4 % do que o mapa chama de construído não é. Parte do peso pode estar em pixels que não são de fato construídos, deslocando a densidade implícita. Ver populacao_dasimetrica_sensibilidade.csv para o teste de sensibilidade GHSL/WSF.",
   "restricao_geografica": "só Cidade de Tete; Distrito de Moatize não distribuído (ver docstring do script, item 2)",
-  "data_processamento": "2026-09-08T12:56:45.877640+00:00",
+  "data_processamento": "2026-09-09T16:59:29.044342+00:00",
   "script": "pipeline/02_metrics/reconstrucao_demografica.py"
 }

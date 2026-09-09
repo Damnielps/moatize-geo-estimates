@@ -16,8 +16,11 @@ Fórmulas (todas em reflectância de superfície, adimensional):
 
 Cada índice é gravado como COG de banda única:
 `<indice_minusculo>_<ano>_<res>m_<epsg>.tif`, seguindo a convenção de nomes
-do CLAUDE.md. Denominadores próximos de zero são mascarados (NaN), não
-divididos — evita explosão numérica sem gerar um valor "plausível" falso.
+do CLAUDE.md. Pixels com alguma banda de reflectância **não positiva** são
+mascarados (NaN), não divididos: reflectância de superfície <= 0 é
+fisicamente inválida (artefato de correção atmosférica) e é a única origem de
+explosão numérica nestas razões. O critério anterior (|denominador| < 0,1)
+apagava o Zambeze — ver docs/ADR/0014.
 
 Uso: `uv run python pipeline/01_imagery/indices.py [ano ...]`
 Sem argumentos, processa todos os compostos já gravados em `data/processed/imagery/`.
@@ -47,33 +50,79 @@ TOLERANCES_YAML = REPO_ROOT / "config" / "tolerances.yaml"
 DATA_PROCESSED = REPO_ROOT / "data" / "processed" / "imagery"
 
 
-def _carregar_denominador_min() -> float:
-    """Limiar declarado em `config/tolerances.yaml ->
-    processamento_indices.denominador_minimo.min` (§10: "mascare o
-    denominador, não afrouxe o contrato" — o limiar vive em config, não como
-    constante solta no script, para que fique auditável e versionado junto
-    com as demais tolerâncias do estudo).
+def _carregar_criterio_mascara() -> str:
+    """Critério declarado em `config/tolerances.yaml ->
+    processamento_indices.banda_nao_positiva.criterio` (§10: o critério vive em
+    config, não como constante solta no script, para que fique auditável e
+    versionado junto com as demais tolerâncias do estudo).
+
+    Serve de contrato: se alguém trocar o critério no YAML sem trocar o código,
+    a leitura falha alto em vez de divergir em silêncio.
     """
     with TOLERANCES_YAML.open(encoding="utf-8") as fh:
         tolerances = yaml.safe_load(fh)
-    return float(tolerances["processamento_indices"]["denominador_minimo"]["min"])
+    criterio = str(tolerances["processamento_indices"]["banda_nao_positiva"]["criterio"])
+    if criterio != CRITERIO_MASCARA_ESPERADO:
+        raise ValueError(
+            "config/tolerances.yaml -> processamento_indices.banda_nao_positiva."
+            f"criterio = {criterio!r}, mas indices.py implementa "
+            f"{CRITERIO_MASCARA_ESPERADO!r}"
+        )
+    return criterio
 
 
-# Denominador abaixo deste limiar (em valor absoluto) é mascarado: uma soma de
-# duas reflectâncias fisicamente plausíveis (each em [-0.2, ~1.6] após o
-# offset do Landsat C2 L2) só se aproxima de zero em pixels degenerados
-# (cancelamento entre bandas de sinal oposto ou quase nulo). Ver
-# `config/tolerances.yaml -> processamento_indices.denominador_minimo` para a
-# justificativa completa do valor.
-DENOMINADOR_MIN = _carregar_denominador_min()
+# Critério de mascaramento (docs/ADR/0014). O critério anterior — |denominador|
+# < 0,1 — foi retirado: ele é um limiar ABSOLUTO sobre uma soma de
+# reflectâncias e, em água limpa (green baixo E swir16 baixo), o denominador do
+# MNDWI cai naturalmente abaixo de 0,1 sem que haja instabilidade numérica
+# nenhuma. Medido: o denominador do MNDWI sobre o Zambeze é 0,0821 (2000) e
+# 0,0505 (2015), e a regra apagava 32.909 (2000) e 44.364 (2015) pixels — o rio
+# inteiro — dos índices, e com ele a agricultura de vazante das margens e ilhas
+# (§3, camada iii).
+#
+# O critério novo é físico, não numérico: mascara-se o pixel em que **alguma
+# banda de reflectância usada na fórmula é não positiva**. Reflectância de
+# superfície ≤ 0 é fisicamente inválida (artefato de correção atmosférica), e é
+# só ali que a razão pode explodir. Medido nesta AOI: os pixels realmente
+# patológicos (|índice| > 1) são exatamente 1 por raster, e todos têm banda não
+# positiva — o critério novo remove o mesmo pixel e preserva 36.041 dos 36.042
+# pixels de água.
+CRITERIO_MASCARA_ESPERADO = "banda_de_reflectancia_nao_positiva"
+CRITERIO_MASCARA = _carregar_criterio_mascara()
+
+# Guarda numérica residual, **só para o EVI**. O denominador dele
+# (nir + 6*red - 7.5*blue + 1) não é uma soma de reflectâncias: é combinação
+# linear com coeficiente negativo grande no azul e um "+1" de fundo de dossel.
+# Ele pode cancelar mesmo com as três bandas positivas (azul alto por aerossol
+# residual), e aí o EVI explode: medido em 2025, 6 pixels saem de [-1, 1.5],
+# chegando a -21,3.
+#
+# Diferença essencial em relação ao critério retirado em docs/ADR/0014: este
+# denominador é centrado em ~1, não em zero, e **não tem nada a ver com água**
+# (sobre o Zambeze ele fica em 0,6-1,0). Um corte em 0,1 é 10 % do valor
+# nominal, não atravessa nenhuma população de interesse e mascara, medido,
+# 4 pixels em 2025 e 0 em 2000/2015 — não os 33-44 mil pixels de rio que o
+# critério antigo apagava.
+EVI_DENOM_MIN = 0.1
 
 NOME_ARQUIVO_RE = re.compile(r"^composto_(\d{4})_(\d+)m_(\d+)\.tif$")
 
 
+def _bandas_positivas(*bandas: xr.DataArray) -> xr.DataArray:
+    """Máscara booleana: todas as bandas de entrada estritamente positivas."""
+    valido = bandas[0] > 0
+    for banda in bandas[1:]:
+        valido = valido & (banda > 0)
+    return valido
+
+
 def _razao_normalizada(a: xr.DataArray, b: xr.DataArray) -> xr.DataArray:
-    denom = a + b
-    denom_valido = denom.where(np.abs(denom) > DENOMINADOR_MIN)
-    return (a - b) / denom_valido
+    """(a-b)/(a+b) onde as duas reflectâncias são positivas; NaN onde não são.
+
+    Com a > 0 e b > 0 o denominador é positivo por construção e o resultado
+    está em (-1, 1) por álgebra — nenhum corte adicional é necessário.
+    """
+    return ((a - b) / (a + b)).where(_bandas_positivas(a, b))
 
 
 def calcular_ndvi(c: xr.Dataset) -> xr.DataArray:
@@ -95,8 +144,8 @@ def calcular_ndwi(c: xr.Dataset) -> xr.DataArray:
 def calcular_evi(c: xr.Dataset) -> xr.DataArray:
     nir, red, blue = c["nir"], c["red"], c["blue"]
     denom = nir + 6 * red - 7.5 * blue + 1
-    denom_valido = denom.where(np.abs(denom) > DENOMINADOR_MIN)
-    return 2.5 * (nir - red) / denom_valido
+    valido = _bandas_positivas(nir, red, blue) & (np.abs(denom) > EVI_DENOM_MIN)
+    return (2.5 * (nir - red) / denom).where(valido)
 
 
 CALCULADORAS = {
@@ -204,7 +253,8 @@ def processar_ano(ano: int, caminho_composto: Path, indices_pedidos: list[str]) 
                 "NDWI": "(green-nir)/(green+nir)",
                 "EVI": "2.5*(nir-red)/(nir+6*red-7.5*blue+1)",
             }[nome_indice],
-            "denominador_min_mascarado": DENOMINADOR_MIN,
+            "criterio_mascara": CRITERIO_MASCARA,
+            "evi_denominador_min": EVI_DENOM_MIN,
             "selo": "observado",
             "data_processamento": datetime.now(UTC).isoformat(),
             "commit_git": commit_git_atual(),

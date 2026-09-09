@@ -38,7 +38,7 @@ famílias (§5.2, §5.6) acrescentam linhas com `familia` diferente, mesmo esque
 
 | variavel | significado | anos disponíveis |
 |---|---|---|
-| `populacao_total_residente` | população residente total, contagem/projeção INE, **não ajustada** pela subenumeração de 3,7-3,8% do Censo 2017 (`censo_2017.subenumeracao_pct` em `config/study.yaml`) | 2017 (observado), 2025 (modelado) |
+| `populacao_total_residente` | população residente total, contagem/projeção INE, **não ajustada** pela subenumeração do Censo 2017. São duas taxas de unidades diferentes, não uma faixa: 3,7% no total nacional e 3,8% na Província de Tete. `censo_2017.subenumeracao_pct` em `config/study.yaml` guarda a **nacional (3,7%)**, aplicada de forma consistente também aos controles, que estão noutras províncias; nenhum valor publicado é ajustado por qualquer das duas | 2017 (observado), 2025 (modelado) |
 | `populacao_homens` / `populacao_mulheres` | mesma fonte, por sexo | 2017, 2025 |
 | `cagr_2017_2025` | taxa de crescimento anual composta entre os dois únicos pontos de nível A: `(pop2025/pop2017)^(1/8) - 1`, em %/ano | 2025 (rótulo do ponto final) |
 
@@ -201,3 +201,58 @@ dos pixels da AOI com menos de 4 observações válidas,
 Sem série de população compatível com o polígono de núcleo urbano usado em
 §5.2 (ver seção de demografia acima). Pendência registrada, não simulada.
 <!-- SECAO_FORMA_URBANA_FASE2_FIM -->
+
+---
+
+<!-- SECAO_DEMOGRAFIA_DASHBOARD_INICIO -->
+## §5.3 — Dashboard de população 1997-2025 (Frente A)
+
+Gerado por `pipeline/02_metrics/demografia_dashboard.py`.
+
+### `data/processed/demografia_serie_1997_2025.csv` — uma linha por unidade × ano/intervalo
+
+**Não entra em `stats_by_year_by_unit.csv`**: grava direto em `data/processed/`, fora do
+circuito `data/interim/stats_*.csv` → `stats_by_year_by_unit.py`. O consolidador do
+núcleo continua reprovando nível B/C — este produto existe justamente para carregar B, C
+e `ausente` lado a lado com A, cada linha com o seu nível explícito, para o dashboard do
+app comparar Cidade de Tete e Distrito de Moatize com Província de Tete e Moçambique.
+
+| coluna | tipo | descrição |
+|---|---|---|
+| `familia` | string | sempre `demografia` |
+| `unidade_geografica` | string | `Cidade de Tete`, `Distrito de Moatize`, `Província de Tete`, `Moçambique` (Vila de Moatize fica fora desta invocação — ver WorldPop, coleta paralela) |
+| `ano` | int | 1997, 2007, 2017 ou 2025 |
+| `variavel` | string | `populacao_total_residente`; `cagr_<a>_<b>` (CAGR do intervalo `a`→`b`, publicado no ano `b`); `indice_base_<ano>` (índice, base=100 no primeiro ano disponível da unidade) |
+| `valor` | float | vazio quando a unidade não tem valor para o ano (ex.: Distrito de Moatize, 1997) |
+| `unidade_medida` | string | `pessoas`, `%/ano`, `índice (base=100)` |
+| `selo` | string | `observado` \| `modelado` — **obrigatório**; `modelado` sempre que o ano ou uma das pontas do intervalo/índice for 2025 (projeção institucional do INE) |
+| `nivel_fonte` | string | `A`, `B`, `C` ou `ausente`. Para `cagr_*`/`indice_base_*`: pior nível das duas pontas (A<B<C<ausente) |
+| `fonte` | string | citação + caminho em `data/raw/`; nenhuma linha de nível A cita o INE diretamente — só HDX COD-PS (contrato `test_dashboard_nenhuma_linha_a_cita_ine_diretamente_na_fonte`) |
+| `metodo` | string | como o número foi obtido/calculado |
+| `nota` | string | ressalvas (subenumeração, circularidade da projeção 2025, mudança de limite administrativo, motivo de ausência) |
+| `comparabilidade` | string | `"ok"` \| `"limites do distrito mudaram entre censos — não garantida"` (todo ano de Distrito de Moatize) \| `"projeção INE"` (todo ano 2025) |
+
+**Origem de cada ponto:**
+
+- Cidade de Tete e Distrito de Moatize, 2017/2025 (A): reaproveitados de
+  `reconstrucao_demografica.montar_nucleo()`, sem retranscrição.
+- Cidade de Tete e Distrito de Moatize, 1997/2007 (B/C/`ausente`): reaproveitados de
+  `reconstrucao_demografica.montar_contexto_b_c()`.
+- Província de Tete e Moçambique, 2017/2025 (A): soma dos `T_TL` de todos os ADM2 do HDX
+  COD-PS **por nome de província** (`ADM1_PT`), nunca por P-code — o P-code `MZ10` do
+  COD-PS resolve para outra entidade no COD-AB (ver `config/unidades.yaml`).
+- Província de Tete e Moçambique, 2007 (C): parse programático de
+  `data/raw/censo2007-tete-quadro3-populacao-por-idade-distrito-2007.html` (linha
+  `T O T A L` da província; rodapé `POP_Total(2007)` para o total nacional) — nenhum
+  valor transcrito à mão.
+
+**Total nacional = soma do COD-PS, não o total "ajustado" do INE** (decisão do usuário,
+2026-09-09): a soma dos ADM2 de 2017 (26.899.102) diverge da "população residente a 1 de
+agosto de 2017" publicada pelo INE (26.899.105) em poucas unidades — a divergência é
+calculada em tempo de execução e gravada na `nota` da linha, nunca digitada. A soma
+provincial de 2017 (2.551.824) confere com o total do INE (2.551.826) dentro de ±5.
+
+**Unidades novas em `config/unidades.yaml`:** `provincia_tete` e `mocambique`,
+`comparavel_entre_familias: false` — servem só a este dashboard de população, não a
+forma urbana nem agricultura.
+<!-- SECAO_DEMOGRAFIA_DASHBOARD_FIM -->

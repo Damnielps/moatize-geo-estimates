@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  App de página única com HashRouter (endereços "#/..."): para um rastreador, todas as
+  seções vivem na mesma URL de documento. Por isso o sitemap lista só a raiz -- listar
+  os fragmentos "#/populacao" etc. não ajudaria a indexação (a maioria dos motores de
+  busca ignora o fragmento ao decidir se duas URLs são a mesma página).
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>__SITE_URL__/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+</urlset>

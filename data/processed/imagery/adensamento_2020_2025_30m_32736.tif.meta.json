@@ -1,0 +1,64 @@
+{
+  "camada": "adensamento",
+  "periodo": [
+    2020,
+    2025
+  ],
+  "selo": "modelado",
+  "grade_m": 240.0,
+  "fator_grade_pixels_30m": 8,
+  "n_pixels_celula": 64,
+  "domain_criterio": "n_pixels_30m == 64 (célula completa; ver docs/ADR/0016 §Decisão-3)",
+  "n_celulas_dominio": 43416,
+  "area_dominio_km2": 2500.76,
+  "quantis_declarados": {
+    "TAU": 0.7,
+    "Q_ALTO": 0.8,
+    "Q_BAIXO": 0.2,
+    "Q_INDUSTRIAL": 0.5
+  },
+  "quantis_realizados": {
+    "TAU_s1": 0.00743604997025582,
+    "TAU_s2": 0.0011167536018750423,
+    "TAU_s3": 0.35293075077498537,
+    "Q_ALTO": 0.890625,
+    "Q_BAIXO": 0.03125,
+    "Q_INDUSTRIAL": 0.75
+  },
+  "areas_por_classe_km2": {
+    "fora_de_dominio": 5.7888,
+    "vazio_estavel": 2365.8624,
+    "esparso_estavel": 44.1792,
+    "adensando": 15.3216,
+    "expansao_nova": 10.3104,
+    "consolidado": 19.6416,
+    "pegada_industrial": 45.4464
+  },
+  "razao_sensibilidade_maxima_1_decil": 2.2931,
+  "regime_publicacao_sensibilidade": "publicada só como padrão espacial e ordem de grandeza, NÃO como área (razão em (2.0, 5.0])",
+  "publicavel_como": "padrao_espacial",
+  "riscos": {
+    "R1": "erro espacialmente estruturado sobrevive ao posto",
+    "R2": "S1 e S3 partilham f_2020 — votos não são independentes",
+    "R3": "camada não detecta esvaziamento (S1 censurado por baixo pela catraca R2 de urbano)",
+    "R4": "luz sobreamostrada de ~500 m para 240 m",
+    "R5": "S3 pode ser desacordo de sensor, não construção",
+    "R6": "janela real de S3 é 2020 -> ~2023, não 2020->2025",
+    "R7": "churn de pixel de 31% sobrevive parcialmente à agregação",
+    "R8": "dependência dos cortes — ver sensibilidade acima",
+    "R9": "moatize_vila possivelmente inflada (25 de Setembro sem geometria)",
+    "R10": "camada modelada, risco de ser lida como observada — selo em 4 lugares"
+  },
+  "arquivo_raster_240m": "data/processed/imagery/adensamento_2020_2025_240m_32736.tif",
+  "arquivo_raster_30m": "data/processed/imagery/adensamento_2020_2025_30m_32736.tif",
+  "arquivo_vetor": "data/processed/imagery/adensamento_2020_2025.geojson",
+  "n_poligonos_vetor": 443,
+  "arquivo_por_unidade": "data/processed/adensamento_2020_2025_por_unidade.csv",
+  "arquivo_sensibilidade": "data/processed/adensamento_sensibilidade.csv",
+  "estocasticidade": "nenhuma — Theil-Sen exato e quantis são determinísticos",
+  "adr": "docs/ADR/0016-adensamento-por-concordancia-de-tres-sinais.md",
+  "data_processamento": "2026-09-09T17:02:37.274167+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "script": "pipeline/02_metrics/adensamento.py"
+}
