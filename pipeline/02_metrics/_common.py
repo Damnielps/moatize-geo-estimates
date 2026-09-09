@@ -117,6 +117,43 @@ def pontos_sede_utm(epsg: int) -> dict[str, tuple[float, float]]:
     return pontos
 
 
+def pontos_sede_wgs84() -> dict[str, tuple[float, float]]:
+    """Mesmos pontos-sede de `pontos_sede_utm` (tete, moatize_vila, cateme, mwaladzi),
+    mas em EPSG:4326 (lon, lat), sem reprojeção — para uso direto com grades que já
+    estão nesse CRS (ex.: GRID3/WorldPop, GHSL 3ss), evitando reprojetar o raster."""
+    pontos = dict(PONTOS_SEDE_WGS84)
+    for nome, coord in carregar_pontos_reassentamento_wgs84().items():
+        if coord is not None:
+            pontos[nome] = coord
+    return pontos
+
+
+def atribuir_unidade_mais_proxima_grade_completa(
+    perfil: dict, pontos: dict[str, tuple[float, float]]
+) -> dict[str, np.ndarray]:
+    """Mesma partição de Voronoi (nearest-neighbor por `cKDTree`) de
+    `atribuir_unidade_mais_proxima`, mas aplicada a TODA a grade de `perfil`, não só
+    aos pixels True de uma máscara "construído" prévia.
+
+    Necessária para grades de contagem populacional (GRID3, WorldPop — EPSG:4326,
+    ~100 m) que não têm, elas mesmas, nenhuma máscara "construído" prévia com a sua
+    extensão: é a grade inteira que precisa ser repartida entre
+    tete/moatize_vila/cateme/mwaladzi ANTES de cruzar com o peso de construído (que
+    vem de outra fonte/grade e é reprojetado à parte).
+
+    `pontos` tem de estar no MESMO CRS de `perfil['crs']` — para GRID3/GHSL (ambos
+    EPSG:4326) use `pontos_sede_wgs84()`, não `pontos_sede_utm()`."""
+    transform = perfil["transform"]
+    h, w = perfil["shape"]
+    rows, cols = np.indices((h, w))
+    xs, ys = rasterio.transform.xy(transform, rows.ravel(), cols.ravel(), offset="center")
+    nomes = list(pontos.keys())
+    arvore = cKDTree(np.array([pontos[n] for n in nomes]))
+    _, idx = arvore.query(np.column_stack([xs, ys]))
+    idx = idx.reshape(h, w)
+    return {n: (idx == i) for i, n in enumerate(nomes)}
+
+
 def carregar_camada(
     camada: str, ano: int, res_m: int = 30, epsg: int | None = None
 ) -> tuple[np.ndarray, dict]:
@@ -212,6 +249,89 @@ def atribuir_unidade_mais_proxima(
         sel = idx == i
         saida[nome][linhas[sel], colunas[sel]] = True
     return saida
+
+
+def grade_agregada(arr: np.ndarray, fator: int) -> tuple[np.ndarray, np.ndarray]:
+    """Agrega um array 2D em blocos `fator`×`fator`, tolerando blocos parciais nas
+    bordas (§Decisão-3 do docs/ADR/0016 — grade 240 m = 8×8 pixels de 30 m, mas o
+    domínio real, 1299×2144, não é múltiplo exato de 8 na dimensão das linhas).
+
+    Faz `padding` com NaN até o próximo múltiplo de `fator` em cada eixo, soma os
+    valores reais (NaN não conta) e conta quantos pixels reais entraram em cada
+    célula. Retorna `(soma_por_celula, n_pixels_validos_por_celula)`, ambos com
+    shape `(ceil(linhas/fator), ceil(colunas/fator))`.
+
+    Uma célula é "completa" (dentro do domínio) quando
+    `n_pixels_validos == fator * fator`; células de borda com menos pixels ficam
+    com `n_pixels_validos < fator * fator` — o chamador decide o que fazer com
+    elas (`docs/ADR/0016` manda excluí-las do domínio, classe `fora_de_dominio`).
+    """
+    linhas, colunas = arr.shape
+    n_blocos_l = -(-linhas // fator)  # ceil division, sem importar math
+    n_blocos_c = -(-colunas // fator)
+    pad_l = n_blocos_l * fator - linhas
+    pad_c = n_blocos_c * fator - colunas
+
+    arr_f = arr.astype("float64")
+    if pad_l or pad_c:
+        arr_f = np.pad(arr_f, ((0, pad_l), (0, pad_c)), mode="constant", constant_values=np.nan)
+
+    validos = ~np.isnan(arr_f)
+    arr_zerado = np.where(validos, arr_f, 0.0)
+
+    soma = arr_zerado.reshape(n_blocos_l, fator, n_blocos_c, fator).sum(axis=(1, 3))
+    n_validos = validos.reshape(n_blocos_l, fator, n_blocos_c, fator).sum(axis=(1, 3))
+    return soma, n_validos.astype(int)
+
+
+def agregar_fracao(mask: np.ndarray, fator: int) -> tuple[np.ndarray, np.ndarray]:
+    """Fração de pixels `True` de uma máscara booleana 30 m, por célula agregada
+    `fator`×`fator` (reusa `grade_agregada`). Célula incompleta (borda) recebe
+    fração 0 — o chamador decide se ela entra no domínio a partir do segundo
+    valor de retorno (`n_pixels_validos`), nunca a partir da fração sozinha."""
+    soma, n_validos = grade_agregada(mask.astype("float64"), fator)
+    completa = n_validos == fator * fator
+    fracao = np.where(completa, soma / np.maximum(n_validos, 1), 0.0)
+    return fracao, n_validos
+
+
+def posto_ecdf(valores: np.ndarray, mascara_referencia: np.ndarray) -> np.ndarray:
+    """Converte `valores` à sua posição na ECDF empírica (`scipy.stats.rankdata`,
+    `method="average"`), calculada **só** sobre as células em que
+    `mascara_referencia` é `True` — nunca sobre o array inteiro
+    (`docs/ADR/0016` §Decisão-1: um viés que desloca o mapa inteiro de um ano
+    cancela na diferença de postos só se a ECDF de referência for a mesma
+    população em que se compara).
+
+    Retorna um array do mesmo shape de `valores`, com posto em `(0, 1]` dentro
+    de `mascara_referencia` e `0.0` fora dela (célula fora da referência não
+    tem posição na distribuição — não é "o mínimo", é "não avaliada")."""
+    from scipy.stats import rankdata
+
+    saida = np.zeros_like(valores, dtype="float64")
+    idx = np.where(mascara_referencia)
+    if idx[0].size == 0:
+        return saida
+    postos = rankdata(valores[idx], method="average")
+    saida[idx] = postos / idx[0].size
+    return saida
+
+
+def atribuir_unidade_por_centroide(
+    xs: np.ndarray, ys: np.ndarray, pontos: dict[str, tuple[float, float]]
+) -> np.ndarray:
+    """Mesma partição de Voronoi de `atribuir_unidade_mais_proxima`, mas sobre
+    coordenadas arbitrárias (ex.: centróides de célula de uma grade agregada) em
+    vez de pixels `True` de uma máscara — para camadas cuja unidade de análise
+    não é mais o pixel de 30 m (`docs/ADR/0016`, grade de 240 m).
+
+    Retorna um array de strings (nome da unidade), mesmo tamanho de `xs`/`ys`."""
+    nomes = list(pontos.keys())
+    arvore = cKDTree(np.array([pontos[n] for n in nomes]))
+    if xs.size == 0:
+        return np.array([], dtype=object)
+    _, idx = arvore.query(np.column_stack([xs, ys]))
+    return np.array(nomes, dtype=object)[idx]
 
 
 def area_km2(mask: np.ndarray, res_m: float = 30.0) -> float:

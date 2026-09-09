@@ -1,0 +1,176 @@
+name: Publicar
+
+# Publica o app em GitHub Pages. Não roda o pipeline de dados (imagem, métricas,
+# causal): o CI só verifica, constrói e publica o que já está aprovado e versionado
+# em data/processed/app/ e app/src/content/ (gerados por pipeline/05_app/, ver
+# Makefile alvo `app-data`) -- mesma lógica de PROVENANCE.md e CLAUDE.md §4.0/§6-A.
+#
+# Pendente antes do primeiro deploy real (ver docs/CHECKLIST_PUBLICACAO.md):
+#   - env var/secret SITE_URL (hoje cai no placeholder inválido __SITE_URL__ -> EXEMPLO.invalid)
+#   - env var BASE_PATH se o repositório for publicado como página de projeto
+#     (https://<usuário>.github.io/<repo>/) em vez de página de usuário/domínio próprio
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  SITE_URL: ${{ vars.SITE_URL }}
+  BASE_PATH: ${{ vars.BASE_PATH }}
+
+jobs:
+  verificar:
+    name: Verificar (testes, segredos, histórico)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (histórico completo, para a varredura de segredos e do histórico)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.12.1"
+          enable-cache: true
+
+      - name: Ambiente exatamente como travado
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Contratos de dados e regressão numérica
+        run: uv run pytest -q
+
+      - name: Nenhum dado de nível B ou C versionado (§4.0, regra 2)
+        run: |
+          if git ls-files | grep -Ei 'ipums|nicfi|dhs_microdata'; then
+            echo "::error::arquivo de nível B versionado — ver .gitignore e §4.0"
+            exit 1
+          fi
+
+      - name: Baixar gitleaks (binário oficial, sem exigir licença de organização)
+        run: |
+          set -euo pipefail
+          VERSAO=$(curl -sSL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | \
+                   python3 -c "import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))")
+          ARQ="gitleaks_${VERSAO}_linux_x64.tar.gz"
+          curl -sSLo "$ARQ" "https://github.com/gitleaks/gitleaks/releases/download/v${VERSAO}/${ARQ}"
+          tar -xzf "$ARQ" gitleaks
+          chmod +x gitleaks
+          ./gitleaks version
+
+      - name: Varredura de segredos (gitleaks)
+        run: ./gitleaks detect --source . --redact --exit-code 1
+
+      - name: Nenhum dado bruto/intermediário fora do padrão de sidecars no histórico do git
+        run: |
+          set -euo pipefail
+          # Espelha o .gitignore: data/raw/ só pode ter .sha256, .meta.json e .gitkeep;
+          # data/interim/ não pode ter nada; data/processed/**/*.tif não é versionado
+          # (regenerável por pipeline/01_imagery/ a partir dos itens STAC do .meta.json).
+          ARQUIVOS=$(git log --all --name-only --pretty=format: | sort -u | sed '/^$/d')
+          SUSPEITOS=$(printf '%s\n' "$ARQUIVOS" | grep -E \
+            '^data/raw/.*[^.](sha256|meta\.json|gitkeep)$|^data/raw/[^.].*$|^data/interim/.+|^data/processed/.*\.tif$' \
+            | grep -vE '\.(sha256|meta\.json)$|/\.gitkeep$' || true)
+          if [ -n "$SUSPEITOS" ]; then
+            echo "ERRO: arquivos de dados brutos/intermediários fora do padrão de sidecars no histórico do git:" >&2
+            printf '%s\n' "$SUSPEITOS" | sed 's/^/  - /' >&2
+            exit 1
+          fi
+          echo "Histórico limpo: data/raw/ só tem sidecars .sha256/.meta.json/.gitkeep, data/interim/ está vazio, data/processed/ sem .tif."
+
+  construir:
+    name: Construir o app (Vite)
+    needs: verificar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Instalar dependências do front-end
+        working-directory: app
+        run: npm ci
+
+      - name: Build do app (sync-data + sync-maplibre-worker + vite build, via prebuild/build)
+        working-directory: app
+        env:
+          SITE_URL: ${{ env.SITE_URL }}
+          BASE_PATH: ${{ env.BASE_PATH }}
+        run: npm run build
+
+      - name: Avisar se SITE_URL/BASE_PATH ainda não foram configurados
+        run: |
+          if [ -z "${SITE_URL}" ]; then
+            echo "::warning::vars.SITE_URL não está configurado — canonical/OG/JSON-LD caem no placeholder https://EXEMPLO.invalid. Configure em Settings > Secrets and variables > Actions > Variables assim que o repositório for publicado (ver docs/CHECKLIST_PUBLICACAO.md)."
+          fi
+          if [ -z "${BASE_PATH}" ]; then
+            echo "::notice::vars.BASE_PATH não está configurado — build usando base '/'. Se este for publicado como página de projeto (https://<usuário>.github.io/<repo>/), configure BASE_PATH=/<repo>/."
+          fi
+
+      - name: Marcar dist para o GitHub Pages (sem processamento Jekyll)
+        run: touch app/dist/.nojekyll
+
+      - name: Checagem pós-build (nenhum artefato sensível ou de desenvolvimento no dist)
+        run: |
+          set -euo pipefail
+          PROBLEMA=0
+          if find app/dist -name '*.map' | grep -q .; then
+            echo "ERRO: sourcemap (*.map) encontrado em app/dist." >&2
+            PROBLEMA=1
+          fi
+          if grep -rIl '/Users/' app/dist >/dev/null 2>&1; then
+            echo "ERRO: caminho local (/Users/...) vazado em app/dist." >&2
+            PROBLEMA=1
+          fi
+          if grep -rIl '__SITE_URL__' app/dist >/dev/null 2>&1; then
+            echo "ERRO: placeholder __SITE_URL__ não substituído em app/dist (SITE_URL não propagado ao build?)." >&2
+            PROBLEMA=1
+          fi
+          if [ ! -f app/dist/sitemap.xml ]; then
+            echo "ERRO: app/dist/sitemap.xml ausente." >&2
+            PROBLEMA=1
+          fi
+          if [ ! -f app/dist/404.html ]; then
+            echo "ERRO: app/dist/404.html ausente." >&2
+            PROBLEMA=1
+          fi
+          if [ "$PROBLEMA" -ne 0 ]; then
+            exit 1
+          fi
+          echo "Checagem pós-build aprovada."
+
+      - name: Publicar artefato do Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  publicar:
+    name: Publicar no GitHub Pages
+    needs: construir
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

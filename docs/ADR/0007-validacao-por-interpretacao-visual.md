@@ -90,6 +90,13 @@ A acurácia **global** fica em 0,87–1,00 e cumpre a meta de 0,85 em todos os a
 mas a comparação é fraca por construção: o estrato `nao_construido` ocupa
 98–99,5 % da AOI. O número que discrimina é a acurácia do **usuário** da classe
 `construido`, entre **0,27 e 0,63** — comissão alta e consistente. Publicado
-como está. A acurácia do **produtor** não é utilizável com n = 24 por estrato:
+como está.
+
+> **Valor superado (registro histórico).** Esta faixa é a medição vigente na data
+> deste ADR. `docs/ADR/0014` reexecutou a validação sobre os estratos corrigidos e
+> obteve **0,286–0,625**. O argumento desta seção — que o número que discrimina é a
+> acurácia do **usuário**, e não a global — continua valendo sem alteração; o valor
+> que o ilustra é anterior à reexecução e não deve ser citado como corrente.
+ A acurácia do **produtor** não é utilizável com n = 24 por estrato:
 um único ponto de referência do estrato `nao_construido` carrega ~4,1 % da área
 da AOI no estimador.

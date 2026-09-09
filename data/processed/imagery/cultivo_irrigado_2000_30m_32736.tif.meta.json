@@ -1,0 +1,27 @@
+{
+  "ano": 2000,
+  "camada": "cultivo_irrigado",
+  "arquivo_raster": "data/processed/imagery/cultivo_irrigado_2000_30m_32736.tif",
+  "arquivo_vetor": "data/processed/imagery/cultivo_irrigado_2000.geojson",
+  "n_poligonos_vetor": 6718,
+  "area_km2": 47.1024,
+  "n_pixels": 52336,
+  "resolucao_m": 30,
+  "crs": "EPSG:32736",
+  "metodo": "recorte fenológico de vegetacao/solo_exposto por amplitude de NDVI chuva-seca relativa à mediana da paisagem de referência do ano (ratio_irrigado_amp=0.5, ratio_sequeiro_amp=1.3, ratio_sequeiro_chuva=1.0)",
+  "natureza": "refinamento fenológico DENTRO de vegetacao — NÃO é camada mutuamente exclusiva com ela; é mutuamente exclusiva com urbano/industrial/reassentamento/agua",
+  "limitacao": "fenologia bianual não separa cultivo de vegetação natural com o mesmo padrão sazonal (savana herbácea/arbustiva para sequeiro; mata ripária para irrigado); ver docstring de cultivo.py e acuracia_cultivo.py para a acurácia do usuário medida",
+  "diagnostico": {
+    "mediana_amplitude_paisagem": 0.23532313108444214,
+    "mediana_ndvi_seca_paisagem": 0.23333396017551422,
+    "mediana_ndvi_chuva_paisagem": 0.4745819568634033,
+    "n_pixels_dominio_referencia": 2727783,
+    "n_pixels_vegetacao": 261490,
+    "n_pixels_solo_exposto": 2466293
+  },
+  "selo": "observado",
+  "data_processamento": "2026-09-08T15:33:01.100815+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "script": "pipeline/01_imagery/cultivo.py"
+}

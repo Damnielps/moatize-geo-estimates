@@ -4,8 +4,9 @@
 Métricas por ano e por camada (`urbano`, `industrial`, `reassentamento`),
 usando a classificação própria — é a única fonte que separa as três camadas
 mutuamente exclusivas (ADR 0008). Todas as métricas de fragmentação carregam
-a mesma ressalva do item 5 da tarefa: **sensíveis à comissão medida (0,27-0,63,
-ADR 0009)**. Comissão tende a acrescentar manchas pequenas e espúrias
+a mesma ressalva do item 5 da tarefa: **sensíveis à comissão medida** (ADR 0009;
+valor reexecutado em ADR 0014 — ver `pipeline/lib/acuracia_texto.py`, não
+transcrito aqui). Comissão tende a acrescentar manchas pequenas e espúrias
 ("sal e pimenta" residual, mesmo depois do filtro de coerência 3×3 aplicado na
 classificação) — isso INFLA `n_manchas` e a `densidade_de_borda`, e DEPRIME o
 `tamanho médio de mancha` e o `largest_patch_index`. A direção do viés é
@@ -38,6 +39,9 @@ import pylandstats as pls
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _common as c
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import acuracia_texto
 
 CAMADAS = ["urbano", "industrial", "reassentamento"]
 METRICAS_PLS = {
@@ -118,8 +122,8 @@ def _linha(
         ),
         "nota": (
             f"n_pixels_camada={n_pixels}. "
-            "Sensível à comissão medida (acurácia do usuário 0,27-0,63, ADR 0009): "
-            "comissão tende a inflar n_manchas/densidade_borda e a deprimir "
+            f"Sensível à comissão medida ({acuracia_texto.nota_comissao_construido()}) "
+            "Comissão tende a inflar n_manchas/densidade_borda e a deprimir "
             "tamanho médio de mancha/largest_patch_index — direção declarada, "
             "magnitude não corrigida."
         ),

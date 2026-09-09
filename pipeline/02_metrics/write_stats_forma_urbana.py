@@ -40,6 +40,9 @@ import fragmentacao
 import tipologia_expansao
 from _common import carregar_estudo, epsg_metrico
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import acuracia_texto
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SAIDA = REPO_ROOT / "data" / "interim" / "stats_forma_urbana.csv"
 
@@ -97,9 +100,8 @@ def _nota_confiabilidade(linha: dict) -> str:
         )
     else:
         tag = (
-            "Sensível à comissão do mapa (ADR 0009, acurácia do usuário do "
-            "construído = 0,27-0,63): não interpretar como medição absoluta "
-            "livre de erro."
+            f"Sensível à comissão do mapa ({acuracia_texto.nota_comissao_construido()}) "
+            "Não interpretar como medição absoluta livre de erro."
         )
     return f"{nota} {tag}".strip()
 

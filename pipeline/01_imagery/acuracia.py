@@ -68,6 +68,7 @@ STUDY_YAML = REPO_ROOT / "config" / "study.yaml"
 DATA_PROCESSED = REPO_ROOT / "data" / "processed" / "imagery"
 DIR_VALIDACAO = REPO_ROOT / "data" / "processed" / "validacao"
 PONTOS_CSV = DIR_VALIDACAO / "pontos_validacao.csv"
+AMOSTRA_CSV = DIR_VALIDACAO / "amostra_interpretada.csv"
 ROTULOS_CSV = DIR_VALIDACAO / "rotulos_interpretados.csv"
 SAIDA_CSV = REPO_ROOT / "data" / "processed" / "acuracia_por_ano.csv"
 MATRIZ_CSV = REPO_ROOT / "data" / "processed" / "matriz_confusao_por_ano.csv"
@@ -92,22 +93,29 @@ def carregar_yaml(path: Path) -> dict:
         return yaml.safe_load(fh)
 
 
-def pesos_dos_estratos(ano: int, res_m: int, epsg: int) -> dict[str, float]:
-    """W_h = fração de pixels da AOI em cada estrato do MAPA."""
-    caminho = DATA_PROCESSED / f"{CAMADA_CONSTRUIDO}_{ano}_{res_m}m_{epsg}.tif"
-    with rasterio.open(caminho) as src:
-        mask = src.read(1).astype(bool)
-    total = float(mask.size)
-    w_c = float(mask.sum()) / total
-    return {"construido": w_c, "nao_construido": 1.0 - w_c}
-
-
 def ler_amostra() -> dict[int, list[dict]]:
-    # O join é por `id_cego`, não por `id_ponto`: o intérprete só viu o
-    # identificador cego (ver amostras_validacao.sortear_pontos). Assim o rótulo
-    # é rastreável ao recorte que foi de fato olhado, e não a uma ordem que
-    # revelava o estrato do mapa.
-    pontos = {p["id_cego"]: p for p in csv.DictReader(PONTOS_CSV.open(encoding="utf-8"))}
+    """Junta rótulo de referência + AMOSTRA CONGELADA (coordenadas e desenho).
+
+    Mudança de docs/ADR/0014, que corrige um defeito silencioso. O join é por
+    `id_cego` — o intérprete só viu o identificador cego. Antes, o `id_cego` era
+    procurado em `pontos_validacao.csv`, que `amostras_validacao.py` **redesenha
+    a cada execução a partir do mapa vigente**. Quando a classificação muda, o
+    sorteio muda: medido nesta reabertura, dos 288 pontos, **zero** caíram na
+    mesma linha/coluna de antes. O rótulo de `2000-C006` continuava sendo lido,
+    mas aplicado a outro pixel — julgamento de um lugar atribuído a outro, sem
+    que nenhum contrato percebesse.
+    A amostra que foi de fato interpretada passa a ser um artefato próprio e
+    imutável (`amostra_interpretada.csv`), com linha/coluna, o estrato **do
+    desenho** e o peso de área daquele estrato **na época do sorteio** — que é o
+    que define a probabilidade de inclusão e, portanto, o estimador.
+    """
+    if not AMOSTRA_CSV.exists():
+        raise FileNotFoundError(
+            f"{AMOSTRA_CSV} ausente — é a amostra congelada que foi interpretada "
+            "(coordenadas + desenho). Sem ela não há como saber a que pixel cada "
+            "rótulo se refere."
+        )
+    pontos = {p["id_cego"]: p for p in csv.DictReader(AMOSTRA_CSV.open(encoding="utf-8"))}
     if not ROTULOS_CSV.exists():
         raise FileNotFoundError(
             f"{ROTULOS_CSV} ausente — os rótulos de referência são produzidos por "
@@ -124,7 +132,10 @@ def ler_amostra() -> dict[int, list[dict]]:
             {
                 "id_ponto": ponto["id_ponto"],
                 "id_cego": r["id_cego"],
-                "estrato_mapeado": ponto["estrato_mapeado"],
+                "estrato_desenho": ponto["estrato_desenho"],
+                "w_h_desenho": float(ponto["w_h_desenho"]),
+                "linha": int(ponto["linha"]),
+                "coluna": int(ponto["coluna"]),
                 "classe_referencia": r["classe_referencia"],
                 "interprete": r["interprete"],
             }
@@ -132,8 +143,42 @@ def ler_amostra() -> dict[int, list[dict]]:
     return por_ano
 
 
-def estimar(ano: int, linhas: list[dict], pesos: dict[str, float]) -> tuple[dict, list[dict]]:
+def classe_no_mapa_atual(ano: int, linhas: list[dict], res_m: int, epsg: int) -> None:
+    """Lê, no mapa VIGENTE, a classe de cada ponto da amostra congelada.
+
+    É este passo que torna a reutilização legítima: o rótulo de referência é uma
+    observação do terreno naquela coordenada e não caduca quando o classificador
+    muda; o que muda é a classe que o mapa atribui ao mesmo pixel.
+    """
+    caminho = DATA_PROCESSED / f"{CAMADA_CONSTRUIDO}_{ano}_{res_m}m_{epsg}.tif"
+    with rasterio.open(caminho) as src:
+        mask = src.read(1).astype(bool)
+    for r in linhas:
+        r["classe_mapa"] = "construido" if mask[r["linha"], r["coluna"]] else "nao_construido"
+
+
+def estimar(ano: int, linhas: list[dict]) -> tuple[dict, list[dict]]:
     """Matriz em proporção de área + acurácia global, kappa e IC de 95 %.
+
+    Estimador de Horvitz-Thompson sobre o **desenho amostral congelado**
+    (docs/ADR/0014). Cada ponto pertence a um estrato `h` do desenho (as classes
+    do mapa **na época do sorteio**), com peso de área `W_h` e `n_h` pontos:
+
+        p(m, r) = Σ_h W_h * n_h(m, r) / n_h
+
+    onde `m` é a classe do ponto no mapa **vigente** e `r` a classe de
+    referência. Σ_{m,r} p = Σ_h W_h = 1. Quando o mapa vigente é o mesmo que
+    gerou o desenho, `m == h` para todo ponto e a expressão colapsa exatamente
+    na eq. 4 de Olofsson et al. (2014) — o estimador anterior é caso particular
+    deste, não foi substituído por outro.
+
+    Acurácias e variâncias saem da mesma matriz:
+        AG = Σ_c p(c, c);  V(AG) = Σ_h W_h² ŝ²_h/n_h  (Olofsson, eq. 5)
+        AU(c) = p(c,c)/Σ_r p(c,r);  AP(c) = p(c,c)/Σ_m p(m,c)
+    As duas últimas são razões de dois estimadores lineares e o IC vem de
+    linearização (delta), com a variância de `y - R·z` estimada dentro de cada
+    estrato do desenho — que é o análogo direto das eq. 6/7 de Olofsson quando
+    estrato e classe do mapa deixam de coincidir.
 
     Pontos rotulados `indeterminado` **não são descartados em silêncio**: entram
     no CSV como `n_indeterminado` e saem do estimador, e a nota diz que a
@@ -142,94 +187,106 @@ def estimar(ano: int, linhas: list[dict], pesos: dict[str, float]) -> tuple[dict
     n_indeterminado = sum(1 for r in linhas if r["classe_referencia"] == "indeterminado")
     uteis = [r for r in linhas if r["classe_referencia"] != "indeterminado"]
 
-    contagem = {(h, i): 0 for h in CLASSES for i in CLASSES}
-    n_h = dict.fromkeys(CLASSES, 0)
+    estratos = sorted({r["estrato_desenho"] for r in uteis})
+    pesos_h = {h: uteis[0]["w_h_desenho"] for h in estratos}
     for r in uteis:
-        h = r["estrato_mapeado"]
-        contagem[(h, r["classe_referencia"])] += 1
-        n_h[h] += 1
+        pesos_h[r["estrato_desenho"]] = r["w_h_desenho"]
+    por_estrato = {h: [r for r in uteis if r["estrato_desenho"] == h] for h in estratos}
+    n_h = {h: len(v) for h, v in por_estrato.items()}
 
-    p = {}
-    for h in CLASSES:
-        for i in CLASSES:
-            p[(h, i)] = (pesos[h] * contagem[(h, i)] / n_h[h]) if n_h[h] else 0.0
+    def media_estrato(h: str, f) -> float:
+        return sum(f(r) for r in por_estrato[h]) / n_h[h] if n_h[h] else 0.0
 
-    acuracia = sum(p[(h, h)] for h in CLASSES)
+    def total(f) -> float:
+        """Estimador linear Σ_h W_h * média_h(f) — proporção de área."""
+        return sum(pesos_h[h] * media_estrato(h, f) for h in estratos)
 
-    # Olofsson et al. (2014), eq. 5: variância da acurácia global estratificada.
-    var = 0.0
-    for h in CLASSES:
-        if n_h[h] < 2:
-            continue
-        acerto_h = contagem[(h, h)] / n_h[h]
-        var += pesos[h] ** 2 * acerto_h * (1 - acerto_h) / (n_h[h] - 1)
-    ic = Z_95 * float(np.sqrt(var))
+    def var_total(f) -> float:
+        var = 0.0
+        for h in estratos:
+            if n_h[h] < 2:
+                continue
+            m = media_estrato(h, f)
+            s2 = sum((f(r) - m) ** 2 for r in por_estrato[h]) / (n_h[h] - 1)
+            var += pesos_h[h] ** 2 * s2 / n_h[h]
+        return var
+
+    def indicador(m: str, r_: str):
+        def f(x: dict) -> float:
+            return 1.0 * (x["classe_mapa"] == m and x["classe_referencia"] == r_)
+
+        return f
+
+    p = {(m, r_): total(indicador(m, r_)) for m in CLASSES for r_ in CLASSES}
+    contagem = {
+        (m, r_): sum(
+            1 for x in uteis if x["classe_mapa"] == m and x["classe_referencia"] == r_
+        )
+        for m in CLASSES
+        for r_ in CLASSES
+    }
+    n_mapa = {m: sum(contagem[(m, r_)] for r_ in CLASSES) for m in CLASSES}
+
+    acuracia = sum(p[(c, c)] for c in CLASSES)
+    ic = Z_95 * float(
+        np.sqrt(var_total(lambda x: 1.0 * (x["classe_mapa"] == x["classe_referencia"])))
+    )
 
     # Kappa sobre a matriz em proporção de área.
-    linha_marg = {h: sum(p[(h, i)] for i in CLASSES) for h in CLASSES}
-    col_marg = {i: sum(p[(h, i)] for h in CLASSES) for i in CLASSES}
+    linha_marg = {m: sum(p[(m, r_)] for r_ in CLASSES) for m in CLASSES}
+    col_marg = {r_: sum(p[(m, r_)] for m in CLASSES) for r_ in CLASSES}
     p_e = sum(linha_marg[c] * col_marg[c] for c in CLASSES)
     kappa = (acuracia - p_e) / (1 - p_e) if p_e < 1 else float("nan")
 
-    # Acurácia do usuário/produtor da classe de interesse (construido), com IC.
-    n_mapeado_c = n_h["construido"]
-    usuario = contagem[("construido", "construido")] / n_mapeado_c if n_mapeado_c else float("nan")
-    ic_usuario = (
-        Z_95 * float(np.sqrt(usuario * (1 - usuario) / (n_mapeado_c - 1)))
-        if n_mapeado_c > 1
-        else float("nan")
-    )
+    def razao_com_ic(f_num, f_den) -> tuple[float, float]:
+        num, den = total(f_num), total(f_den)
+        if den <= 0:
+            return float("nan"), float("nan")
+        r_hat = num / den
+        var = var_total(lambda x: f_num(x) - r_hat * f_den(x)) / den**2
+        return r_hat, Z_95 * float(np.sqrt(max(var, 0.0)))
 
-    denom_prod = sum(p[(h, "construido")] for h in CLASSES)
-    produtor = p[("construido", "construido")] / denom_prod if denom_prod else float("nan")
+    acerto_c = indicador("construido", "construido")
 
-    # Olofsson et al. (2014), eq. 7 — variância da acurácia do produtor.
-    # Com pesos W_h no lugar de áreas N_h (área total = 1).
-    if denom_prod > 0 and n_mapeado_c > 1:
-        soma_outros = 0.0
-        for h in CLASSES:
-            if h == "construido" or n_h[h] < 2:
-                continue
-            r = contagem[(h, "construido")] / n_h[h]
-            soma_outros += pesos[h] ** 2 * r * (1 - r) / (n_h[h] - 1)
-        var_prod = (
-            pesos["construido"] ** 2 * (1 - produtor) ** 2 * usuario * (1 - usuario)
-            / (n_mapeado_c - 1)
-            + produtor**2 * soma_outros
-        ) / denom_prod**2
-        ic_produtor = Z_95 * float(np.sqrt(max(var_prod, 0.0)))
-    else:
-        ic_produtor = float("nan")
+    def mapa_c(x: dict) -> float:
+        return 1.0 * (x["classe_mapa"] == "construido")
+
+    def ref_c(x: dict) -> float:
+        return 1.0 * (x["classe_referencia"] == "construido")
+
+    usuario, ic_usuario = razao_com_ic(acerto_c, mapa_c)
+    produtor, ic_produtor = razao_com_ic(acerto_c, ref_c)
 
     # Alavanca amostral: fração da ÁREA da AOI que UM único ponto de referência
-    # do estrato `nao_construido` carrega no estimador. Com n_h pequeno e
-    # W_nao_construido ~ 0,98, um único ponto mal rotulado desloca a área
+    # do estrato `nao_construido` do DESENHO carrega no estimador. Com n_h pequeno
+    # e W_nao_construido ~ 0,98, um único ponto mal rotulado desloca a área
     # estimada da classe rara em vários pontos percentuais da AOI. É por isso
     # que a acurácia do PRODUTOR não é utilizável neste n, e a nota diz isso.
     alavanca = (
-        pesos["nao_construido"] / n_h["nao_construido"]
-        if n_h["nao_construido"]
+        pesos_h["nao_construido"] / n_h["nao_construido"]
+        if n_h.get("nao_construido")
         else float("nan")
     )
 
     celulas = [
         {
             "ano": ano,
-            "estrato_mapeado": h,
-            "classe_referencia": i,
-            "n": contagem[(h, i)],
-            "proporcao_de_area": round(p[(h, i)], 6),
+            "classe_mapa": m,
+            "classe_referencia": r_,
+            "n": contagem[(m, r_)],
+            "proporcao_de_area": round(p[(m, r_)], 6),
         }
-        for h in CLASSES
-        for i in CLASSES
+        for m in CLASSES
+        for r_ in CLASSES
     ]
     resumo = {
         "ano": ano,
         "n_total": len(linhas),
-        "n_construido": n_h["construido"],
-        "n_nao_construido": n_h["nao_construido"],
+        "n_construido": n_mapa["construido"],
+        "n_nao_construido": n_mapa["nao_construido"],
         "n_indeterminado": n_indeterminado,
-        "peso_estrato_construido": round(pesos["construido"], 6),
+        "peso_estrato_construido_desenho": round(pesos_h.get("construido", float("nan")), 6),
+        "peso_area_construido_mapa_atual": round(linha_marg["construido"], 6),
         "acuracia_global": round(acuracia, 4),
         "ic95_acuracia_global": round(ic, 4),
         "kappa": round(kappa, 4),
@@ -272,8 +329,8 @@ def main(argv: list[str]) -> int:
 
     resumos, celulas = [], []
     for ano in sorted(por_ano):
-        pesos = pesos_dos_estratos(ano, res_m, epsg)
-        resumo, cel = estimar(ano, por_ano[ano], pesos)
+        classe_no_mapa_atual(ano, por_ano[ano], res_m, epsg)
+        resumo, cel = estimar(ano, por_ano[ano])
         resumo["meta_global"] = meta_global
         resumo["meta_kappa"] = meta_kappa
         resumo["atinge_meta_global"] = bool(resumo["acuracia_global"] >= meta_global)
@@ -346,8 +403,15 @@ def escrever_provenance(resumos: list[dict], interpretes: list[str]) -> None:
         "ao olhar o recorte, se o mapa classificava aquele pixel como construído. Sem "
         "isso a concordância mediria a pista, não a imagem.",
         "",
-        "**Estimador.** Olofsson et al. (2014), estratificado pelas classes do mapa, com "
-        "pesos `W_h` iguais à fração de área da AOI em cada estrato e IC de 95 %.",
+        "**Estimador.** Olofsson et al. (2014) generalizado para **reúso da amostra sob "
+        "o desenho congelado** (docs/ADR/0014): os estratos e os pesos `W_h` são os do "
+        "mapa vigente **na época do sorteio** (`amostra_interpretada.csv`), e a classe do "
+        "mapa **atual** em cada ponto é lida do raster do ano. Quando os dois mapas "
+        "coincidem, a expressão colapsa na eq. 4 de Olofsson. **Consequência declarada:** "
+        "a amostra não foi otimizada para os estratos do mapa atual, e o número correto "
+        "de fazer depois de uma reclassificação é uma NOVA rodada de interpretação sobre "
+        "`pontos_validacao.csv` (que já foi redesenhado e está sem rótulo). Até lá, este "
+        "é um estimador não viesado mas de variância subótima para o mapa vigente.",
         "",
         f"**Intérprete(s):** {'; '.join(interpretes)}",
         "",
@@ -363,9 +427,11 @@ def escrever_provenance(resumos: list[dict], interpretes: list[str]) -> None:
             f"±{r['ic95_acuracia_usuario_construido']:.3f} | "
             f"{r['acuracia_produtor_construido']:.3f} | "
             f"±{r['ic95_acuracia_produtor_construido']:.3f} | "
-            f"{r['n_indeterminado']} | {r['peso_estrato_construido']:.4f} | "
+            f"{r['n_indeterminado']} | {r['peso_estrato_construido_desenho']:.4f} | "
             f"{r['alavanca_area_de_um_ponto_nao_construido']:.4f} |"
         )
+    _au_vals = [r["acuracia_usuario_construido"] for r in resumos]
+    _au_min, _au_max = min(_au_vals), max(_au_vals)
     linhas += [
         "",
         "AG = acurácia global · AU = acurácia do usuário (1 − comissão) · "
@@ -378,10 +444,10 @@ def escrever_provenance(resumos: list[dict], interpretes: list[str]) -> None:
         "AOI, e um mapa que errasse *toda* a classe construída ainda teria acurácia "
         "global ≈ 0,98. A meta de §10 não discrimina neste desenho.",
         "2. O que informa sobre a classe de interesse é a **acurácia do usuário**: "
-        "0,27–0,63. Cerca de metade dos pixels que o mapa chama de construído não "
-        "parecem construídos ao intérprete — **comissão alta e consistente**, pior em "
-        "2010. É coerente com o viés já documentado no ADR 0008 e com a confusão "
-        "solo exposto × construído na savana semiárida em estação seca.",
+        f"{_au_min:.3f}–{_au_max:.3f}. Cerca de metade dos pixels que o mapa chama de "
+        "construído não parecem construídos ao intérprete — **comissão alta e "
+        "consistente**, pior em 2010. É coerente com o viés já documentado no ADR 0008 "
+        "e com a confusão solo exposto × construído na savana semiárida em estação seca.",
         "3. A **acurácia do produtor não é utilizável neste n**. A coluna "
         "`alavanca de 1 ponto` é a fração da área da AOI que **um único** ponto de "
         "referência do estrato `nao_construido` carrega no estimador (≈ 0,041). Em 2020, "

@@ -13,7 +13,10 @@ Quatro defeitos foram diagnosticados e corrigidos:
    da imagem todo ano (3,4–4,4% da AOI): o produto media o percentil, não o
    crescimento. Agora **nenhum percentil da própria imagem** entra em nenhum
    rótulo — o treino é ancorado no WSF Evolution (produto externo, ano de
-   primeira detecção) e em limiares físicos fixos, iguais em todos os anos.
+   primeira detecção) e em limiares físicos; o de `vegetacao` é expresso como
+   **razão à mediana da paisagem do próprio ano** (docs/ADR/0014) — normalização
+   radiométrica, não percentil: o corte não seleciona fração fixa da AOI
+   (9,9 a 13,5 % ao longo da série).
 2. **Confusão solo exposto × construído** na savana semiárida em estação seca.
    Agora há **separação fenológica**: `NDVI(chuva) − NDVI(seca)`. Construído é
    estável entre estações; solo exposto esverdeia na chuva. Medido nesta AOI, a
@@ -62,8 +65,14 @@ partição é **exaustiva** — todo negativo recebe uma classe, por limiares
 
 - `agua`: MNDWI > 0 e NDWI > 0 (limiar canônico de Xu 2006 — água tem MNDWI
   positivo por construção do índice; não é um corte ajustado a esta AOI);
-- `vegetacao`: não-água e NDVI(seca) ≥ 0,30 — verde **persistente na seca**:
-  arbóreo, ripário ou irrigado;
+- `vegetacao`: não-água e NDVI(seca) ≥ 1,30 × **mediana de NDVI(seca) da
+  paisagem do próprio ano** — verde **persistente na seca** e **acima da
+  paisagem daquele ano**: arbóreo, ripário ou irrigado. Era um corte absoluto
+  de 0,30; `docs/ADR/0013` mostrou que a mediana da paisagem percorre
+  0,205–0,409 na série e que o corte fixo, caindo dentro dessa faixa, media o
+  ano verde e não a vegetação (10,7 % da AOI em 2000, 90,8 % em 2015).
+  Corrigido em `docs/ADR/0014`, propagando a normalização que `docs/ADR/0011`
+  já usava na pegada;
 - `solo_exposto`: todo o resto do pool de negativos.
 
 A exaustividade não é detalhe: numa primeira versão deste redesenho,
@@ -91,11 +100,16 @@ detecção.
   confirmação, a detecção é descartada. O último ano da série (2025) não tem
   ano seguinte: suas primeiras detecções entram **não confirmadas** e o CSV
   marca isso.
-- **R2 — permanência.** Depois de R1, `construido(t) = ∪_{t' ≤ t} construido_R1(t')`.
+- **R2 — permanência (só `urbano`).** Depois de R1, `construido(t) = ∪_{t' ≤ t} construido_R1(t')`.
   A série passa a ser não decrescente **por construção**. Justificativa:
   construído é quase permanente nesta AOI (o próprio WSF é, por definição, um
   ano de primeira detecção — monotônico); desaparecimento entre anos-âncora é
-  sinal de erro de classificação, não de dinâmica.
+  sinal de erro de classificação, não de dinâmica. **Escopo por camada**
+  (`docs/ADR/0014`): R2 vale para `urbano` e **não** vale para `industrial`
+  nem para `reassentamento` — cava é reabilitada e povoado pode ser
+  abandonado. Custo de R2 em `urbano`, medido em `docs/ADR/0013`: 18,0 % do
+  estoque de 2025 não é detectado no próprio ano, e a série pós-R2 não pode
+  cair, logo não serve para estimar quebra nem para testar H4.
 - **Transparência obrigatória:** `data/processed/area_construida_por_ano.csv`
   publica lado a lado a área **sem restrição** (RF puro + filtro espacial), a
   área **após R1** e a área **após R2**. O leitor vê exatamente quanto cada
@@ -144,6 +158,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_fetch"))
 from _config import carregar_estudo
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+sys.path.insert(0, str(REPO_ROOT / "pipeline" / "lib"))
+import acuracia_texto  # noqa: E402
+
 STUDY_YAML = REPO_ROOT / "config" / "study.yaml"
 SEEDS_YAML = REPO_ROOT / "config" / "seeds.yaml"
 DATA_RAW = REPO_ROOT / "data" / "raw"
@@ -176,9 +194,31 @@ ANO_FIM_WSF = 2015
 FAIXA_GUARDA_NEGATIVO_M = 150.0
 LIMIAR_AGUA_MNDWI = 0.0
 LIMIAR_AGUA_NDWI = 0.0
-LIMIAR_VEGETACAO_NDVI_SECA = 0.30
-LIMIAR_SOLO_NDVI_SECA = 0.20
-LIMIAR_SOLO_AMPLITUDE = 0.10
+
+# Rótulo de `vegetacao` no treino: **razão à mediana de NDVI(seca) da paisagem do
+# próprio ano**, não corte absoluto (docs/ADR/0014).
+#
+# O corte absoluto anterior era `NDVI(seca) >= 0,30`. `docs/ADR/0013` mediu o
+# defeito: a mediana de NDVI(seca) da paisagem percorre 0,205–0,409 entre os
+# anos-âncora (sensor ETM+/TM/OLI/OLI-2 e pluviosidade), e o corte fixo cai
+# DENTRO dessa faixa. A fração da AOI acima dele ia de 10,7 % (2000) a 90,8 %
+# (2015) e reaparecia quase inalterada na classe publicada — o produto media o
+# ano verde, não a vegetação. `docs/ADR/0011` já tinha corrigido exatamente esse
+# defeito, mas só na pegada minerária; aqui a correção é propagada.
+#
+# Valor: 1,30. Não é ajuste ao sintoma. É a razão que o corte histórico de 0,30
+# representava nos dois anos em que a paisagem estava radiometricamente
+# comparável e o classificador se comportava de forma plausível — 2000
+# (mediana 0,233 => razão 1,29) e 2005 (0,231 => 1,30), os anos de maior pool de
+# `solo_exposto` e de razão bruta/GHSL de 0,83 e 1,08. Isto preserva a intenção
+# física do rótulo ("verde persistente na seca, acima da paisagem de savana
+# semiárida") e a torna comparável entre anos.
+#
+# NÃO é percentil da imagem (o defeito que reprovou a primeira classificação):
+# o corte não seleciona fração fixa da AOI. Medido com este valor, a fração
+# rotulável como vegetação é 9,9 / 11,0 / 11,6 / 6,4 / 13,5 / 13,2 % — varia por
+# fator 2,1 entre anos, contra fator 15 do corte absoluto.
+RAZAO_VERDE_VEGETACAO = 1.30
 
 # Filtro de coerência espacial: maioria simples numa janela 3×3. Menos agressivo
 # que o 5×5/50% da versão anterior (que apagava manchas legítimas de poucos
@@ -248,12 +288,36 @@ BUFFER_EXPANSAO_MINA_M = 500.0
 # pixel acrescentado tivesse a assinatura da classe.
 JANELA_FECHO_PEGADA = 3
 
-# Permanência (R2) também para as pegadas, pelo mesmo argumento usado em construído
-# e com a mesma transparência: cava e pilha de estéril não se revegetam na escala
-# desta série, e a série sem restrição é publicada ao lado em
-# `data/processed/pegada_por_ano.csv`. A acumulação começa no ano de licença da mina
-# (2006) e, para cada povoado, no seu ano de reassentamento.
-PEGADA_APLICA_PERMANENCIA = True
+# R2 (permanência) tem ESCOPO POR CAMADA, não é regra global (docs/ADR/0013 item 5,
+# executado em docs/ADR/0014). Antes valia para as três camadas pelo argumento
+# "construído é permanente". O argumento é de alvenaria e não sustenta número sobre
+# rocha movida nem sobre povoado que pode ser abandonado:
+#
+# - `urbano`: R2 MANTIDO. Edificação é quase permanente nesta AOI; o custo está
+#   medido e publicado (fração do estoque herdada da união: 0 / 0 / 3,4 / 6,1 /
+#   12,7 / 18,0 % — `data/processed/causal/decomposicao_permanencia_urbano.csv`).
+# - `industrial`: R2 REMOVIDO. Mina fecha, cava é reabilitada, pilha de estéril é
+#   revegetada. docs/ADR/0011 item 5 já registrava que parte da pilha de 2015
+#   aparece revegetada ou sombreada em 2020 e que a permanência a mantinha contada.
+# - `reassentamento`: R2 REMOVIDO. Aqui não é só indefensável, é danoso: a pergunta
+#   específica 3 de §1 é "consolidação, ABANDONO ou adensamento", e a permanência
+#   torna abandono indetectável por construção — o pipeline respondia
+#   "consolidação" sempre, antes de medir.
+#
+# Consequência declarada e antecipada: `reassentamento` 2020 cai de 2,00 para
+# 0,63 km², abaixo do piso de `config/plausibilidade.yaml`. É sinal honesto, não
+# falha — a faixa NÃO foi afrouxada; abriu-se a exceção declarada no YAML
+# apontando docs/ADR/0014, que é o mecanismo previsto para exatamente isto.
+#
+# A acumulação, quando aplicada, começaria no ano de licença da mina (2006) e, para
+# cada povoado, no seu ano de reassentamento. As colunas
+# `area_sem_permanencia_km2` e `area_publicada_km2` de
+# `data/processed/pegada_por_ano.csv` continuam publicadas lado a lado — agora
+# idênticas para as duas pegadas, que é a forma de o leitor ver que R2 saiu.
+PEGADA_APLICA_PERMANENCIA = {
+    "industrial": False,
+    "reassentamento": False,
+}
 
 METODO_INDUSTRIAL_POR_ANO = {
     2000: (
@@ -468,8 +532,13 @@ def rotulos_treino(
     mask_excluir_negativos: np.ndarray,
     res_m: float,
 ) -> np.ndarray:
-    """Rótulos de treino: WSF ancora `construido`; limiares físicos fixos
-    ancoram as três classes não construídas. Ver §3 do docstring do módulo.
+    """Rótulos de treino: WSF ancora `construido`; limiares físicos ancoram as
+    três classes não construídas — `agua` por limiar canônico absoluto (Xu 2006)
+    e `vegetacao` por RAZÃO à mediana de NDVI(seca) da paisagem do próprio ano
+    (docs/ADR/0014). Ver §3 do docstring do módulo.
+
+    Devolve `(rotulo, diagnostico)`; o diagnóstico carrega a mediana do ano e o
+    limiar efetivo, que passam para a proveniência.
 
     A partição dos negativos é **exaustiva**: todo pixel do pool de negativos
     recebe uma das três classes não construídas. Isso é deliberado e foi um
@@ -497,7 +566,13 @@ def rotulos_treino(
 
     rotulo = np.full(ndvi.shape, -1, dtype="int8")
     e_agua = pool_negativo & (mndwi > LIMIAR_AGUA_MNDWI) & (ndwi > LIMIAR_AGUA_NDWI)
-    e_veg = pool_negativo & ~e_agua & (ndvi >= LIMIAR_VEGETACAO_NDVI_SECA)
+    # Referência radiométrica do ano: o próprio pool de negativos fora d'água —
+    # população definida a priori (não é o corte que seleciona a classe), a mesma
+    # lógica de `mediana_paisagem` usada na pegada desde docs/ADR/0011.
+    referencia = pool_negativo & ~e_agua
+    med_seca = mediana_paisagem(ndvi, referencia)
+    limiar_veg = RAZAO_VERDE_VEGETACAO * med_seca
+    e_veg = pool_negativo & ~e_agua & (ndvi >= limiar_veg)
     e_solo = pool_negativo & ~e_agua & ~e_veg
 
     rotulo[e_agua] = CODIGO_CLASSE["agua"]
@@ -505,7 +580,11 @@ def rotulos_treino(
     rotulo[e_solo] = CODIGO_CLASSE["solo_exposto"]
     rotulo[positivos] = CODIGO_CLASSE["construido"]
     rotulo[~mask_valida] = -1
-    return rotulo
+    return rotulo, {
+        "mediana_ndvi_seca_pool_negativo": med_seca,
+        "limiar_vegetacao_ndvi_seca_do_ano": limiar_veg,
+        "razao_verde_vegetacao": RAZAO_VERDE_VEGETACAO,
+    }
 
 
 def amostrar_treino(
@@ -564,7 +643,7 @@ def classificar_ano(
     mask_valida = features_ano["mask_valida"]
     empilhados = features_ano["empilhados"]
 
-    rotulo_treino = rotulos_treino(
+    rotulo_treino, diag_rotulo = rotulos_treino(
         ano, features_ano["indices"], mask_valida, wsf, mask_excluir_negativos, res_m
     )
     (lin, col), y, disponivel = amostrar_treino(rotulo_treino, mask_valida, amostragem_cfg)
@@ -601,11 +680,16 @@ def classificar_ano(
             zip(FEATURES, [float(x) for x in clf.feature_importances_], strict=True)
         ),
         "estrategia_amostragem": amostragem_cfg["estrategia"],
+        "limiar_vegetacao": diag_rotulo,
         "fonte_rotulos": (
             "positivos = WSF Evolution erodido 3x3 (WSF <= min(ano, 2015)); negativos = "
-            "partição exaustiva por limiares físicos fixos, fora de uma faixa de guarda "
-            f"de {FAIXA_GUARDA_NEGATIVO_M:.0f} m em torno de qualquer WSF construído e "
-            "fora de mineração/reassentamento. Nenhum percentil da própria imagem."
+            "partição exaustiva, fora de uma faixa de guarda de "
+            f"{FAIXA_GUARDA_NEGATIVO_M:.0f} m em torno de qualquer WSF construído e "
+            "fora de mineração/reassentamento. `agua` por limiar canônico de Xu 2006 "
+            "(MNDWI > 0 e NDWI > 0); `vegetacao` por RAZÃO à mediana de NDVI(seca) da "
+            f"paisagem do próprio ano (>= {RAZAO_VERDE_VEGETACAO} x mediana = "
+            f"{diag_rotulo['limiar_vegetacao_ndvi_seca_do_ano']:.4f} neste ano), "
+            "docs/ADR/0014 — NÃO é limiar absoluto nem percentil da imagem."
         ),
     }
     return rotulo, construido_filtrado, info
@@ -816,7 +900,7 @@ def pegadas_por_ano(
     }
     for ano in anos:
         for camada in ("industrial", "reassentamento"):
-            if PEGADA_APLICA_PERMANENCIA:
+            if PEGADA_APLICA_PERMANENCIA[camada]:
                 acum[camada] = acum[camada] | sem_restricao[ano][camada]
                 apos.setdefault(ano, {})[camada] = acum[camada].copy()
             else:
@@ -1128,7 +1212,8 @@ def main(argv: list[str]) -> int:
                 metodo = (
                     "Random Forest com protocolo único em todos os anos "
                     "(config/seeds.yaml -> random_forest); rótulos de treino ancorados no "
-                    "WSF Evolution e em limiares físicos fixos; features incluem as "
+                    "WSF Evolution e em limiares físicos (o de vegetação relativo à "
+                    "mediana da paisagem do ano, docs/ADR/0014); features incluem as "
                     "métricas fenológicas chuva-seca."
                 )
 
@@ -1285,7 +1370,11 @@ def escrever_pegada_csv(registros: list[dict]) -> None:
         "Sentinel-2 2017-2019) a camada encontra; em 2000 e 2005 o valor baixo é o "
         "resultado esperado (placebo temporal: a mina não existia). O limiar foi "
         "calibrado em 2020 contra essa mesma referência, então a concordância de 2020 "
-        "não é validação independente."
+        "não é validação independente. **R2 (permanência) FOI REMOVIDO das duas "
+        "pegadas** em docs/ADR/0014: cava é reabilitada e povoado pode ser abandonado, "
+        "e a permanência tornava abandono indetectável por construção (pergunta 3 de "
+        "§1). Por isso `area_sem_permanencia_km2` e `area_publicada_km2` são agora "
+        "iguais nesta tabela; R2 continua valendo só para `urbano`."
     )
     with PEGADA_CSV.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=campos)
@@ -1401,8 +1490,8 @@ def escrever_proveniencia(registros: list[dict], anos: list[int], infos: dict) -
         "idêntica à anterior (o raio de exclusão de negativos do treino foi mantido em "
         f"{RAIO_EXCLUSAO_NEGATIVO_REASSENTAMENTO_M:.0f} m, separado do raio de detecção de "
         f"{RAIO_BUFFER_REASSENTAMENTO_M:.0f} m); os 288 pontos de validação não se moveram "
-        "(0 de 288); `data/processed/acuracia_por_ano.csv` é idêntico por diff e a acurácia "
-        "do usuário de `construido` continua 0,27-0,63 (docs/ADR/0009); `urbano` dentro dos "
+        "(0 de 288); `data/processed/acuracia_por_ano.csv` é idêntico por diff e a "
+        f"{acuracia_texto.nota_comissao_construido()} `urbano` dentro dos "
         "polígonos de mineração continua 0,0000 km² de 2010 em diante. O único efeito sobre "
         "`urbano` é a migração de construído do envelope minerário (planta, pátio "
         "ferroviário) para `industrial`: 44,02 -> 42,84 km² em 2025.",

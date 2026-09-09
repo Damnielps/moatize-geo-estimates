@@ -40,12 +40,15 @@ git clone <url> && cd tete-moatize
 make env      # uv sync --locked — provisiona o próprio Python 3.12 (ver docs/ADR/0002)
 make fetch    # baixa as fontes de nível A, verifica sha256, preenche PROVENANCE.md
 make all      # pipeline completo: imagem → métricas → causal → figuras  (não implementado)
-make app      # build estático do front-end em app/dist                  (não implementado)
+make app      # build estático do front-end em app/dist
 ```
 
-`make env` e `make test` já funcionam. Os demais alvos existem no grafo do `Makefile` mas
-falham explicitamente enquanto a fase correspondente não for executada — de propósito:
-um alvo que não faz nada e sai com sucesso é pior que um que diz que não está pronto.
+`make env`, `make test` e `make app` já funcionam (`make app` depende de `app-data`, que
+regenera `app/src/content/` a partir de `PROVENANCE.md`/`data/DATA_AUDIT.md`/`uv.lock` e
+copia `data/processed/` para `app/public/data/`, antes de `npm ci && npm run build`).
+Os demais alvos existem no grafo do `Makefile` mas falham explicitamente enquanto a fase
+correspondente não for executada — de propósito: um alvo que não faz nada e sai com
+sucesso é pior que um que diz que não está pronto.
 
 A rota de referência para reprodutibilidade é **STAC público + Python local**
 (`pipeline/01_imagery/stac/`), sem conta em nenhuma plataforma. A rota Google Earth
@@ -83,6 +86,33 @@ docs/ADR/   decisões metodológicas
   listadas em `data/LICENSES.md`.
 - **Dados de nível B** (IPUMS, Planet NICFI, microdados DHS) não estão neste repositório
   e nunca entram no depósito publicado.
+
+## Publicação
+
+O app é publicado como página estática no GitHub Pages pelo workflow
+`.github/workflows/publicar.yml` (build + deploy a cada push em `main`, sem rerodar o
+pipeline de dados — mesmo padrão do projeto irmão `atlas-migração`), com verificação de
+segredos (`gitleaks`, `.gitleaks.toml`) e de ausência de dado bruto/intermediário no
+histórico do git. `CITATION.cff` e `docs/CHECKLIST_PUBLICACAO.md` seguem o mesmo molde.
+
+**Destino decidido:** repositório `github.com/Damnielps/moatize-geo-estimates`, página
+de projeto em `https://Damnielps.github.io/moatize-geo-estimates`. Assim que o
+repositório existir no GitHub, configurar em *Settings → Secrets and variables →
+Actions → Variables*: `SITE_URL=https://Damnielps.github.io/moatize-geo-estimates` e
+`BASE_PATH=/moatize-geo-estimates/`. Até lá, o build cai no placeholder inválido de
+propósito `https://EXEMPLO.invalid` (ver `app/vite.config.js`).
+
+**E-mail dos commits:** corrigido em 2026-09-09 — o histórico (então com 1 commit) foi
+reescrito com `git filter-repo` para usar o e-mail no-reply do GitHub
+(`129672935+Damnielps@users.noreply.github.com`) em vez do e-mail pessoal do titular;
+`user.email` local já está configurado com o mesmo endereço para os próximos commits.
+
+**Varredura de segurança feita antes do primeiro push** (2026-09-09, detalhada em
+`docs/CHECKLIST_PUBLICACAO.md`): `gitleaks detect` no histórico do git — nenhum segredo
+encontrado; sweep manual por padrões de chave/token, e-mail pessoal, CPF, caminho local
+e dado de nível B — limpo, com uma correção aplicada (`pipeline/00_fetch/fetch_osm_reassentamentos.sh`
+tinha o e-mail pessoal do titular hardcoded no `User-Agent` de contato para a API do
+OSM; trocado por uma URL do repositório, mesmo padrão já usado em `fetch_osm_contexto.py`).
 
 ## Ética
 

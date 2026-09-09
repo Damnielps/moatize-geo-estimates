@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "Se você usar este estudo, seus dados ou seu código, cite-o desta forma."
+title: "Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025"
+type: dataset
+authors:
+  - family-names: "Pessini Sobreira"
+    given-names: "Daniel"
+    # ORCID: adicionar aqui se o titular tiver um (não localizado neste repositório —
+    # nunca inventar um identificador).
+year: 2026
+version: "2026-09-09"
+url: "https://Damnielps.github.io/moatize-geo-estimates"
+repository-code: "https://github.com/Damnielps/moatize-geo-estimates"
+license: "MIT AND CC-BY-4.0"
+license-url: "https://creativecommons.org/licenses/by/4.0/legalcode"
+keywords:
+  - urbanização
+  - mineração
+  - carvão
+  - Moatize
+  - Tete
+  - Moçambique
+  - reassentamento
+  - agricultura urbana
+  - sensoriamento remoto
+  - economia de enclave
+abstract: >-
+  Pipeline reproduzível, aplicação web e artigo sobre como o ciclo carbonífero de
+  Moatize (Vale, Benga/Riversdale/ICVL, Corredor Logístico de Nacala) alterou a
+  trajetória demográfica, a forma urbana, a base econômica e a agricultura urbana e
+  periurbana de Tete e Moatize (província de Tete, Moçambique) entre 1997 e 2025, a
+  partir de classificação própria de imagens Landsat/Sentinel-2 e de fontes públicas de
+  nível A (WSF Evolution/DLR, GHSL/JRC, HDX COD-AB/COD-PS, NPP-VIIRS-like). Inclui
+  reconstrução demográfica e domiciliar, métricas de forma urbana, análise causal
+  (séries interrompidas, DiD, controle sintético) e cenários pós-2025. Não inclui
+  microdados de acesso controlado — apenas fontes de nível A sustentam números
+  publicados (política em CLAUDE.md §4.0).

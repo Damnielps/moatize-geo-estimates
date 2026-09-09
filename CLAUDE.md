@@ -151,11 +151,36 @@ sem GEE** (§11.3): STAC público (Planetary Computer ou Element84 Earth Search)
 |---|---|---|
 | DMSP-OLS (calibrado) | luzes noturnas | 1992–2013 |
 | VIIRS DNB (VNP46A4 / EOG annual) | luzes noturnas | 2012–presente |
-| Harmonized DMSP-VIIRS (Li et al. 2020) | série contínua | 1992–2018+ |
+| **NPP-VIIRS-like (Chen, Z., Yu, B. et al. 2021)** — série harmonizada **efetivamente usada** | série contínua anual | 2000–2025 |
+| ~~Harmonized DMSP-VIIRS (Li et al. 2020)~~ — **NÃO usada**; ver nota abaixo | série contínua | 1992–2018+ |
 | Global Coal Mine Tracker (GEM) | status, capacidade, produção | anual |
 | Vale / Vulcan / ICVL — relatórios públicos (20-F, sustentabilidade) | toneladas embarcadas, empregos | anual (A quando no site do emissor ou repositório regulatório) |
 | Banco de Moçambique / INE — IPC regional | inflação regional (verificar se Tete tem IPC próprio) | mensal |
 | World Bank Pink Sheet | preço do carvão metalúrgico e térmico | mensal |
+
+
+> **Correção de atribuição (Fase 3, 2026-09-08).** A versão anterior desta tabela nomeava
+> "Li et al. 2020" como o harmonizado. São **dois produtos distintos**, não dois nomes do
+> mesmo, e o que este estudo de fato usa é o segundo:
+>
+> - **Li, X., Zhou, Y., Zhao, M., Zhao, X. (2020)**, *Scientific Data* 7:168,
+>   DOI `10.1038/s41597-020-0510-y` — harmonizado DMSP-VIIRS, hospedado no figshare.
+>   **Não usado.**
+> - **Chen, Z., Yu, B., Yang, C., Zhou, Y., Yao, S., Qian, X., Wang, C., Wu, B., Wu, J.
+>   (2021)**, *Earth System Science Data* 13:889–906, DOI `10.5194/essd-13-889-2021`;
+>   dataset no Harvard Dataverse, DOI `10.7910/DVN/YGIVCD`, CC0 1.0. **É este que está em
+>   `data/raw/` e é este que o artigo tem de citar.**
+>
+> O erro nasceu no prompt-mestre e foi propagado pelo orquestrador na delegação; quem o
+> pegou foi o `coletor-dados`, conferindo a autoria na API do Dataverse. O prefixo
+> `viirs_like_li2020_` nos nomes de arquivo é **herança do erro** e foi mantido para não
+> quebrar checksums já registrados — o nome do arquivo não é a fonte da atribuição;
+> `data/LICENSES.md` e o `.meta.json` são.
+>
+> **Consequência metodológica, não só editorial:** com o VIIRS VNL rebaixado a **B**
+> (o EOG passou a exigir OAuth) e o DMSP-OLS excluído em **C** (URL 404), o Chen/Yu é a
+> **única** série de luz de nível A. A conciliação DMSP↔VIIRS deixou de ser feita por este
+> pipeline e passou a ser interna ao produtor, **não auditável aqui**.
 
 ### 4.5 Reassentamento e conflito
 Relatórios de EIA/RAP (Vale, Riversdale/Rio Tinto, Jindal), Human Rights Watch (2013),
@@ -203,6 +228,47 @@ Consome **apenas** `data/processed/`; a página de metodologia é gerada de `PRO
 e `data/DATA_AUDIT.md`. Identidade: **Sistema Ardósia** — ardósia `#24404F`, terracota
 `#9C5B41`, Source Serif 4 / Source Sans 3 / IBM Plex Mono; sobriedade, rampas sequenciais
 discretas, terracota reservada para destaque.
+
+---
+
+## 6-A. EXIGÊNCIA DE TRANSPARÊNCIA METODOLÓGICA (decisão do usuário, 2026-09-08)
+
+**Vinculante para as Fases 4 (app) e 5 (artigo).** Ambos os produtos têm de apresentar a
+metodologia **detalhada** e o **processo de implementação**, não um resumo de métodos. Isso
+é requisito de entrega, não seção opcional.
+
+O que "detalhado" obriga, em ambos os produtos:
+
+1. **Método por etapa**, do dado bruto ao número publicado: composição sazonal, índices,
+   amostragem de treino, classificador e seus hiperparâmetros, regras de pós-processamento
+   (R1 de área mínima, R2 de permanência e **em que camadas cada uma se aplica**), zoneamento
+   por anéis, matrizes de transição, estimador de área de Olofsson.
+2. **Ambiente e bibliotecas**, com **versão exata**: Python, `uv` e `uv.lock`, GDAL/PROJ e a
+   decisão de usá-los só por API (`docs/ADR/0002`), `rasterio`, `odc-stac`, `pystac-client`,
+   `scikit-learn`, `pylandstats`, `numpy`, `pandas`. A lista tem de ser **gerada do lockfile**,
+   nunca escrita à mão — uma lista de versões redigida por um agente é afirmação não
+   verificada, e esta é a classe de erro mais frequente deste estudo.
+3. **Seeds e determinismo**: `config/seeds.yaml`, ordem de execução pelo Makefile, e a
+   declaração de o que reproduz byte a byte e o que reproduz dentro de tolerância.
+4. **Plataformas como meio, não fonte** (§4.0 regra 3): Planetary Computer é o STAC canônico
+   (`docs/ADR/0004`), com a rota alternativa de §11.3 documentada e não hipotética.
+5. **As decisões metodológicas e o que elas custaram.** Os 14 ADRs não são apêndice: vários
+   mudaram a resposta do estudo (0008 tirou a série própria do papel de série de tendência;
+   0011 tornou H3 testável; 0012 recusou uma camada; 0013 restringiu o que a Fase 3 pode
+   estimar). O artigo e o app têm de expor **o que foi decidido, contra que alternativa, e
+   com que evidência medida**.
+6. **Os defeitos encontrados e corrigidos**, quando eles condicionam a leitura do resultado —
+   o `qa_pixel` que contava falha de sensor como observação válida, o limiar absoluto que
+   apagava o Zambeze, as camadas que mediam o objeto errado. Um método que só narra o
+   caminho que deu certo não é reproduzível: é publicidade.
+
+No **app**, isso vive na página de metodologia, que §6 já manda **gerar** de `PROVENANCE.md`
+e `data/DATA_AUDIT.md` — mais a lista de dependências gerada de `uv.lock`. Nada dessa página
+é escrito à mão.
+
+No **artigo**, isso vive numa seção de Métodos com essa profundidade, mais um apêndice de
+reprodutibilidade. O limite de 8–10 mil palavras de §7 conta o corpo; **o apêndice de
+método e implementação não é comprimido para caber nele**.
 
 ---
 

@@ -1,0 +1,6 @@
+{
+  "script": "pipeline/03_causal/series_interrompidas.py",
+  "desenho": "docs/DESENHO_FASE3.md §2 + EMENDA 1 (§11, E4/E5/E8)",
+  "aviso_obrigatorio": "T<=23: HAC sub-cobre. Os IC sao PISO de incerteza, nao teto. Nenhum resultado aqui e apresentado como significativo sem esta frase.",
+  "fonte_luz": "Chen/Yu 2021 (10.5194/essd-13-889-2021), CC0 — NAO Li et al. 2020"
+}

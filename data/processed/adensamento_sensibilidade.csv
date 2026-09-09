@@ -1,0 +1,14 @@
+variante,area_adensando_km2,nota,n_sinais_ativos,concordancia_minima
+base,15.3216,"TAU=0.70, Q_ALTO=0.80, Q_BAIXO=0.20, grade 240 m",3,2
+tau_060,21.5424,TAU=0.6 — variante ±1 decil,3,2
+tau_080,6.6816,TAU=0.8 — variante ±1 decil,3,2
+qalto_070,13.9968,Q_ALTO=0.7 — variante ±1 decil,3,2
+qalto_090,15.9552,Q_ALTO=0.9 — variante ±1 decil,3,2
+qbaixo_010,23.904,Q_BAIXO=0.1 — variante ±1 decil,3,2
+qbaixo_030,11.6352,Q_BAIXO=0.3 — variante ±1 decil,3,2
+grade_480m,23.2704,"Grade 480 m (16x16 pixels de 30 m = agregação 2x2 ESTRITA sobre a grade de 240 m); S2 e S3 RECALCULADOS nesta resolução (ECDF sobre o novo domínio de células) — teste de escala, não de amputação de sinal (corrigido em 2026-09-09, ver Emenda 1 do ADR).",3,2
+ob_conf_mediana,15.552,Open Buildings filtrado a confidence >= mediana do recorte (0.7915),3,2
+concordancia_3de3,3.2832,"Exige concordância 3 de 3 sinais, em vez de 2 de 3",3,3
+sem_S2,6.912,"S2 (luz) zerado — concordância decidida só por S1 e S3 (que partilham f_2020, risco R2)",2,2
+sem_S3,7.5456,S3 (Open Buildings) zerado — mede o efeito do risco R2 (S1/S3 partilham minuendo),2,2
+bruta_experimental,13.536,"S1 sobre data/interim/estabilidade/bruta_construido_* (rótulo bruto do RF, pré-R1/R2, EXPERIMENTAL); S2 e S3 permanecem ATIVOS e inalterados — a comparação com a base isola o efeito de R1/R2 em S1, não o número de sinais (corrigido em 2026-09-09, ver Emenda 1 do ADR) — diagnóstico, não publicável como resultado (§Alternativa d do ADR)",3,2

@@ -47,33 +47,46 @@ regressao_numerica:
     metrica: erro_relativo_absoluto
     max: 0.01
 
-# §5.1/§10 — instabilidade numérica nos índices de razão de banda (NDVI, NDBI,
-# MNDWI, NDWI, EVI): o numerador e o denominador vêm de reflectância de
-# superfície plausível (Landsat C2 L2, faixa aproximada [-0.2, ~1.6]); a única
-# forma de sair de [-1, 1] (ou da faixa mais larga do EVI) é o denominador se
-# aproximar de zero por cancelamento entre duas reflectâncias de sinal oposto
-# ou quase nulas — não é erro de escala (p1/p99 de todos os índices são
-# plausíveis para savana semiárida, verificado pelo orquestrador nesta
-# tarefa). Pixels com |denominador| abaixo deste limiar são mascarados (NaN),
-# nunca divididos: um valor "plausível" resultante de denominador quase-zero
-# seria mais enganoso que um nulo declarado.
+# §5.1/§10 — mascaramento de pixel nos índices de razão de banda (NDVI, NDBI,
+# MNDWI, NDWI, EVI).
 #
-# Valor medido nesta tarefa (Fase 1, correção pós-defeito de qa_pixel): depois
-# de corrigir o carregamento (ver `_stac_common.STAC_CFG_QA_PIXEL_SEM_NODATA`),
-# os pixels que ainda violavam a faixa plausível em
-# `pipeline/tests/test_imagery.py` tinham |denominador| até 0,0175 (NDBI 2000),
-# 0,0575 (MNDWI 2000) e 0,0944 (EVI 2025) — água muito escura / sombra residual
-# com reflectância próxima de zero em duas bandas simultaneamente, não um erro
-# de escala. `min: 0.1` cobre esses três casos com folga e mascara, em cada
-# ano/composto, entre 0% e ~1,7% dos pixels válidos por índice (medido nos
-# cinco anos-âncora desta entrega) — não a maioria da imagem.
+# CRITÉRIO ANTERIOR, RETIRADO em docs/ADR/0014: |denominador| < 0,1 era
+# mascarado como "instabilidade numérica". O defeito é o mesmo de docs/ADR/0011
+# e docs/ADR/0013 — **limiar absoluto sobre grandeza não estacionária**. Água
+# limpa tem green baixo E swir16 baixo, então `green + swir16` cai abaixo de
+# 0,1 sem que exista instabilidade alguma: medido, o denominador do MNDWI sobre
+# o Zambeze é 0,0821 (2000) e 0,0505 (2015). A regra apagava 32.909 (2000) e
+# 44.364 (2015) pixels — o rio inteiro — e com ele a agricultura de vazante das
+# margens e ilhas, que §3 nomeia como uma das quatro camadas de agricultura
+# urbana. Consequência medida na classificação: a classe `agua` ia de 0,045 %
+# (2015) a 11,1 % (2025) na janela da Tete central, onde o Zambeze tem ~1 km de
+# largura e a fração deveria ser estável.
+#
+# CRITÉRIO VIGENTE: mascara-se o pixel em que **alguma banda de reflectância
+# usada na fórmula é não positiva**. Reflectância de superfície <= 0 é
+# fisicamente inválida (artefato de correção atmosférica), e com todas as
+# bandas positivas a razão (a-b)/(a+b) está em (-1, 1) por álgebra. Medido
+# nesta AOI: os pixels realmente patológicos (|índice| > 1) são exatamente 1
+# por raster e **todos** têm banda não positiva — o critério novo remove o
+# mesmo pixel e preserva 36.041 dos 36.042 pixels de água.
 processamento_indices:
-  denominador_minimo:
+  banda_nao_positiva:
+    criterio: banda_de_reflectancia_nao_positiva
+    nota: >-
+      Pixel com qualquer banda de reflectância da fórmula <= 0 é mascarado
+      (NaN) em vez de dividido. Único critério de mascaramento dos índices.
+      Ver pipeline/01_imagery/indices.py e docs/ADR/0014.
+  evi_denominador_minimo:
     metrica: valor_absoluto_denominador
     min: 0.1
-    nota: >
-      Abaixo deste módulo, o denominador de (a-b)/(a+b) ou do termo do EVI é
-      mascarado (NaN) em vez de dividido. Ver pipeline/01_imagery/indices.py.
+    nota: >-
+      Guarda numérica SÓ do EVI, cujo denominador (nir + 6*red - 7.5*blue + 1)
+      não é soma de reflectâncias: é combinação linear centrada em ~1, com
+      coeficiente negativo grande no azul, e pode cancelar mesmo com as três
+      bandas positivas (aerossol residual). Sem ela, 6 pixels de 2025 saem de
+      [-1, 1.5], chegando a -21,3. Este corte NÃO tem relação com água (sobre o
+      Zambeze o denominador do EVI fica em 0,6-1,0) e mascara, medido, 4 pixels
+      em 2025 e 0 em 2000/2015.
 
 # §5.1.3 — concordância esperada com produtos de referência (não é erro, é sanidade).
 # Fora da faixa não reprova automaticamente, mas exige explicação escrita.
@@ -98,3 +111,28 @@ sanidade_demografica:
   densidade_hab_km2: {min: 500, max: 20000}
   tamanho_medio_domicilio: {min: 3.0, max: 7.0}
   cagr_populacional: {min: -0.02, max: 0.15}
+
+# §6, Fase 4 — pipeline/05_app/build_web_assets.py. Simplificação geométrica dos
+# GeoJSON de data/processed/imagery/ para data/processed/app/imagery/ (Douglas-Peucker,
+# preserve_topology=True, em EPSG:32736). NÃO é um segundo critério de acurácia
+# temática: mede só a distorção geométrica introduzida por remover vértices, contra a
+# própria camada publicada.
+app_geometria_simplificacao:
+  candidatos_m: [15, 10, 5, 2, 1, 0.5, 0.1, 0]
+  # maior tolerância candidata testada primeiro; o script escolhe a MAIOR que respeitar
+  # o teto abaixo. 0 = sem simplificação geométrica (só corte de precisão de coordenada
+  # para 6 casas decimais) e erro de área 0 por definição — garante que sempre existe
+  # uma opção dentro do teto.
+  erro_area_max_pct: 0.01
+  # 1 % — teto pedido pelo orquestrador na tarefa da Fase 4: "se simplificar muda a área
+  # em mais de 1 %, o app passa a mostrar número diferente do publicado".
+  justificativa: >
+    O inchaço de data/processed/imagery/*.geojson (367 MB / 49 arquivos) não vinha de
+    complexidade vetorial: os polígonos já chegam dissolvidos da classificação upstream
+    (contra-exemplo testado: urbano_2025 tem 622 features para 43,1 km², não um polígono
+    por pixel). Vinha de (a) coordenadas UTM gravadas com ~15 dígitos significativos —
+    precisão de nanômetro sobre um pixel de 30 m — e (b) vértices de "escada" de 30 m
+    herdados da poligonização do raster. A simplificação Douglas-Peucker remove (b) e o
+    arredondamento a 6 casas decimais (~0,11 m) remove (a); nenhum dos dois muda a
+    interpretação temática da camada. O erro de área medido por arquivo é publicado em
+    data/processed/app/imagery/manifest.json, chave `camadas.<nome>.erro_area_pct`.

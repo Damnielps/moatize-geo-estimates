@@ -20,9 +20,10 @@ de `ardosia-brand-guidelines/scripts/palette.py`).
 
 ## Honestidade cartográfica (obrigatória, ver docs/ADR/0009 e docs/ADR/0008)
 
-- A camada `urbano` tem acurácia do usuário medida entre 0,27 e 0,63 por ano — entre
-  37% e 73% do que ela chama de construído não é. Isto vai na legenda, não só no texto.
-  Fonte não é usada como cadastro.
+- A camada `urbano` tem acurácia do usuário medida por ano (docs/ADR/0009; valor
+  reexecutado em docs/ADR/0014 — ver `pipeline/lib/acuracia_texto.py` para o número
+  corrente, não transcrito aqui). Isto vai na legenda, não só no texto. Fonte não é
+  usada como cadastro.
 - A série de área construída ao longo do tempo é a do WSF Evolution (ADR 0008), não a
   classificação própria; esta figura mostra só o corte de 2025 (fim da série própria,
   sem contraparte WSF depois de 2015) e não plota nenhuma série temporal — a ressalva
@@ -62,7 +63,9 @@ from shapely.geometry import box
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_fetch"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
+import acuracia_texto
 from _config import carregar_aoi, carregar_estudo
 from _paleta_ardosia import (
     ARDOSIA,
@@ -487,10 +490,9 @@ def montar_legenda(fig, nomes_sem_geom=None):
     y -= 0.10
 
     aviso = (
-        "Advertência de acurácia (docs/ADR/0009): a camada 'urbano' tem acurácia do usuário "
-        "medida entre 0,27 e 0,63 por ano-âncora — entre 37% e 73% do que o mapa chama de "
-        "construído não é. Esta camada NÃO é cadastro; é insumo classificado, sujeito a "
-        "comissão alta."
+        "Advertência de acurácia (docs/ADR/0009, reexecutado em docs/ADR/0014): a camada "
+        f"'urbano' tem {acuracia_texto.nota_comissao_construido()} Esta camada NÃO é "
+        "cadastro; é insumo classificado, sujeito a comissão alta."
     )
     import textwrap
 
@@ -565,8 +567,8 @@ def gravar_meta(caminhos_saida: list[Path]) -> Path:
         "crs_encartes": CRS_EXIBICAO,
         "selo": "observado",
         "ressalvas": [
-            "Camada 'urbano' com acurácia do usuário 0,27–0,63 por ano (docs/ADR/0009) "
-            "— não é cadastro.",
+            f"Camada 'urbano' com {acuracia_texto.nota_comissao_construido()} "
+            "Não é cadastro.",
             "Série temporal de área construída é do WSF Evolution, não da classificação "
             "própria (docs/ADR/0008).",
             "'25 de Setembro' sem geometria localizável em fonte aberta — não representado "

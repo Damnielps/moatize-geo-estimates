@@ -1,0 +1,10 @@
+estrato_mapeado,classe_referencia,n,proporcao_de_area
+cultivo_sequeiro,cultivo_sequeiro,0,0.0
+cultivo_sequeiro,cultivo_irrigado,2,0.04206
+cultivo_sequeiro,outro,6,0.12618
+cultivo_irrigado,cultivo_sequeiro,1,0.001532
+cultivo_irrigado,cultivo_irrigado,5,0.007658
+cultivo_irrigado,outro,3,0.004595
+outro,cultivo_sequeiro,2,0.204494
+outro,cultivo_irrigado,0,0.0
+outro,outro,6,0.613482

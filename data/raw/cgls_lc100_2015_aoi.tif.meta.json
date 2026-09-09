@@ -1,0 +1,24 @@
+{
+  "url": "https://zenodo.org/api/records/3939038/files/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif/content",
+  "download_date": "2026-09-08T13:15:25.082863+00:00",
+  "size_bytes": 59156,
+  "license": "CC-BY 4.0",
+  "license_url": "https://zenodo.org/records/3518036",
+  "level": "A",
+  "selo": "observado",
+  "source_page": "https://land.copernicus.eu/en/products/global-dynamic-land-cover",
+  "dataset": "CGLS-LC100",
+  "ano": 2015,
+  "anos_cobertos": "2015",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0,
+    "crs": "EPSG:4326"
+  },
+  "citation": "Buchhorn, M. et al. (2020). \"Copernicus Global Land Service: Land Cover 100m: Collection 3: epoch 2015: Globe.\" Zenodo. DOI 10.5281/zenodo.3939038",
+  "zenodo_record": "3939038",
+  "resolution_m": 100,
+  "nota": "Recortado da AOI (+0.02 grau de margem) via leitura em janela GDAL /vsicurl/ no momento do fetch; o arquivo global 'Discrete-Classification-map' (~1,7 GB) NÃO foi mirrorado inteiro."
+}

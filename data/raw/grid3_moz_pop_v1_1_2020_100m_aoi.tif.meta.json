@@ -1,0 +1,24 @@
+{
+  "url": "https://wopr.worldpop.org/download/237",
+  "download_date": "2026-09-09T12:15:25.010478+00:00",
+  "size_bytes": 160504,
+  "license": "CC BY 4.0 (Creative Commons Attribution) -- https://data.humdata.org package license_id=cc-by, license_url=http://www.opendefinition.org/licenses/cc-by (confirmado via HDX package_show API em 2026-09-09)",
+  "citation": "Bondarenko M, Jones P, Leasure D, Lazar AN, Tatem AJ. 2020. Census disaggregated gridded population estimates for Mozambique (2017), version 1.1. WorldPop, University of Southampton. doi:10.5258/SOTON/WP00672",
+  "year": 2017,
+  "resolution_m": 100,
+  "crs": "EPSG:4326",
+  "shape_rows_cols": [
+    444,
+    744
+  ],
+  "clip_method": "Arquivo nacional baixado integralmente (servidor wopr.worldpop.org nao suporta HTTP Range), recortado a AOI via rasterio.windows.from_bounds, arquivo nacional descartado apos o recorte. Dado calibrado ao Censo 2017 (v1.1), apesar do rotulo '2020' no nome do arquivo pedido pela tarefa.",
+  "aoi_bounds_epsg4326": [
+    33.5,
+    -16.35,
+    34.1,
+    -16.0
+  ],
+  "sha256": "d7096cb69444d6534d460970987733a2c2d249f061143c5f9b8d63926ccbd9b5",
+  "calibration_census_year": 2017,
+  "source_page": "https://data.humdata.org/dataset/gridded-population-estimates-for-mozambique-2017-census-v1-1"
+}

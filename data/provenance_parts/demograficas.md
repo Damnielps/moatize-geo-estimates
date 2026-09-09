@@ -48,7 +48,9 @@ Tentativa 4. Rastreabilidade de arquivos efetivamente baixados para `data/raw/`.
   NÃO.** Verificação direta: o TOTAL da linha "T O T A L" do Quadro 3 da província de Tete
   (2017) é **2.551.826** — exatamente igual à "População Residente" (não ajustada) do
   quadro nacional, e não aos 2.648.941 ajustados. Logo, **307.338 (Cidade de Tete) e 260.843
-  (Distrito de Moatize) são contagens residentes, sem o ajuste de omissão de 3,7-3,8%
+  (Distrito de Moatize) são contagens residentes, sem o ajuste de omissão — 3,8% na Província de Tete
+  (a taxa pertinente a estas unidades) e 3,7% no total nacional: duas taxas de
+  unidades diferentes, NÃO uma faixa de incerteza de uma só grandeza
   aplicado.** Isso é relevante para H1 e para qualquer comparação com o total oficial do
   país: os números distritais publicados sistematicamente subestimam a população "real"
   estimada pelo INE em cerca de 3-6% a mais, dependendo da província.
@@ -115,7 +117,7 @@ de H1, com selo "não verificado em fonte primária".
 **parcialmente respondível, com lacuna séria na ponta 1997.** Os anos-âncora 2007 e 2017
 estão confirmados em fonte primária (Cidade de Tete: 155.870 em 2007, 307.338 em 2017;
 Distrito de Moatize: 215.092 em 2007, 260.843 em 2017 — todos não ajustados pela taxa de
-omissão de 3,7-3,8%). O ano-âncora 1997 **não foi confirmado em fonte primária** (busca
+omissão de 3,8% da Província de Tete; a nacional, 3,7%, é outra grandeza). O ano-âncora 1997 **não foi confirmado em fonte primária** (busca
 exaustiva no Wayback, ver seção acima) — os valores de §8 (101.984 e 109.103) continuam
 como citação de agregador, não verificável. Isso significa que a CAGR pré-2005 (ponta do
 H1) só pode ser calculada com um número não verificado, o que deve ser declarado
@@ -144,3 +146,23 @@ não resolvida.
 2. Confirmação cartográfica de mudança de limites do Distrito de Moatize 1997→2007→2017
    (fora do escopo desta busca textual).
 3. Origem do número 305.722 (não localizado em nenhum documento primário consultado).
+
+---
+
+## RECONCILIAÇÃO — 2026-09-08
+
+A avaliação acima trata **H1 na formulação original, em população** ("aceleração de ~4 %/ano
+para ~7 %/ano"), e a classifica como "parcialmente respondível, com lacuna séria na ponta
+1997". Duas decisões posteriores mudam isso:
+
+- **`docs/ADR/0003`** reformulou H1 em termos de **área construída**, não de habitantes,
+  precisamente porque o Censo de 1997 não existe em fonte acessível. A formulação em
+  população **não é mais a hipótese do estudo**.
+- **A emenda de 2026-09-08 ao `docs/ADR/0008`** restringe ainda mais a formulação em área:
+  ela vale sobre **taxa de primeira detecção**, não sobre estoque, porque nem a classificação
+  própria (regra R2) nem o WSF Evolution (formato do dado) fornecem estoque sem
+  monotonicidade imposta.
+
+O conteúdo factual deste fragmento — licenças, âncoras verificadas, o que existe e o que não
+existe — **permanece válido**. O que caducou é a avaliação de testabilidade de H1, que foi
+feita antes das reformulações.

@@ -109,8 +109,10 @@ def janela_chuva(ano: int, mes_inicio: int, mes_fim: int) -> str:
 
 def ndvi(bandas: xr.Dataset) -> xr.DataArray:
     """NDVI da estação chuvosa, pela **mesma** função de razão normalizada de
-    `indices.py` — inclusive a máscara de denominador quase-zero de
-    `config/tolerances.yaml -> processamento_indices.denominador_minimo`.
+    `indices.py` — inclusive a máscara de banda de reflectância não positiva de
+    `config/tolerances.yaml -> processamento_indices.banda_nao_positiva`
+    (docs/ADR/0014; o critério anterior de denominador quase-zero apagava o
+    Zambeze).
 
     Correção de defeito (Fase 1, T3): esta função dividia `(nir-red)/(nir+red)`
     sem mascarar o denominador, ao contrário do NDVI da estação seca. O

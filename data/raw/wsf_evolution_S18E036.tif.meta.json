@@ -1,0 +1,20 @@
+{
+  "url": "https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_36_-18.tif",
+  "download_date": "2026-09-08T14:14:00-03:00",
+  "size_bytes": 1635622,
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "level": "nao classificado - cabe ao auditor-dados",
+  "source_page": "https://geoservice.dlr.de/web/datasets/wsf_evo",
+  "citation": "Marconcini, M., Metz-Marconcini, A., Esch, T., Gorelick, N. (2021). \"Understanding Current Trends in Global Urbanisation - The World Settlement Footprint Suite.\" GI_Forum 2021, Issue 1, p. 33-38. DOI: 10.1553/giscience2021_01_s33",
+  "anos_cobertos": "1985-2015 (valor de pixel = ano de primeira deteccao; 0 = sem dado)",
+  "resolucao_m": 30,
+  "selo": "observado",
+  "pixel_value": "ano de primeira deteccao de assentamento (1985-2015); 0 = sem dado (confirmado na aba Abstract de https://geoservice.dlr.de/web/datasets/wsf_evo)",
+  "aoi_bbox": {
+    "nota": "controle: tile derivado das coordenadas da capital, nao da AOI de estudo"
+  },
+  "tile_id": "36_-18",
+  "md5_produtor": "0715fa02d86aff455d40ebd1b2e6fc21",
+  "nota": "Tile 36_-18 (grade 2x2 graus do produtor; nao recortado para a AOI). Redownload em 2026-09-08 apos deteccao de que o .tif estava ausente em disco (download anterior morreu em .part; sidecars ficaram orfaos). SHA256 e MD5 do arquivo re-baixado conferem exatamente com o sidecar orfao preexistente e com o grid.geojson do produtor (md5sum, filesize, URL) - o sidecar anterior estava correto quanto ao conteudo esperado, mas o .tif que ele descrevia nao existia em disco."
+}

@@ -1,0 +1,23 @@
+{
+  "script": "pipeline/03_causal/cenarios.py",
+  "regra_de_rotulo": "todo numero e `modelado`; cenario nao e previsao",
+  "n_trajetorias": 9,
+  "premissas": {
+    "delta_por_cenario_pp": 1.5,
+    "migracao_liquida_pp": [
+      -1.0,
+      0.0,
+      1.0
+    ],
+    "tamanho_domicilio": {
+      "baixo": 4.5,
+      "central": 5.0,
+      "alto": 5.5
+    },
+    "modelo": "geometrico por fase; o coorte-componente NAO foi executado - nao ha estrutura etaria por idade simples em nivel A para 2025"
+  },
+  "proibicoes_respeitadas": [
+    "nenhuma epoca GHSL 2025/2030 usada como ancora",
+    "nenhuma trajetoria destacada como central"
+  ]
+}

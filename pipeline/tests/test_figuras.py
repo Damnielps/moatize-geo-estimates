@@ -13,6 +13,7 @@ Pula (`pytest.skip`) se a figura ainda não foi gerada — `mapa_localizacao.py`
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -85,9 +86,37 @@ def test_meta_declara_ressalvas_de_honestidade_cartografica(meta):
     própria; geometria ausente não é inventada. As três ressalvas têm de estar
     registradas na proveniência, não só implícitas na legenda."""
     ressalvas = " ".join(meta.get("ressalvas", [])).lower()
-    assert "0,27" in ressalvas and "0,63" in ressalvas, (
-        "faixa de acurácia do usuário (docs/ADR/0009) ausente das ressalvas"
-    )
+
+    # A faixa é LIDA da fonte, não escrita aqui (ORCHESTRATION_LOG.md 4-07).
+    #
+    # A versão anterior exigia os literais "0,27" e "0,63". Quando `docs/ADR/0014`
+    # reexecutou a validação e obteve 0,286–0,625, este contrato passou a **exigir o
+    # número obsoleto**: corrigir a figura o fazia falhar. Um contrato que codifica um
+    # valor medido envelhece com ele e passa a defender o erro — é o mesmo defeito que
+    # `pipeline/lib/acuracia_texto.py` existe para eliminar no pipeline.
+    import csv as _csv
+
+    csv_acuracia = ROOT / "data" / "processed" / "acuracia_por_ano.csv"
+    if csv_acuracia.exists():
+        with csv_acuracia.open(encoding="utf-8", newline="") as fh:
+            vals = []
+            for linha in _csv.DictReader(fh):
+                try:
+                    vals.append(float(linha["acuracia_usuario_construido"]))
+                except (KeyError, TypeError, ValueError):
+                    pass
+        if vals:
+            # Aceita 2 ou 3 decimais: "0,286" e "0,29" descrevem o mesmo valor medido.
+            alvos = []
+            for v in (min(vals), max(vals)):
+                alvos.append({f"{v:.3f}".replace(".", ","), f"{v:.2f}".replace(".", ",")})
+            faltando = [a for a in alvos if not (a & set(re.findall(r"0,\d{2,3}", ressalvas)))]
+            assert not faltando, (
+                "faixa de acurácia do usuário ausente ou desatualizada nas ressalvas: "
+                f"esperado {min(vals):.3f}–{max(vals):.3f} "
+                f"(de acuracia_por_ano.csv, reexecutado em docs/ADR/0014); "
+                f"encontrado {sorted(set(re.findall(r'0,\\d{2,3}', ressalvas)))}"
+            )
     assert "wsf" in ressalvas, "menção ao WSF Evolution como série primária (docs/ADR/0008) ausente"
     assert "25 de setembro" in ressalvas, "nota sobre geometria não localizada ausente"
 

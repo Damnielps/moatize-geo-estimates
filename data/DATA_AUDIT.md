@@ -7,6 +7,244 @@ abertura da Fase 1.
 
 ---
 
+## 0. RECONCILIAÇÃO OBRIGATÓRIA — Revisão de 2026-09-08 (pós-medição, ADR 0012/0013/0014)
+
+A revisão de 2026-09-07 (seção 0, abaixo) julgava **disponibilidade de dado**: a fonte
+existe, tem licença A, cobre o período. Três ADRs posteriores — `docs/ADR/0012`
+(2026-09-08), `docs/ADR/0013` (2026-09-08) e `docs/ADR/0014` (2026-09-08) — mediram
+**desempenho da classificação**, não disponibilidade, e a medição derruba parte do
+veredito anterior. O dado orbital existe; o classificador de cultivo não separa cultivo
+de vegetação natural, e a série de área construída própria (e o WSF Evolution) é
+catraca por construção. Isto muda o veredito de H5, H6, P8, e qualifica P1–P4, H1–H4,
+P6 e P7. A seção 1–4 abaixo é preservada sem alteração de texto; esta seção a supera
+onde indicado.
+
+### H5 rebaixada: de "RESPONDÍVEL, com ressalva de fenologia" para SUSTENTADA FRACAMENTE
+
+`docs/ADR/0012` mediu `cultivo_sequeiro` com acurácia do usuário **0,000** (n=8,
+IC95 ±0,000) e kappa **−0,065** — pior que aleatório. `docs/ADR/0014` corrigiu a raiz
+(limiar relativo, propagado de `docs/ADR/0011`) e o cultivo **não melhorou**: o
+Jaccard contra GLAD Cropland/ESA WorldCover permanece em **0,001–0,002**, e a área
+classificada (359–761 km²) excede a do GLAD (~20 km² na mesma AOI) por mais de uma
+ordem de grandeza. Isso localiza a falha na abordagem fenológica bianual, não nos
+limiares — **reforça**, não enfraquece, `docs/ADR/0012`.
+
+H5 tem dois componentes: (i) "conversão cropland→construído concentrada na
+implantação/boom" — **não sustentável**: não existe classificação de cropland
+defensável em nenhum ano-âncora para medir a conversão, com nenhuma das duas classes
+(`cultivo_sequeiro` reprovado; `cultivo_irrigado` cobre só cultivo irrigado, uma fração
+pequena e distinta do que a hipótese descreve); (ii) "persistência em várzeas" —
+**sustentável apenas de forma fraca e indireta**: `cultivo_irrigado` (acurácia do
+usuário 0,556 ± 0,344, Jaccard 0,043–0,098 contra GLAD/WorldCover — positivo e acima do
+acaso, mas com intervalo de confiança que cobre quase toda a faixa plausível) aparece
+2 a 3 vezes mais concentrado na zona de várzea do que `cultivo_sequeiro` em 4 dos 6
+anos-âncora. Essa razão **não é uma medida de área agrícola** — é enriquecimento
+relativo entre duas classes, uma das quais (o denominador da comparação,
+`cultivo_sequeiro`) tem acurácia nula. **Veredito revisto: H5 sustentada fracamente**,
+apenas no componente de localização relativa em várzea, nunca em magnitude de área ou
+de conversão.
+
+### H6 rebaixada: de "PARCIAL" para SEM RESPOSTA — e o motivo muda
+
+O veredito de 2026-09-07 tratava H6 como parcial por falta de dado domiciliar (censo/IOF
+em nível C, sem reprocessador). Essa lacuna **continua existindo**, mas deixou de ser o
+fator limitante. O fator limitante agora é que **a série de área de cultivo que
+sustentaria "cresce a área cultivada intra e periurbana após 2016" não mede cropland**:
+kappa −0,065, Jaccard essencialmente nulo contra duas referências externas
+independentes, em todos os pares ano testados. Não há segunda via de nível A com
+desempenho medido para a dimensão de área. **Veredito revisto: SEM RESPOSTA** — nem a
+dimensão física (área cultivada) nem a dimensão domiciliar (dependência de produção
+própria) têm via de nível A com desempenho aceitável.
+
+### Pergunta 8 de §1 — respondível só em localização de várzea e cultivo irrigado com ressalva
+
+"Onde estão os bolsões" é respondível em parte: várzea (HydroRIVERS + DEM, nível A,
+método geométrico não sujeito ao mesmo defeito) e `cultivo_irrigado` com a ressalva de
+acurácia acima. "Quanto ocupam" e "como evoluíram" (conversão em construído,
+deslocamento para anéis externos, persistência) **não são respondíveis** com a série
+atual — dependem de uma medida de área de cultivo que não existe em nível A com
+desempenho defensável. O papel na segurança alimentar e renda domiciliar permanece
+fechado por ausência de tabulação em A (Censo/IOF = C), como já registrado.
+
+### P1/H1 — reformulação adicional: taxa de primeira detecção, não estoque
+
+Emenda de 2026-09-08 a `docs/ADR/0008`, corroborada por `docs/ADR/0013`: o WSF
+Evolution, posto como série primária de tendência pelo ADR 0008 original, é também
+**monotônico por construção** — cada pixel registra o ano de primeira detecção, e o
+acumulado nunca decresce. **Nenhuma fonte disponível fornece estoque de área construída
+sem monotonicidade imposta** (nem a classificação própria, com a regra R2 de
+permanência mantida em `urbano`; nem o WSF, pelo formato do próprio dado). H1
+(reformulada por `docs/ADR/0003` em área construída) permanece testável em nível A,
+mas com uma segunda reformulação obrigatória: a hipótese é sobre a **taxa de
+incorporação de solo** (primeira detecção por ano), não sobre o nível do estoque. As
+quebras de 2005 e 2011 são estimáveis sobre essa taxa; nenhuma quebra é estimável sobre
+o acumulado. Veredito: **TESTÁVEL EM A, restrito a taxa de primeira detecção** — grau
+abaixo do "TESTÁVEL EM A" simples da revisão de 2026-09-07.
+
+### P2 e P6 — o par 2015–2020 da série própria está contaminado
+
+`docs/ADR/0013` mostra que a área bruta de 2015 está inflada (~15 km²) por colapso do
+pool de treino de `solo_exposto` naquele ano (18× menos amostras que em 2000/2025), e
+que o GHSL (árbitro externo, épocas observadas) não mostra queda alguma entre 2015 e
+2020 — quem precisa de explicação é o excesso de 2015, não o déficit de 2020. **A
+quebra de 2016 cai exatamente entre os dois anos-âncora contaminados.** Isso atinge
+diretamente P2 (fim do boom) e P6 (bust 2015–2019): nenhum efeito de nível estimado
+sobre o par 2015–2020 da série própria pode ser atribuído ao ciclo do carvão — mede o
+artefato de rotulagem, não o tratamento. `docs/ADR/0013` recomenda que a série de luzes
+noturnas (harmonizada DMSP-VIIRS / VIIRS DNB, que não é catraca e pode cair) passe a ser
+a série primária de §5.4 depois de 2015. P2 permanece PARCIAL; P6 permanece PARCIAL, com
+a ressalva adicional de que a magnitude do bust não pode vir da série própria de área
+construída no par 2015–2020.
+
+> **Nota da revisão de 2026-09-08, tarde (ver §0'', auditoria de Fase 3):** a
+> recomendação acima de usar "a série de luzes noturnas... que não é catraca e pode
+> cair" como série primária pós-2015 **foi parcialmente esvaziada**: o único
+> harmonizado de nível A hoje em `data/raw/` é o produto Chen/Yu (NPP-VIIRS-like,
+> Harvard Dataverse), cuja conciliação interna DMSP↔VIIRS não é auditável por este
+> pipeline, e que apresenta uma descontinuidade não resolvida entre 2020 e 2022. Ver
+> §0''.
+
+### P3 — melhora parcialmente: abandono volta a ser observável
+
+`docs/ADR/0014` removeu a regra R2 de `reassentamento` (e de `industrial`), por decisão
+do usuário sobre o diagnóstico do ADR 0013 item 5. A série deixou de ser monotônica:
+1,20 (2010) · 1,65 (2015) · 0,70 (2020) · 1,09 (2025) km². Isso é uma melhora direta
+para a pergunta 3 de §1 ("como evoluíram — consolidação, **abandono**, adensamento"):
+o abandono, antes indetectável por construção, agora é observável na série própria.
+Isso **não resolve** as duas lacunas já registradas na arbitragem (b) — ausência de
+polígono oficial do plano de reassentamento (logo, "quanto ocupam" continua sem fonte
+A) e ausência de contagem de famílias em A (HRW é B). Veredito atualizado: **PARCIAL,
+com o componente "evolução temporal" agora sustentado por observação própria não
+catraca** (com o aviso de que a série vem de um buffer fotointerpretado ao redor do nó
+OSM, não de um polígono do plano — a atribuição causal "isto é o reassentamento"
+permanece frágil).
+
+### P4 e H2 — típologia por pixel precisa da ressalva de churn
+
+`docs/ADR/0013` mede, para `urbano`, um churn pixel a pixel de **31–54 %** entre
+anos-âncora consecutivos (Jaccard 0,456–0,69): a estabilidade em área agregada não se
+traduz em estabilidade de localização. Isso atinge diretamente qualquer método que
+dependa do mesmo pixel manter identidade entre dois anos — matriz de transição, rosa de
+expansão, tipologia infill/borda/leapfrog (§5.2, §5.6.4), que é exatamente o método por
+trás de P4 e H2. **Veredito revisto: RESPONDÍVEL COM RESSALVA DE CHURN** (antes:
+RESPONDÍVEL sem qualificação) — a área agregada por tipologia é utilizável, a atribuição
+pixel a pixel de qual tipologia gerou qual incremento carrega 31–54 % de incerteza de
+identidade e deve declarar esse número em toda figura e tabela.
+
+### H3 — componente industrial melhora, componente demográfico inalterado
+
+A remoção de R2 de `industrial` (`docs/ADR/0014`, item 3) é uma melhora para H3: antes,
+a permanência mascarava reabilitação de cava/pilha de estéril (`docs/ADR/0011` item 5–6
+já registrava isso); agora a série pode cair, o que é necessário para testar
+"estabiliza após 2016" de forma não circular. O componente "mancha urbana cresce por
+inércia demográfica" permanece como estava em 2026-09-07 (dependente de HDX 2017
+observado + 2025 modelado, insuficiente sozinho) — **inalterado nesse componente**, e
+adicionalmente sujeito à ressalva de churn de P4/H2 se usar tipologia por pixel.
+
+### H4 — a série própria de `urbano` não pode testar a hipótese; usar GHSL observado ou série de luzes
+
+`docs/ADR/0013` (seção "Não pode") é explícito: a regra R2 em `urbano` faz o incremento
+publicado ser sempre ≥ 0 por construção, então uma elasticidade área–luz estimada com
+essa série produziria "área cresce, atividade estagna" **mesmo se H4 fosse falsa** —
+circularidade, não resultado. A evidência principal de H4 já estava condicionada, na
+revisão de 2026-09-07, a não depender da população modelada de 2025 (risco de
+circularidade análogo do lado demográfico); agora se soma a restrição do lado da área:
+usar GHSL BUILT-S em épocas **observadas** (não R2025 extrapolado) ou a coluna
+experimental `estoque_sustentado_pelo_ano_km2` (que pode cair, e cai em 2020), nunca a
+série R2 publicada de `urbano`. Veredito revisto: **PARCIAL, com risco de circularidade
+duplo (lado população E lado área) — não sustenta conclusão sozinha em nenhuma das duas
+pontas**, condição mais restrita que a de 2026-09-07.
+
+### O que não muda nesta revisão
+
+Arbitragens (a) INE-documento=C, (c) WorldPop=A da seção 1; a tabela de níveis A/B/C da
+seção 2; P5 (luzes vs. ciclos do carvão, método não afetado pelos três ADRs); o bloqueio
+de 1997/2007 fora do núcleo A; e as condições de abertura por módulo da seção 4,
+**exceto** onde a presente seção as qualifica. O veredito global permanece **CONJUNTO A
+INSUFICIENTE**, agora por dois motivos independentes e não apenas um: (i) lacunas de
+licença/proveniência (1997/2007, tabulações domiciliares do INE — inalterado desde
+2026-09-07) e (ii) lacunas de desempenho de classificação recém-medidas (cultivo,
+monotonicidade de área construída) que impedem H5/H6/P8 de se apoiarem em número, e que
+qualificam H1/H3/H4/P2/P4/P6/H2 mesmo onde a fonte é A.
+
+---
+
+## 0''. Auditoria da coleta de Fase 3 (2026-09-08, tarde) — luzes noturnas, WSF de controle, HDX COD-AB
+
+Classifica três famílias coletadas em `data/licenses_parts/fase3_coleta_t2_licenca.md`
+(registradas pelo coletor como "não classificado — cabe ao auditor-dados") e duas
+fontes não obtidas. Detalhe linha a linha em `data/licenses_parts/fase3_auditoria_t3.md`
+e `data/provenance_parts/fase3_auditoria_t3.md`. Resumo:
+
+| # | Fonte | Nível | Nota |
+|---|---|---|---|
+| 1 | NPP-VIIRS-like (Chen, Z., Yu, B. et al.), 54 recortes, Harvard Dataverse V10, DOI 10.7910/DVN/YGIVCD | **A** | CC0 1.0, confirmada na API do Dataverse (não agregador). **Atribuição corrigida**: não é "Li et al. 2020" (produto distinto, figshare, DOI 10.1038/s41597-020-0510-y) — ver correção abaixo. |
+| 2 | WSF Evolution — 5 tiles das capitais de controle (DLR) | **A** | CC BY 4.0, mesma licença já registrada para os tiles da AOI de estudo em `construida.md`. |
+| 3 | HDX COD-AB Moçambique (`moz_admin_boundaries.geojson.zip`) | **A** | CC BY-IGO 3.0, mesma lógica já aplicada ao HDX COD-PS (reprocessador com licença própria, distinto do documento-INE bruto). |
+| 4 | VIIRS VNL V2 (EOG, `eogdata.mines.edu`) | **B — rebaixada de A** | Todo diretório de download testado responde HTTP 302 → OAuth (`eogauth.mines.edu`); não é acesso anônimo nem cadastro trivial. O registro pré-existente em `economicos.md` ("acesso via GEE ou EOG FTP público", nível A) está **desatualizado**: o FTP público não existe mais. Rota via GEE não testada nesta rodada. |
+| 5 | DMSP-OLS estável (NOAA/NCEI) | **C — excluída** | URL de `CLAUDE.md` §4.4 responde HTTP 404; página sucessora em EOG sofre o mesmo bloqueio OAuth do item 4; nenhuma licença localizável no domínio que efetivamente serve o dado hoje. |
+
+### Correção obrigatória a `CLAUDE.md` §4.4
+
+A linha "Harmonized DMSP-VIIRS Nighttime Lights (1992–2018) (Li et al. 2020)" do
+mandato descreve um produto diferente do que está em `data/raw/`. O que foi coletado é
+"The global NPP-VIIRS-like nighttime light data (Version 2) for 1992–2025", autoria
+**Chen, Z., Yu, B., Yang, C., Zhou, Y., Yao, S., Qian, X., Wang, C., Wu, B., Wu, J.**
+(paper de método: *Earth Syst. Sci. Data*, 13, 889–906, 2021, DOI
+10.5194/essd-13-889-2021), hospedado no Harvard Dataverse (DOI 10.7910/DVN/YGIVCD,
+CC0 1.0) — **não** em figshare, e **não** do grupo Li/Zhou/Zhao/Zhao (Scientific Data
+7, 168, 2020). As duas séries são harmonizados DMSP↔VIIRS **distintos**, de grupos e
+métodos diferentes. `CLAUDE.md` §4.4 deve separar as duas linhas; o produto Li et al.
+2020 não foi coletado nesta Fase e permanece nível B conforme já registrado (acesso via
+figshare exige verificação adicional não feita aqui).
+
+### Resposta à pergunta pré-registrada: a conciliação DMSP↔VIIRS interna ao produtor é aceitável sob §4.0?
+
+**Não, não sem ressalva formal — e a ressalva deve constar de toda figura/tabela que
+use a série pós-2015.** Com VIIRS VNL rebaixado a B e DMSP-OLS excluído (C), o único
+harmonizado de nível A é o produto Chen/Yu, que resolve a calibração cruzada
+DMSP↔VIIRS **dentro de seu próprio modelo de super-resolução/aprendizado profundo**,
+sem parâmetros auditáveis por este pipeline. Isso substitui a premissa 4 de
+`docs/DESENHO_FASE3.md` §1.3 — conciliação **estimada por nós**, com trecho de
+sobreposição 2012–2013, critério de falha e placebo próprios (P4, §4.4 do desenho) —
+por uma conciliação de caixa-preta de terceiros. Sob §4.0, o dado em si é A (CC0,
+proveniência primária confirmada); o que deixa de ser possível é a **verificação
+independente** da conciliação, que o desenho pré-registrado presumia disponível via
+duas séries A separadas.
+
+Isso é agravado pela descontinuidade medida pelo orquestrador: radiância máxima na AOI
+de Tete cai de 70,4 (2020) para 49,9 (2022) e permanece em 49,9 até 2025. Evidência de
+terceiros (não o changelog interno do Dataverse, que este agente não conseguiu renderizar)
+indica que o produtor **reprocessou especificamente os anos 2021–2022** desta linhagem
+de dataset. A coincidência temporal entre a queda medida e um reprocessamento
+documentado do produto **não permite, com os dados hoje em `data/raw/`, distinguir
+quebra de produto de quebra de economia na quebra causal de 2022** prevista em
+`docs/DESENHO_FASE3.md` §1.2. Nenhuma fonte B (o próprio harmonizado seria nível B se
+não fosse pela via CC0 do Dataverse — aqui a licença salva o nível, não a auditabilidade)
+resolve isso.
+
+**Veredito**: aceitável **apenas** como a única via disponível de série de luz de nível
+A, nunca como equivalente metodológico ao desenho original de conciliação por
+sobreposição. Toda quebra estimada sobre esta série a partir de 2020–2022 deve carregar
+o aviso explícito: "não distinguível de mudança de versão do produtor entre 2020 e
+2022 — nenhuma fonte de nível A permite verificação independente." Recomenda-se emenda
+datada a `docs/DESENHO_FASE3.md` (seu próprio §10 de pré-registro) registrando esta
+mudança de disponibilidade de dado.
+
+### Efeito sobre a matriz da seção 3 e sobre o veredito global
+
+Nenhuma pergunta/hipótese muda de categoria (RESPONDÍVEL/PARCIAL/SEM RESPOSTA) só por
+esta auditoria: P5, P6 e H4 já estavam condicionados (ver §0' acima) a usar luzes como
+série primária pós-2015, e essa recomendação **permanece a melhor disponível** — só
+deixa de ser "verificável de forma independente", o que já era um risco declarado
+(circularidade, §0' H4) e agora ganha um segundo risco declarado (versão do produto).
+O veredito global **não muda**: continua **CONJUNTO A INSUFICIENTE**, pelos dois
+motivos já registrados em §0, mais este terceiro risco explícito sobre a série de luz
+pós-2020, que não rebaixa nenhuma pergunta a um grau pior do que já estava, mas deve
+constar de toda publicação que use a quebra de 2022.
+
+---
+
 ## 0. Revisão de 2026-09-07 (pós-emissão) — o que muda e o que não muda
 
 Quatro fatos novos, verificados após a emissão original deste documento (seção 1
@@ -27,7 +265,7 @@ a supera). Resumo do julgamento:
    citação ao reprocessador (HDX/OCHA/FIS, fonte declarada INE) e a ressalva já
    registrada em `data/LICENSES.md`/`PROVENANCE.md` de que os limites ADM3/ADM4
    subjacentes carregam "ajustes não oficiais" até a revisão INE de 2027, e de
-   que o valor é contagem residente **sem** o ajuste de omissão de 3,7–3,8%
+   que o valor é contagem residente **sem** o ajuste de omissão — 3,8% na Província de Tete (a taxa pertinente às unidades deste estudo) e 3,7% no total nacional; são duas taxas de unidades diferentes, não uma faixa de incerteza de uma só grandeza
    documentado na brochura nacional (ver `demograficas.md`, achado (b)).
 2. **Existe agora uma segunda âncora HDX, vintage 2025** (Cidade de Tete
    460.248; Moatize 349.103), mesma licença A, mesmo reprocessador — mas com
@@ -78,6 +316,11 @@ licença localizável) continua correta e vigente — o que mudou é que ela dei
 de ser a **única** via para os valores de 2017/2025, não que ela própria tenha
 sido revertida. A arbitragem (b) (reassentamentos) e (c) (WorldPop) não são
 afetadas por nenhum dos quatro fatos novos e permanecem como emitidas.
+
+> **Nota da revisão de 2026-09-08 (§0'):** o item 4 acima (H1 por ADR 0003)
+> segue válido quanto a tirar H1 da dependência de censo, mas precisa da
+> reformulação adicional de §0' (taxa de primeira detecção, não estoque) —
+> ver "P1/H1" em §0'.
 
 ---
 
@@ -162,6 +405,12 @@ em nível A (localização aproximada + evolução do construído num buffer), s
 área oficial nem dimensão populacional/domiciliar em A. **Não afetada pelos
 fatos novos desta revisão.**
 
+> **Nota da revisão de 2026-09-08 (§0'):** o componente "como evoluíram" deixou
+> de ser puramente indireto para o subitem consolidação/abandono: `docs/ADR/0014`
+> removeu a catraca (R2) da série de `reassentamento`, tornando abandono
+> observável na série própria pela primeira vez. Ver "P3" em §0'. Os demais
+> subitens (quanto ocupam, contagem de famílias) permanecem como aqui emitidos.
+
 ### (c) WorldPop / GRID3 — **classificado A**
 
 A página geral do produtor (hub.worldpop.org) declara CC BY 4.0 como licença
@@ -194,7 +443,7 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 | Família | Fonte | Observação |
 |---|---|---|
 | Imagem | Landsat C2 L2 (USGS), Sentinel-2 L2A (Copernicus) | domínio público / licença Copernicus; via STAC (Planetary Computer + Element84), sem dependência de GEE |
-| Construída | WSF Evolution, WSF 2015/2019 (DLR) | CC-BY-4.0; **agora caminho crítico da linha de base 1997–2005 (ADR 0003)** |
+| Construída | WSF Evolution, WSF 2015/2019 (DLR) | CC-BY-4.0; **agora caminho crítico da linha de base 1997–2005 (ADR 0003)**; **também monotônico por construção — ver §0'/ADR 0008 emenda**; **Fase 3: 5 tiles adicionais das capitais de controle, mesma licença — ver §0''** |
 | Construída | GHSL BUILT-S/BUILT-V/POP/SMOD R2023A (JRC) | CC-BY-4.0; observado até 2020 |
 | Construída | GHSL R2025 (projeções 2025–2100) | CC-BY-4.0; **modelado/extrapolado**, não observado |
 | Construída | Google Open Buildings v3, Microsoft Global Building Footprints | CC-BY-4.0/ODbL; CDLA Permissive 2.0 |
@@ -204,14 +453,15 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 | Demográfica | HDX COD-PS — **valor específico Cidade de Tete/Moatize 2017 e 2025** | **novo nesta revisão**: 2017 = 307.338/260.843 (observado, idêntico ao documento INE via Wayback); 2025 = 460.248/349.103 (modelado, projeção INE; risco de circularidade se usado para testar H4 — ver §0.2) |
 | Demográfica | WorldPop / GRID3 MOZ v1.1 | CC-BY 4.0 (política geral do produtor); ver arbitragem (c); **modelado**, ano 2017 |
 | Demográfica | DHS — relatórios finais / STATcompiler | acesso aberto sem registro para consulta agregada; ODbL no Spatial Data Repository |
-| Econômico | DMSP-OLS, VIIRS DNB (EOG) | domínio público |
-| Econômico | Harmonized DMSP-VIIRS (Li et al. 2020) | CC-BY 4.0 (nota: inconsistência interna entre fragmentos sobre exigência de cadastro no figshare — licença é aberta; tratado como A, registrar a inconsistência) |
+| Econômico | DMSP-OLS, VIIRS DNB (EOG) | domínio público **quanto ao conteúdo; ver §0'' — acesso direto ao VIIRS DNB rebaixado a B, DMSP-OLS excluído (C) por bloqueio de acesso em 2026-09-08** |
+| Econômico | Harmonized DMSP-VIIRS — **corrigido em §0''**: o produto efetivamente coletado é **NPP-VIIRS-like (Chen, Z., Yu, B. et al. 2021), Harvard Dataverse, DOI 10.7910/DVN/YGIVCD, CC0 1.0**, não "Li et al. 2020" (produto distinto, figshare) | CC0 1.0; **descontinuidade não resolvida entre 2020 e 2022 (radiância máx. 70,4→49,9 na AOI de Tete) — ver §0'' | única série de luz de nível A restante após a exclusão dos itens acima |
 | Econômico | World Bank Pink Sheet | domínio público |
 | Econômico | Global Coal Mine Tracker (GEM) | CC-BY 4.0; acesso por formulário, sem aprovação |
-| Agricultura | GLAD Global Cropland, ESA WorldCover, CGLS-LC100, ESRI/IO 10m LULC | CC-BY 4.0 / licença Copernicus |
+| Agricultura | GLAD Global Cropland, ESA WorldCover, CGLS-LC100, ESRI/IO 10m LULC | CC-BY 4.0 / licença Copernicus; **agora usadas como referência que reprova `cultivo_sequeiro` — ver §0'/ADR 0012** |
 | Agricultura | Copernicus DEM GLO-30 (via bucket AWS, não OpenTopography) | licença Copernicus |
 | Agricultura | HydroRIVERS v1.0 | licença própria HydroSHEDS (uso livre com atribuição; não CC0) |
 | Reassentamento | OpenStreetMap (nós Cateme, Mwaladzi) | ODbL 1.0; geometria apenas, sem atributos de família |
+| Demográfica/Geometria | HDX COD-AB Moçambique (`moz_admin_boundaries.geojson.zip`) | **novo em §0''**: CC BY-IGO 3.0; ADM0–3, P-codes das 5 capitais de controle + Tete/Moatize |
 
 ### Nível B (validação opcional, nunca núcleo)
 
@@ -224,6 +474,7 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 | Planet NICFI | não comercial, proíbe redistribuição do bruto; **e, em 2026, programa descontinuado sem sucessor** — inacessível na prática |
 | OpenTopography (com chave de API pessoal) | não é acesso anônimo; via primária A é o bucket Copernicus DEM na AWS |
 | **UNSD Demographic Yearbook 2007, Tabela 8** (novo nesta revisão) | confirma Cidade de Tete 1997 = 101.984 exatamente; licença ONU proíbe redistribuição e obra derivada sem autorização escrita — válido só como validação, não como fonte publicável |
+| **VIIRS VNL V2 (EOG, `eogdata.mines.edu`) — novo em §0''** | rebaixada de A: todo download testado exige login OAuth (`eogauth.mines.edu`); não é acesso anônimo nem cadastro trivial |
 
 ### Nível C (excluído; nunca no núcleo)
 
@@ -242,6 +493,7 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 | EIA/RAP — Vale (Moatize) | não disponível publicamente (404) |
 | EIA/RAP — Riversdale/Rio Tinto (Benga) | não localizado |
 | EIA/RAP — Jindal (Tete) | não disponível (406) / não localizado |
+| **DMSP-OLS estável (NOAA/NCEI) — novo em §0''** | URL de CLAUDE.md §4.4 responde HTTP 404; página sucessora (EOG) exige login OAuth; nenhuma licença localizável no domínio que efetivamente serve o dado hoje |
 
 ### Via não esgotada (nem A/B/C — indisponibilidade externa, distinta de "não existe")
 
@@ -251,85 +503,107 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 
 ---
 
-## 3. Matriz pergunta/hipótese × suficiência em nível A (revista em 2026-09-07)
+## 3. Matriz pergunta/hipótese × suficiência em nível A (revista em 2026-09-07; **qualificada em 2026-09-08, ver §0'/§0''**)
 
-| # | Pergunta/Hipótese (§1) | Veredito (original) | Veredito (revisto) | O que mudou / o que falta |
-|---|---|---|---|---|
-| P1 | Tendência pré-projetos 1997–2005 | PARCIAL | **RESPONDÍVEL (reformulada por área, ADR 0003)** | Deixa de depender de população. WSF Evolution (A, 1985–2005, 21 anos) mede a mancha construída pré-tratamento com resolução superior a 3 censos. A dimensão populacional específica (habitantes) continua sem 1997/2007 em A — mas essa dimensão não é mais o que a pergunta exige na formulação aceita. |
-| P2 | Implantação e boom 2005–2015 | PARCIAL | **PARCIAL, com endpoint melhor ancorado** | Área/forma construída e pegada industrial testáveis em A (inalterado). HDX 2017 (A, observado) dá um ponto populacional logo após o boom, útil como referência de saída de fase — mas o boom em si (2005–2015) segue sem âncora populacional intermediária em A. Reassentamento: polígonos oficiais continuam ausentes de A. |
-| P3 | Reassentamentos: onde, quanto ocupam, evolução, articulação | PARCIAL, degradado | **Inalterado** | Nenhum dos 4 fatos novos toca esta família (arbitragem (b) não afetada). |
-| P4 | Forma de urbanização (compacta/dispersa, infill/borda/leapfrog, eixos) | RESPONDÍVEL | **Inalterado — RESPONDÍVEL** | — |
-| P5 | Crescimento econômico local vs. ciclos do carvão | RESPONDÍVEL | **Inalterado — RESPONDÍVEL** | — |
-| P6 | Bust e transição 2015–2025 | PARCIAL (sem âncora demográfica pós-2017) | **PARCIAL, melhorado — respondível com ressalva de selo** | HDX 2025 (A, **modelado**) dá um segundo ponto populacional após 2017. Dois pontos (1 observado + 1 modelado, 8 anos de intervalo) permitem situar ordem de grandeza da trajetória, mas não caracterizam "desaceleração/estagnação/reconversão" com a granularidade que a pergunta pede — isso continua vindo dos proxies de forma construída e luzes (A, já respondível). Selo `modelado` deve aparecer em qualquer gráfico/tabela que use o ponto 2025. |
-| P7 | Cenários pós-2025 (2035/2040) | RESPONDÍVEL COM RESSALVA | **Melhorado — base populacional mais robusta** | Agora há dois pontos A explícitos (HDX 2017 observado + HDX 2025 modelado, mais WorldPop/GRID3 2017 modelado) para ancorar o componente demográfico do cenário, em vez de um único corte. Ainda é extrapolação sobre extrapolação no trecho 2025→2035/2040 — declarar isso explicitamente. |
-| P8 | Agricultura urbana e periurbana | PARCIAL | **Inalterado — PARCIAL** | Tabulações censitárias de agricultura/renda continuam exclusivas do INE (documento), sem reprocessador alternativo identificado — diferente da população total, que tinha o HDX como segunda via. Mapeamento de cultivo/várzea segue respondível (já era). |
-| H1 | Aceleração 4%→7%/ano (1997→2007→2017), **reformulada por ADR 0003 em termos de área construída** | NÃO TESTÁVEL EM A | **TESTÁVEL EM A (reformulada)** | WSF Evolution dá 19 observações anuais (1997–2015) em nível A. A formulação original em habitantes/ano permanece não testável em A (1997/2007 ausentes) e deve ser abandonada, não citada como resultado — apenas a formulação em área construída sustenta conclusão do núcleo. |
-| H2 | Expansão dispersa/borda com leapfrog | RESPONDÍVEL | **Inalterado — RESPONDÍVEL** | — |
-| H3 | Pegada industrial cresce mais rápido 2010–2015, estabiliza pós-2016; mancha urbana por inércia demográfica | PARCIAL | **PARCIAL, com evidência adicional fraca** | Componente de pegada industrial: inalterado, testável em A. Componente "inércia demográfica": HDX 2017/2025 dá dois pontos, mas 2025 é modelado — insuficiente para confirmar "crescimento por inércia" de forma robusta; tratar como leitura exploratória, apoiada principalmente pela série de área construída (GHSL/imagem própria), que é observada e mais densa. |
-| H4 | Luzes descolam da população pós-2016 | NÃO TESTÁVEL EM A | **PARCIAL, com risco de circularidade — não sustenta conclusão sozinha** | Agora há dois pontos populacionais A pós-2016 (2017 observado, 2025 modelado), tecnicamente suficientes para calcular uma taxa. Mas a projeção INE 2025 provavelmente assume crescimento geométrico contínuo, o que tende a **produzir** o padrão "população sobe, luz estagna" independentemente da realidade — ver §0.2. Uso permitido apenas como leitura complementar rotulada, com o proxy de área construída/edificações (GHSL, observado) como evidência principal, não a população modelada. |
-| H5 | Conversão cropland→construído concentrada na implantação/boom; persistência em várzeas | RESPONDÍVEL, com ressalva de fenologia | **Inalterado** | — |
-| H6 | Agricultura urbana como amortecedor pós-2016 (sobretudo reassentados) | PARCIAL | **Inalterado — PARCIAL** | Dimensão domiciliar segue dependente de Censo/IOF (C) e literatura B/C; nenhum dos 4 fatos novos abre via alternativa para isso. |
+| # | Pergunta/Hipótese (§1) | Veredito (original) | Veredito (revisto 2026-09-07) | Veredito (qualificado 2026-09-08) | O que mudou / o que falta |
+|---|---|---|---|---|---|
+| P1 | Tendência pré-projetos 1997–2005 | PARCIAL | RESPONDÍVEL (reformulada por área, ADR 0003) | **TESTÁVEL EM A, restrito a taxa de primeira detecção** | WSF Evolution é monotônico por construção (emenda ADR 0008); estoque não é testável por nenhuma fonte disponível, só a taxa anual de primeira detecção. Ver §0'. |
+| P2 | Implantação e boom 2005–2015 | PARCIAL | PARCIAL, com endpoint melhor ancorado | **PARCIAL — adicionalmente, o par 2015–2020 da série própria está contaminado** (ADR 0013) e não sustenta magnitude de efeito | Área/forma construída testável em A, mas 2015 tem inflação de rotulagem de ~15 km²; não usar esse par para medir a saída do boom. |
+| P3 | Reassentamentos: onde, quanto ocupam, evolução, articulação | PARCIAL, degradado | Inalterado | **PARCIAL, melhorado no subitem "evolução"**: abandono agora observável (R2 removido, ADR 0014) | Polígono oficial e contagem de famílias seguem ausentes de A/fora de A. |
+| P4 | Forma de urbanização (compacta/dispersa, infill/borda/leapfrog, eixos) | RESPONDÍVEL | Inalterado — RESPONDÍVEL | **RESPONDÍVEL COM RESSALVA DE CHURN** (31–54 % entre anos-âncora, ADR 0013) | Área agregada por tipologia OK; atribuição pixel a pixel carrega incerteza de identidade a declarar. |
+| P5 | Crescimento econômico local vs. ciclos do carvão | RESPONDÍVEL | Inalterado — RESPONDÍVEL | **RESPONDÍVEL, com aviso adicional de versão do produto de luz pós-2020 (§0'')** | Método (luzes) não afetado pelos ADRs 0012–0014; a série de luz disponível mudou de fonte (Chen/Yu, não Li) e carrega descontinuidade 2020→2022 não resolvida. |
+| P6 | Bust e transição 2015–2025 | PARCIAL (sem âncora demográfica pós-2017) | PARCIAL, melhorado — respondível com ressalva de selo | **PARCIAL — adicionalmente, não usar o par 2015–2020 da série própria como base do efeito de bust** (ADR 0013); usar luzes como série primária pós-2015, **com o aviso de versão de produto de §0'' na quebra de 2022** | Ver P2. Luzes noturnas (não catraca) recomendadas como série primária depois de 2015, mas só a série Chen/Yu está em A, com descontinuidade não auditável entre 2020–2022. |
+| P7 | Cenários pós-2025 (2035/2040) | RESPONDÍVEL COM RESSALVA | Melhorado — base populacional mais robusta | **Inalterado quanto ao componente demográfico**; componente de área herda as ressalvas de P1/P2/P6 | Extrapolação sobre extrapolação permanece; agora também herda a ressalva de taxa-vs-estoque de H1. |
+| P8 | Agricultura urbana e periurbana | PARCIAL | Inalterado — PARCIAL | **PARCIAL, restrito a localização (várzea) e a `cultivo_irrigado` com ressalva** — "quanto ocupam" e "como evoluíram" NÃO respondíveis | `cultivo_sequeiro` reprovado (kappa −0,065, Jaccard 0,001–0,002); ver §0'. |
+| H1 | Aceleração 4%→7%/ano (1997→2007→2017), reformulada por ADR 0003 em termos de área construída | NÃO TESTÁVEL EM A | TESTÁVEL EM A (reformulada) | **TESTÁVEL EM A, mas só como taxa de primeira detecção, não como estoque** | Emenda ADR 0008 (2026-09-08): WSF também monotônico. Nenhuma fonte dá estoque sem catraca imposta. |
+| H2 | Expansão dispersa/borda com leapfrog | RESPONDÍVEL | Inalterado — RESPONDÍVEL | **RESPONDÍVEL COM RESSALVA DE CHURN** (mesma ressalva de P4) | — |
+| H3 | Pegada industrial cresce mais rápido 2010–2015, estabiliza pós-2016; mancha urbana por inércia demográfica | PARCIAL | PARCIAL, com evidência adicional fraca | **PARCIAL, componente industrial melhora** (R2 removido de `industrial`, ADR 0014 — reabilitação de cava agora detectável); componente demográfico inalterado | — |
+| H4 | Luzes descolam da população pós-2016 | NÃO TESTÁVEL EM A | PARCIAL, com risco de circularidade — não sustenta conclusão sozinha | **PARCIAL, risco de circularidade duplo, agora triplo (§0'')** (lado população: projeção INE 2025; lado área: catraca R2 de `urbano`; lado luz: descontinuidade de versão do produto 2020→2022 não auditável) | Usar GHSL observado (não R2025) ou `estoque_sustentado_pelo_ano_km2` para o lado da área; nunca a série R2 publicada. A série de luz disponível (Chen/Yu) não permite verificação independente da conciliação DMSP↔VIIRS nem da descontinuidade 2020–2022. Ver ADR 0013 "Não pode" e §0''. |
+| H5 | Conversão cropland→construído concentrada na implantação/boom; persistência em várzeas | RESPONDÍVEL, com ressalva de fenologia | Inalterado | **SUSTENTADA FRACAMENTE** — só o componente de localização relativa em várzea (enriquecimento 2–3× de `cultivo_irrigado`, 4 de 6 anos), nunca magnitude de área/conversão | `cultivo_sequeiro`: acurácia 0,000, kappa −0,065 (ADR 0012), não corrigido pela raiz (ADR 0014). Ver §0'. |
+| H6 | Agricultura urbana como amortecedor pós-2016 (sobretudo reassentados) | PARCIAL | Inalterado — PARCIAL | **SEM RESPOSTA** — motivo mudou: não é (só) lacuna domiciliar (INE=C), é que a série de área de cultivo tem kappa negativo e não mede cropland | Ver §0'. |
 
 ---
 
-## 4. Veredito (revisto em 2026-09-07)
+## 4. Veredito (revisto em 2026-09-07; qualificado em 2026-09-08 — ver §0'/§0'')
 
-**CONJUNTO A INSUFICIENTE — mas o bloqueio se reduziu de "pilar demográfico
-inteiro" para "extremidade pré-2017 do pilar demográfico + tabulações
-domiciliares/agrícolas do INE". Fase 1 abre para mais módulos do que na
-emissão original, sob condições revistas abaixo.**
+**CONJUNTO A INSUFICIENTE — por dois motivos independentes, mais um risco declarado
+sobre a série de luz.** (i) Lacunas de licença/proveniência: 1997/2007 sem âncora
+demográfica em A; tabulações domiciliares/agrícolas do INE fechadas ao núcleo A
+(inalterado desde 2026-09-07). (ii) **Lacunas de desempenho de classificação, medidas
+em 2026-09-08** (`docs/ADR/0012`, `0013`, `0014`): `cultivo_sequeiro` não separa
+cultivo de vegetação natural (kappa −0,065), o que impede H5 de sustentar
+magnitude e torna H6 e a maior parte de P8 SEM RESPOSTA; e nenhuma fonte
+disponível de área construída (classificação própria com R2, ou WSF Evolution)
+fornece estoque sem monotonicidade imposta, o que restringe H1/P1 a taxa de
+primeira detecção e proíbe usar o par 2015–2020 como base de efeito para P2/P6,
+e a série R2 de `urbano` como lado da área em H4. (iii) **Risco declarado desde
+2026-09-08, tarde (§0''):** a única série de luz de nível A hoje disponível
+(Chen/Yu, NPP-VIIRS-like, Harvard Dataverse) resolve a conciliação DMSP↔VIIRS
+dentro de um modelo de terceiros não auditável, e apresenta uma descontinuidade
+de radiância (70,4→49,9 entre 2020 e 2022) coincidente com um reprocessamento
+documentado do produto na mesma janela — nenhuma fonte A permite hoje verificação
+independente dessa descontinuidade, o que qualifica qualquer quebra estimada em
+2022 (P6, H4) até que uma segunda via seja obtida.
 
-O que a revisão muda, em síntese: o veredito original tratava 1997/2007/2017
-como um bloco único bloqueado pela reclassificação C dos documentos do INE.
-Isso permanece correto para os **documentos**, mas dois fatos o superam
-parcialmente: (i) HDX/OCHA (CC BY-IGO, nível A) fornece o mesmo valor de 2017
-por via independente, e agora também um ponto de 2025 (modelado); (ii) ADR
-0003 tira a fase de linha de base (1997–2005 e H1) da dependência de censo por
-completo, ao reformulá-la em área construída (WSF Evolution, nível A). O que
+O que a revisão de 2026-09-07 mudava, em síntese, permanece registrado abaixo
+sem alteração: o veredito original tratava 1997/2007/2017 como um bloco único
+bloqueado pela reclassificação C dos documentos do INE. Isso permanece correto
+para os **documentos**, mas dois fatos o superam parcialmente: (i) HDX/OCHA (CC
+BY-IGO, nível A) fornece o mesmo valor de 2017 por via independente, e agora
+também um ponto de 2025 (modelado); (ii) ADR 0003 tira a fase de linha de base
+(1997–2005 e H1) da dependência de censo por completo, ao reformulá-la em área
+construída (WSF Evolution, nível A) — **reformulação que a emenda de 2026-09-08
+ao ADR 0008 restringe outra vez, à taxa de primeira detecção (ver §0')**. O que
 **não** muda: 1997 e 2007 seguem sem âncora populacional em A; tabulações
 censitárias sobre agricultura/renda/domicílio permanecem C sem reprocessador
-alternativo; a família de reassentamento (P3) e a dimensão domiciliar de H6
-permanecem no mesmo estado.
+alternativo; a família de reassentamento (P3) melhora num subitem (ver §0') mas
+segue sem polígono oficial nem contagem de famílias em A.
 
-**Condição de abertura por módulo:**
+**Condição de abertura por módulo (revista):**
 
-1. **Módulos independentes de censo (inalterado)** — imagem, forma urbana
-   (WSF/GHSL/OSM/Google-MS buildings), luzes noturnas, mapeamento de
-   cultivo/várzea (P4, P5, H2, H5, e agora também **P1/H1** via ADR 0003):
-   **abrem sem restrição**, fonte A completa.
-2. **Módulo demográfico — extremidade 2017/2025 (novo, parcialmente
-   desbloqueado)**: **abre**, usando HDX COD-PS como fonte primária de nível A
-   para Cidade de Tete e Moatize em 2017 (observado) e 2025 (modelado), com
-   três obrigações: (a) citar o reprocessador (OCHA/HDX FIS), não o documento
-   INE, quando o número vier apenas de HDX; (b) selo `observado`/`modelado`
-   obrigatório e visível em toda figura/tabela que use o ponto de 2025; (c)
-   nunca usar o ponto de 2025 como evidência independente de H4 (descolamento
-   luz-população) sem a ressalva de circularidade de §0.2 — a evidência
-   principal de H4 continua sendo a série de área/edificações observada.
+1. **Módulos independentes de censo e de classificação de cultivo** — imagem,
+   forma urbana (WSF/GHSL/OSM/Google-MS buildings) **como taxa, não estoque**,
+   luzes noturnas, mapeamento de várzea (geometria, não classificação
+   espectral): **abrem sem restrição adicional**, fonte A completa.
+2. **Módulo demográfico — extremidade 2017/2025 (inalterado desde
+   2026-09-07)**: abre sob as três obrigações já registradas na seção 0
+   (citar HDX/OCHA, selo observado/modelado, nunca usar 2025 como prova
+   independente de H4).
 3. **Módulo demográfico — extremidade 1997/2007 (inalterado, bloqueado)**:
-   permanece fechado ao núcleo A. UNSD (B) confirma 101.984 (Tete, 1997) só
-   para validação rotulada; Moatize 1997 e ambos os valores de 2007 seguem sem
-   nenhuma via A ou B identificada. CIESIN/SEDAC continua como via não
-   esgotada (servidor fora do ar) — reexecutar antes de declarar
-   definitivamente indisponível.
-4. **Reassentamentos (P3, inalterado)**: publicar apenas o que a arbitragem
-   (b) permite — localização aproximada, evolução do buffer construído,
-   articulação viária. Toda contagem de famílias e toda leitura de área
-   oficial carrega o selo "validação B — HRW 2013", nunca número definitivo.
-5. **Tabulações domiciliares/agrícolas do INE (P8/H6, inalterado)**: seguem
-   fechadas ao núcleo A — nenhum reprocessador alternativo foi identificado
-   para essas tabulações específicas (diferente dos totais populacionais, que
-   têm o HDX). A série física de cultivo/várzea (GLAD/ESRI-IO/WorldCover/DEM)
-   permanece respondível e sustenta H5 integralmente.
-6. **H1 (reformulada) e P1**: abrem de imediato como testes em área
-   construída. A formulação original em população/ano não deve aparecer no
-   núcleo A do artigo/app sob nenhuma circunstância — nem como "aproximação",
-   nem com selo B — porque nenhuma via B ou A cobre 1997 com granularidade
-   distrital confiável (UNSD só cobre "city proper" de Tete, não Moatize, e é
-   B).
-7. `pipeline/00_fetch/fetch_wsf_evolution.py` passa de opcional a **caminho
-   crítico** da Fase 1 (confirmado por ADR 0003) — deve deixar de ser um
-   stub de deferimento ao GEE/STAC e obter o dado diretamente do DLR.
+   permanece fechado ao núcleo A.
+4. **Reassentamentos (P3)**: publicar localização aproximada, evolução do
+   buffer construído (agora incluindo abandono, não catraca) e articulação
+   viária. Toda contagem de famílias e toda leitura de área oficial carrega o
+   selo "validação B — HRW 2013".
+5. **Tabulações domiciliares/agrícolas do INE (P8/H6)**: fechadas ao núcleo A
+   — inalterado. **Adicionalmente, desde 2026-09-08**: mesmo a dimensão física
+   (área cultivada) de P8/H6 está fechada — não por licença, por desempenho de
+   classificação (ADR 0012/0014). Publicável apenas: localização de várzea
+   (geometria) e `cultivo_irrigado` com ressalva de acurácia (IC95 amplo).
+   `cultivo_sequeiro` publica-se só como camada "candidata", nunca como
+   "cultivo confirmado" (ADR 0012, item 3).
+6. **H1/P1 (reformulada)**: abre como teste em **taxa de primeira detecção**
+   de área construída (WSF Evolution), não em estoque nem em população. As
+   quebras de 2005/2011 são estimáveis sobre essa taxa; nenhuma quebra é
+   estimável sobre o acumulado publicado (série própria ou WSF).
+7. `pipeline/00_fetch/fetch_wsf_evolution.py` permanece caminho crítico da
+   Fase 1 (ADR 0003), agora lido como fonte de taxa, não de estoque.
+8. **Placebos obrigatórios para toda quebra estimada em §5.4 (ampliado)**: além
+   dos placebos espacial e temporal já previstos, a quebra sobre mediana de
+   observações por pixel (ADR 0008) e a quebra sobre a fração da AOI com
+   NDVI(seca) ≥ mediana×1,30 (ADR 0013/0014, quarto placebo). Se a quebra
+   aparecer também nesses controles, é artefato de sensor/rotulagem, não
+   tratamento. **Desde §0'': toda quebra estimada em 2020–2022 sobre a série
+   de luz carrega adicionalmente o aviso de descontinuidade de versão do
+   produto, não substituível por nenhum dos quatro placebos acima (nenhum
+   deles testa "mudança de versão do produtor").**
+9. **Série de luzes noturnas (novo, §0'')**: o núcleo A é exclusivamente o
+   produto Chen/Yu (NPP-VIIRS-like, Harvard Dataverse, CC0 1.0, DOI
+   10.7910/DVN/YGIVCD) — **não** "Li et al. 2020" como registrado em
+   `CLAUDE.md` §4.4, que descreve um produto diferente, não coletado. VIIRS
+   VNL direto (EOG) é nível B (login OAuth obrigatório); DMSP-OLS estável
+   (NOAA/NCEI) está excluído, nível C (página 404, sucessora bloqueada).
+   `CLAUDE.md` §4.4 precisa de correção editorial para refletir isso.
 
 Nenhuma âncora de §8 deste repositório pode ser citada diretamente a partir do
 documento do INE no núcleo A. Os valores 307.338 (2017, Tete) e 260.843 (2017,
@@ -340,3 +614,17 @@ licenciada do dado. 155.870 (2007) e 101.984/109.103 (1997) continuam sem
 nenhuma via de nível A e não devem ser citados como número do núcleo,
 independentemente de quantas vezes tenham sido confirmados byte a byte contra
 o documento primário.
+
+Nenhum número de área de `cultivo_sequeiro`, e nenhuma magnitude de conversão
+cropland→construído ou de área cultivada amortecedora do bust (H5/H6), deve
+ser citado como número do núcleo A do app ou do artigo — apenas a leitura
+relativa e qualificada registrada em §0'.
+
+Nenhuma quebra de nível ou inclinação estimada sobre a série de luzes noturnas
+entre 2020 e 2022 (P6, H4) deve ser publicada sem o aviso explícito de que a
+descontinuidade medida (radiância máxima 70,4→49,9 na AOI de Tete) coincide com
+um reprocessamento documentado do produto Chen/Yu nessa mesma janela, e que
+nenhuma fonte de nível A permite hoje verificar essa descontinuidade de forma
+independente (§0'').
+
+**Veredito global: CONJUNTO A INSUFICIENTE.**

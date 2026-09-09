@@ -1,0 +1,22 @@
+{
+  "url": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v100/2020/map/ESA_WorldCover_10m_2020_v100_S18E033_Map.tif",
+  "download_date": "2026-09-08T13:12:05.835047+00:00",
+  "size_bytes": 3384029,
+  "license": "CC-BY 4.0",
+  "license_url": "https://esa-worldcover.org/en/data-access",
+  "level": "A",
+  "selo": "observado",
+  "source_page": "https://esa-worldcover.org/en/data-access",
+  "ano": 2020,
+  "anos_cobertos": "2020",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0,
+    "crs": "EPSG:4326"
+  },
+  "tile": "S18E033",
+  "citation": "Zanaga, D. et al. (2022). \"ESA WorldCover 10 m 2020 v100.\" DOI 10.5281/zenodo.5571936",
+  "nota": "Recortado da AOI (+0.02 grau de margem) via leitura em janela GDAL /vsicurl/ no momento do fetch; o tile 3x3 grau inteiro NÃO foi mirrorado."
+}

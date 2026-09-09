@@ -10,7 +10,7 @@ nível A/B/C · restrições · citação exigida · data de verificação.
 > Não edite este arquivo à mão: edite o fragmento da família e reexecute o script.
 
 
-Consolidado em 2026-09-08.
+Consolidado em 2026-09-09.
 
 
 ---
@@ -124,6 +124,24 @@ não verificados de T1. Todo item abaixo foi testado por HTTP/DOI resolver em
 2. **INE — mozdata.ine.gov.mz** — tratado como nível A condicional por decisão do usuário (2026-09-07): documento do INE servido por catálogo institucional (não agregador) conta como primário. Ainda assim, o fluxo de "get-microdata" não foi verificado manualmente (a raspagem HTTP não confirma se há aprovação humana no meio do caminho); **antes de baixar qualquer microdado**, confirmar manualmente se o acesso é de fato imediato (nível A) ou sujeito a aprovação (rebaixar para nível B, mesmo tratamento do IPUMS).
 3. **Censo Agro-Pecuário 2019–20** — não localizado como documento discreto sob esse nome; a aproximação disponível é o Inquérito Agrário Integrado (IAI) 2020, que é amostral, não censitário. Registrar a diferença metodológica em qualquer uso.
 4. **Tabulações censitárias sobre agricultura urbana (Censos 2007/2017)** — não localizadas em acesso aberto nesta verificação. Registrar como "não disponível — tabulação não localizada no catálogo público" até confirmação manual ou contato direto com o INE.
+
+
+---
+
+<!-- fonte: data/licenses_parts/agricultura_validacao.md -->
+
+# Fontes de Dados — Validação de Cultivo (Fase 2b)
+
+Família "Validação de classificação de cultivo" (§4.6 de CLAUDE.md), scripts em
+`pipeline/00_fetch/`: `fetch_glad_cropland.py`, `fetch_esa_worldcover.py`,
+`fetch_lulc_products.py`. Fragmento novo — não edita `agricultura.md` da Fase 0'.
+
+| Nome | URL canônica | Licença | Nível | Restrições | Citação exigida | Data verificação |
+|------|--------------|---------|-------|-----------|-----------------|-------------------|
+| GLAD Global Cropland (Potapov et al. 2021) | https://glad.umd.edu/dataset/croplands (página, licença); download real: https://gladxfer.umd.edu/Potapov/Global_Crop/Data/Global_cropland_SE_{2003,2007,2011,2015,2019}.tif | CC-BY 4.0, declarada em https://glad.umd.edu/dataset/croplands | A | Nenhuma. Acesso anônimo, HTTP 200. Compostos quinquenais em 2003, 2007, 2011, 2015, 2019 (não 2000/2004/2008/2012/2016). | Potapov et al. (2021), Nature Food 3, 19-28, DOI 10.1038/s43016-021-00429-z (resolve via doi.org para nature.com) | 2026-09-08 |
+| ESA WorldCover 10 m (v100 2020 / v200 2021) | https://esa-worldcover.org/en/data-access (página, licença); download real: tile S18E033 (derivado da AOI, grade 3°): https://esa-worldcover.s3.eu-central-1.amazonaws.com/v100/2020/map/ESA_WorldCover_10m_2020_v100_S18E033_Map.tif e v200/2021 equivalente | CC-BY 4.0, declarada em https://esa-worldcover.org/en/data-access | A | Nenhuma. Bucket S3 público sem assinatura, HTTP 200. | Zanaga, D. et al. (2022). "ESA WorldCover 10 m 2020/2021 v100/v200." DOI 10.5281/zenodo.5571936 (2020) / 10.5281/zenodo.7254221 (2021) | 2026-09-08 |
+| Copernicus Global Land Cover CGLS-LC100 (2015-2019) | https://land.copernicus.eu/en/products/global-dynamic-land-cover (página, sem texto de licença localizável nela); licença declarada nos registros Zenodo por época (ex.: https://zenodo.org/records/3518036); download real: API Zenodo -> arquivo `Discrete-Classification-map` | CC-BY 4.0 (declarada em cada registro Zenodo, ex. https://zenodo.org/records/3518036) | A | Nenhuma. Acesso anônimo, HTTP 200. Arquivos globais grandes (~1,7 GB/época); recortados na AOI no momento do fetch, não mirrorados inteiros. | Buchhorn, M. et al. (2020). Zenodo, DOI 10.5281/zenodo.<record_id_da_época> | 2026-09-08 |
+| ESRI/Impact Observatory 10 m Annual LULC (2017-2024) | https://registry.opendata.aws/io-lulc/ (página, licença); download real: bucket S3 público `https://io-10m-annual-lulc.s3.us-west-2.amazonaws.com/<CELULA>_<ANO>.tif`, células GZD 36K e 36L (derivadas da AOI por amostragem com a biblioteca `mgrs`, confirmadas por listagem do bucket e leitura de janela) | CC-BY 4.0, declarada em https://registry.opendata.aws/io-lulc/ | A | Nenhuma. Bucket S3 público sem assinatura, HTTP 200. 2025 ainda não publicado no bucket (2024 é o ano mais recente). | Karra, K. et al. (2021), IGARSS 2021; Impact Observatory/Microsoft/Esri (2023, atualizado anualmente), "Sentinel-2 10m Land Use/Land Cover Time Series" | 2026-09-08 |
 
 
 ---
@@ -256,6 +274,107 @@ quem reprocessou, censo de origem declarado, licença do produto do reprocessado
 
 ---
 
+<!-- fonte: data/licenses_parts/fase3_auditoria_t3.md -->
+
+# Fase 3 — Auditoria de classificação (auditor-dados, T3)
+
+Classifica as fontes coletadas em `data/licenses_parts/fase3_coleta_t2_licenca.md`
+(que registrou "não classificado — cabe ao auditor-dados" em toda linha) e as duas
+fontes não obtidas, com evidência HTTP. Verificado via `.meta.json` em `data/raw/`
+e página do produtor (Harvard Dataverse), nunca via agregador.
+
+## Correção de autoria — obrigatória, atinge CLAUDE.md §4.4
+
+O item "Harmonized DMSP-VIIRS Nighttime Lights (1992–2018) (Li et al. 2020)" da tabela
+§4.4 de `CLAUDE.md` e a linha correspondente em `data/licenses_parts/economicos.md`
+descrevem um produto **diferente** do coletado nesta rodada. Confirmado por busca na
+página do produtor/paper original (não por agregador):
+
+- **Produto coletado (54 tiles, `viirs_like_li2020_v2_*.tif`)**: autoria **Chen, Z.,
+  Yu, B., Yang, C., Zhou, Y., Yao, S., Qian, X., Wang, C., Wu, B., Wu, J.** Paper de
+  método: Chen et al. (2021), "An extended time series (2000–2018) of global
+  NPP-VIIRS-like nighttime light data from a cross-sensor calibration", *Earth System
+  Science Data*, 13, 889–906, DOI **10.5194/essd-13-889-2021**. Dataset hospedado no
+  Harvard Dataverse como "The global NPP-VIIRS-like nighttime light data (Version 2)
+  for 1992–2025", V10, DOI **10.7910/DVN/YGIVCD**, licença **CC0 1.0** (lida no JSON
+  da API do Dataverse — `metadataBlocks.citation.license`, confirmado no `.meta.json`
+  de cada tile).
+- **Produto descrito em CLAUDE.md §4.4 ("Li et al. 2020")**: Li, X., Zhou, Y., Zhao,
+  M., Zhao, X. (2020), "A harmonized global nighttime light dataset 1992–2018",
+  *Scientific Data*, 7, 168 — hospedado em figshare, **não** em Harvard Dataverse. É
+  um harmonizado DMSP↔VIIRS **distinto**, de outro grupo de autores, com outra
+  metodologia de calibração cruzada.
+- **Nome de arquivo do coletor é ambíguo por desenho** (`viirs_like_li2020_v2_*`),
+  mas o `.meta.json` de cada arquivo já registra a citação correta (Chen/Yu). O nome
+  do arquivo não deve ser lido como atribuição de autoria.
+- **Ação exigida**: `CLAUDE.md` §4.4 deve ser corrigido para separar as duas linhas —
+  "Harmonized DMSP-VIIRS (Li et al. 2020, figshare, DOI 10.1038/s41597-020-0510-y)"
+  permanece como item **não coletado nesta rodada**; "NPP-VIIRS-like (Chen/Yu et al.,
+  Harvard Dataverse V10, DOI 10.7910/DVN/YGIVCD)" é o item efetivamente em
+  `data/raw/`. `data/licenses_parts/economicos.md` cita o DOI/figshare de Li et al.
+  para um produto que **não foi baixado**; não corrigido aqui (fora do escopo desta
+  família), sinalizado para o responsável por `economicos.md`.
+
+## Classificação
+
+| # | Fonte | Nível | Licença confirmada | Citação exigida | Nota |
+|---|---|---|---|---|---|
+| 1 | NPP-VIIRS-like (Chen/Yu et al.), 54 recortes, Harvard Dataverse V10 | **A** | CC0 1.0, http://creativecommons.org/publicdomain/zero/1.0, confirmada no JSON da API do Dataverse (não agregador) | Recomendada, não obrigatória sob CC0: Chen, Z. et al. (2021) *ESSD* 13, 889–906, DOI 10.5194/essd-13-889-2021 + Chen, Z., Yu, B. et al. "Global NPP-VIIRS-like nighttime light data (V2) 1992–2025", Harvard Dataverse V10, DOI 10.7910/DVN/YGIVCD | Único raster global nunca mirrorado; só recortes de AOI (2–6 KB) em `data/raw/`, conforme §4.0 regra 2 |
+| 2 | WSF Evolution — 5 tiles novos (Chimoio S20E032, Quelimane S18E036, Lichinga S14E034, Xai-Xai S26E032, Inhambane S24E034) | **A** | CC BY 4.0, https://creativecommons.org/licenses/by/4.0/, mesma licença já registrada em `construida.md` para os tiles da AOI de estudo | Marconcini, M., Metz-Marconcini, A., Esch, T., Gorelick, N. (2021), GI_Forum 2021, Issue 1, p. 33–38, DOI 10.1553/giscience2021_01_s33 | Consistente com classificação prévia da família; nenhuma divergência de licença entre tiles |
+| 3 | HDX COD-AB Moçambique (`moz_admin_boundaries.geojson.zip`) | **A** | CC BY-IGO 3.0, http://creativecommons.org/licenses/by/3.0/igo/legalcode, lida via API CKAN `package_show` (mesmo padrão já aceito para HDX COD-PS em `demograficas.md`) | OCHA/HDX COD-AB Mozambique (moz_admin_boundaries), fonte declarada INE — não verificada diretamente no site do INE (mesma ressalva já registrada para COD-PS) | ADM0–3, P-codes; nível A pela mesma lógica já aplicada ao COD-PS: variante nomeada de CC-BY, reprocessador com licença própria distingue do documento-INE bruto (nível C) |
+
+## Fontes não obtidas — excluídas, com evidência HTTP (não é lacuna a esconder)
+
+| # | Fonte | Nível | Motivo | Evidência HTTP |
+|---|---|---|---|---|
+| 4 | VIIRS VNL V2 (Earth Observation Group, `eogdata.mines.edu`) | **B, rebaixada de A** — reclassificação desta auditoria | O item já registrado em `economicos.md` como nível A ("acesso via GEE ou EOG FTP público") descrevia um acesso que **deixou de existir**: todo diretório de download testado (`/nighttime_light/annual/v10,v20,v21,v22/`) e os links `.tif.gz` diretos redirecionam HTTP 302 para `eogauth.mines.edu`, exigindo login OAuth com conta EOG — não é acesso anônimo nem cadastro trivial (o cadastro EOG historicamente exige aprovação institucional/e-mail verificado, não é um clique). Isso satisfaz a definição de nível B do §4.0 ("gratuito mas exige aprovação de uso"), não a de A. **Não avaliado nesta rodada** um acesso equivalente via Google Earth Engine (`NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG` ou coleção correlata): se confirmado que o dado subjacente é replicável por essa via semina exigir mais que uma conta Google trivial, o dado (não a plataforma) poderia retornar a A — pendente de teste, não presumido. | `eogdata.mines.edu/products/vnl/` = 200 (página); todos os `/nighttime_light/annual/*` e `.tif.gz` = 302 → `eogauth.mines.edu` (OAuth), verificado 2026-09-08 |
+| 5 | DMSP-OLS estável (NOAA/NCEI) | **C — excluída** | URL registrada em `CLAUDE.md` §4.4 (`ngdc.noaa.gov/eog/dmsp/downloadV4composites.html`) responde HTTP 404 — página removida, sem redirecionamento para conteúdo equivalente. Página sucessora em `eogdata.mines.edu/products/dmsp/` existe (200) mas os links de download (`wwwdata/dmsp/rad_cal/*.tgz`) sofrem o mesmo bloqueio OAuth do item 4. Nenhuma licença localizável no domínio que efetivamente serve o dado hoje; NOAA/NCEI (domínio público, texto de licença já visto em `economicos.md`) não hospeda mais o arquivo. Pela regra §4.0.1 ("sem licença localizável ⇒ C") e pela ausência de via anônima, classificação é **C**, distinta da simples indisponibilidade temporária (não é timeout, é 404 + login obrigatório na via sucessora). | `ngdc.noaa.gov/eog/dmsp/downloadV4composites.html` = 404; `eogdata.mines.edu/products/dmsp/` = 200; `wwwdata/dmsp/rad_cal/*.tgz` = 302 → OAuth, verificado 2026-09-08 |
+
+## Descontinuidade de versão documentada pelo produtor — material para P5/P6/§5.4
+
+Medição do orquestrador: radiância máxima na AOI de Tete cai de 70,4 (2020) para 49,9
+(2022) e permanece em 49,9 (2025), na série `viirs_like_li2020_v2` (Chen/Yu). Busca na
+literatura do próprio produto (não no dado em si, que este agente não abriu) encontra
+evidência **de terceiros que documentam** revisão dos anos 2021–2022 do dataset
+NPP-VIIRS-like desta mesma linhagem (rastreamento de catálogo GEE-community, discussão
+pública de changelog): "the annual NPP-VIIRS-like NTL data of 2021 and 2022 have been
+updated" — i.e., o produtor reprocessou/recalibrou especificamente esses dois anos após
+a publicação original de 2021 (que cobria só 2000–2018; a extensão 2019–2025 e as
+revisões de 2021–2022 são posteriores, do V10 hospedado no Dataverse). **Isto não é
+confirmação de primeira mão do texto de cada nota de versão do Dataverse** (o agente não
+teve acesso ao changelog interno do Dataverse nesta rodada — página client-side não
+renderizada pelo fetch disponível); é evidência de terceiros de que existe reprocessamento
+documentado na janela 2020–2022. **Recomendação, não veredito**: a queda de 70,4→49,9
+medida pelo orquestrador **coincide temporalmente com um reprocessamento conhecido do
+produto**, e não deve ser lida como quebra de nível econômica (bust do carvão, ADR/ desenho
+§1.2 quebra de 2022) sem antes descartar essa explicação alternativa — tratar como
+candidato a "placebo de versão do produto" adicional ao já exigido em
+`docs/DESENHO_FASE3.md` §4 (P1–P4), a ser verificado por segunda via (ex.: comparação
+com VIIRS DNB bruto, se e quando obtido) antes de qualquer atribuição causal à quebra de
+2022.
+
+
+---
+
+<!-- fonte: data/licenses_parts/fase3_coleta_t2_licenca.md -->
+
+# Fase 3 (T2) — fragmento de licenças
+
+| fonte | URL canônica | licença (observada) | nível provisório | restrições | citação exigida | data verificação |
+|---|---|---|---|---|---|---|
+| Harmonized DMSP-VIIRS / NPP-VIIRS-like (Chen, Yu et al., ex-"Li et al. 2020") | https://doi.org/10.7910/DVN/YGIVCD | CC0 1.0 (http://creativecommons.org/publicdomain/zero/1.0, lida no JSON da API Dataverse: metadataBlocks.citation license) | não classificado — cabe ao auditor-dados | nenhuma (CC0); acesso anônimo confirmado, sem cadastro | "Chen, Z., Yu, B., et al. The global NPP-VIIRS-like nighttime light data (Version 2) for 1992-2025. Harvard Dataverse, V10. DOI: 10.7910/DVN/YGIVCD" | 2026-09-08 |
+| VIIRS annual VNL V2 (EOG) | https://eogdata.mines.edu/products/vnl/ | Licença declarada em https://eogdata.mines.edu/files/EOG_products_CC_License.pdf (texto não lido — acesso ao arquivo em si não testado, só o link) | não classificado — cabe ao auditor-dados | download bloqueado: TODOS os diretórios /nighttime_light/annual/v10,v20,v21,v22/ e os links diretos .tif.gz retornam HTTP 302 para eogauth.mines.edu (OAuth, exige conta EOG). Não é acesso anônimo. | (não obtido) | 2026-09-08 |
+| DMSP-OLS estável (NOAA/NCEI, agora hospedado em EOG/Mines) | https://ngdc.noaa.gov/eog/dmsp/downloadV4composites.html | não localizável — página fonte migrou | não classificado — cabe ao auditor-dados | URL do CLAUDE.md (ngdc.noaa.gov) responde 301->www.ngdc.noaa.gov->HTTP 404 (página removida). Página sucessora em eogdata.mines.edu/products/dmsp/ existe (HTTP 200) mas os links de download (eogdata.mines.edu/wwwdata/dmsp/rad_cal/*.tgz) redirecionam HTTP 302 para eogauth.mines.edu (OAuth, exige conta EOG) — mesmo bloqueio do VNL. | (não obtido) | 2026-09-08 |
+| WSF Evolution — tile S20E032 (Chimoio) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_32_-20.tif | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/, lida na aba License de https://geoservice.dlr.de/web/datasets/wsf_evo) | não classificado — cabe ao auditor-dados | citar autores; sem redistribuicao de obra derivada sem atribuicao | Marconcini et al. 2021, GI_Forum 2021 Issue 1 p.33-38, DOI 10.1553/giscience2021_01_s33 | 2026-09-08 |
+| WSF Evolution — tile S18E036 (Quelimane) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_36_-18.tif | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | não classificado — cabe ao auditor-dados | citar autores | Marconcini et al. 2021, DOI 10.1553/giscience2021_01_s33 | 2026-09-08 |
+| WSF Evolution — tile S14E034 (Lichinga) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_34_-14.tif | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | não classificado — cabe ao auditor-dados | citar autores | Marconcini et al. 2021, DOI 10.1553/giscience2021_01_s33 | 2026-09-08 |
+| WSF Evolution — tile S26E032 (Xai-Xai) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_32_-26.tif | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | não classificado — cabe ao auditor-dados | citar autores | Marconcini et al. 2021, DOI 10.1553/giscience2021_01_s33 | 2026-09-08 |
+| WSF Evolution — tile S24E034 (Inhambane) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_34_-24.tif | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | não classificado — cabe ao auditor-dados | citar autores | Marconcini et al. 2021, DOI 10.1553/giscience2021_01_s33 | 2026-09-08 |
+| HDX COD-AB Moçambique (moz_admin_boundaries, INE via OCHA/CKAN) | https://data.humdata.org/dataset/cod-ab-moz | CC BY-IGO 3.0 (http://creativecommons.org/licenses/by/3.0/igo/legalcode, lida via CKAN API package_show license_url) | não classificado — cabe ao auditor-dados (fonte declarada INE, não verificada no site do INE) | atribuicao exigida pela IGO license | OCHA/HDX COD-AB Mozambique, moz_admin_boundaries, dataset_source declarado "INE - Instituto Nacional de Estatistica" | 2026-09-08 |
+
+
+---
+
 <!-- fonte: data/licenses_parts/imagem.md -->
 
 # Licenças — Imagens Orbitais (Fase 0')
@@ -378,6 +497,31 @@ orquestrador em todas as células:
 
 ---
 
+<!-- fonte: data/licenses_parts/osm_vias_lugares.md -->
+
+## OpenStreetMap — topônimos, malha rodoviária e ferroviária (AOI Tete–Moatize, Fase 4)
+
+Fonte: OpenStreetMap, via Overpass API (`https://overpass-api.de/api/interpreter`).
+Dado subjacente é OSM; a Overpass API é meio de acesso, não a fonte.
+
+Licença observada: **Open Database License (ODbL) 1.0** — https://www.openstreetmap.org/copyright
+Atribuição exigida: **"© OpenStreetMap contributors"** (ODbL 1.0, Anexo de Atribuição). O app
+tem de exibir esta atribuição em qualquer mapa que use estas camadas.
+Restrição relevante: compartilhamento de derivadas sob ODbL/licença compatível
+(Share-Alike sobre o banco de dados).
+
+| Camada | Arquivo | Feições | Status |
+|---|---|---|---|
+| Topônimos (place=city/town/village/suburb/hamlet/neighbourhood) | data/raw/osm_lugares_aoi.geojson | 23 | verificado |
+| Malha rodoviária (highway=motorway/trunk/primary/secondary/tertiary) | data/raw/osm_vias_aoi.geojson | 219 (0 motorway, 76 trunk, 17 primary, 23 secondary, 103 tertiary) | verificado |
+| Malha ferroviária (railway=rail/light_rail/narrow_gauge) | data/raw/osm_ferrovia_aoi.geojson | 57 (todas railway=rail; 0 light_rail, 0 narrow_gauge) | verificado |
+
+Data de verificação: 2026-09-08.
+Nível A/B/C: não classificado aqui — atribuição de nível é papel do `auditor-dados`.
+
+
+---
+
 <!-- fonte: data/licenses_parts/reassentamento.md -->
 
 # Família: REASSENTAMENTO (Cateme, 25 de Setembro, Mwaladzi)
@@ -415,3 +559,22 @@ conferindo título/ano/autores contra o texto citado.
   verificação — mantido como nível C até que o acesso seja confirmado.
 - HRW (2013) é a única fonte primária desta família com licença aberta localizável e
   verificável (CC BY-NC-ND 3.0 US) — nível B, não A, pela cláusula NC-ND.
+
+
+---
+
+<!-- fonte: data/licenses_parts/worldpop_grid3.md -->
+
+# WorldPop / GRID3 — fragmento de licenças (Vila de Moatize, população)
+
+Sessão: coleta WorldPop/GRID3 recortado à AOI (33.50–34.10E, -16.35 a -16.00S).
+Nível A/B/C **não** atribuído aqui — cabe ao `auditor-dados`. Abaixo, licença **observada** na página do produtor.
+
+| Fonte | URL canônica | Licença observada | Restrições | Citação exigida | Data de verificação |
+|---|---|---|---|---|---|
+| GRID3 MOZ Population v1.1 (grade ~100m; calibrado ao Censo 2017 -- não existe versão v1.1 "2020") | https://data.humdata.org/dataset/gridded-population-estimates-for-mozambique-2017-census-v1-1 (download servido por wopr.worldpop.org, sem suporte a HTTP Range) | CC BY 4.0 -- confirmado via HDX package_show API (`license_id=cc-by`, `license_url=http://www.opendefinition.org/licenses/cc-by`, `isopen=true`), 2026-09-09 | Atribuição obrigatória; dataset é produto interino ("até que o INE publique a grade oficial do Censo 2017") | Bondarenko M, Jones P, Leasure D, Lazar AN, Tatem AJ. 2020. Census disaggregated gridded population estimates for Mozambique (2017), version 1.1. WorldPop, University of Southampton. doi:10.5258/SOTON/WP00672 | 2026-09-09 |
+| WorldPop Population Counts MOZ 2000 (unconstrained -- único produto disponível para esse ano) | https://data.worldpop.org/GIS/Population/Global_2000_2020/2000/MOZ/moz_ppp_2000.tif (catalogado em https://data.humdata.org/dataset/worldpop-population-counts-for-mozambique) | CC BY 4.0 -- https://www.worldpop.org/data/licence | Atribuição obrigatória | WorldPop (www.worldpop.org). Mozambique 100m Population, 2000 (unconstrained, Global_2000_2020). doi:10.5258/SOTON/WP00645 | 2026-09-09 — **arquivo NÃO baixado nesta sessão**: ver nota de falha em PROVENANCE (data.worldpop.org ignora `Range`, download completo do mosaico nacional de ~446 MB throttled a ~11–70 KB/s medidos em 3 tentativas; tempo extrapolado 2–8 h, excede o orçamento da sessão) |
+| WorldPop Population Counts MOZ 2005 (unconstrained -- único produto disponível para esse ano) | https://data.worldpop.org/GIS/Population/Global_2000_2020/2005/MOZ/moz_ppp_2005.tif | CC BY 4.0 -- https://www.worldpop.org/data/licence | Atribuição obrigatória | WorldPop (www.worldpop.org). Mozambique 100m Population, 2005 (unconstrained, Global_2000_2020). doi:10.5258/SOTON/WP00645 | 2026-09-09 — **arquivo NÃO baixado nesta sessão** (mesmo motivo do ano 2000: throttling do servidor) |
+| WorldPop Population Counts MOZ 2010 (unconstrained -- único produto disponível para esse ano) | https://data.worldpop.org/GIS/Population/Global_2000_2020/2010/MOZ/moz_ppp_2010.tif | CC BY 4.0 -- https://www.worldpop.org/data/licence | Atribuição obrigatória | WorldPop (www.worldpop.org). Mozambique 100m Population, 2010 (unconstrained, Global_2000_2020). doi:10.5258/SOTON/WP00645 | 2026-09-09 — **arquivo NÃO baixado nesta sessão** (mesmo motivo do ano 2000: throttling do servidor) |
+| WorldPop Population Counts MOZ 2015 (constrained, release R2024B -- preferido sobre unconstrained por ser calibrado com pegada de edificações) | https://data.worldpop.org/GIS/Population/Global_2015_2030/R2024B/2015/MOZ/v1/100m/constrained/moz_pop_2015_CN_100m_R2024B_v1.tif | CC BY 4.0 -- https://www.worldpop.org/data/licence | Atribuição obrigatória | WorldPop (www.worldpop.org). Mozambique 100m Population (constrained, individual countries 2015-2030, UN adjusted, R2024B), 2015. | 2026-09-09 — **arquivo NÃO baixado nesta sessão** (mesmo motivo: throttling do servidor a ~90 MB de mosaico nacional) |
+| WorldPop Population Counts MOZ 2020 (constrained, release R2024B -- preferido sobre unconstrained por ser calibrado com pegada de edificações) | https://data.worldpop.org/GIS/Population/Global_2015_2030/R2024B/2020/MOZ/v1/100m/constrained/moz_pop_2020_CN_100m_R2024B_v1.tif | CC BY 4.0 -- https://www.worldpop.org/data/licence | Atribuição obrigatória | WorldPop (www.worldpop.org). Mozambique 100m Population (constrained, individual countries 2015-2030, UN adjusted, R2024B), 2020. | 2026-09-09 — **arquivo NÃO baixado nesta sessão**: HTTP 200 confirmado (`curl -I`, `Accept-Ranges: bytes` anunciado mas ignorado em `curl -r`/GDAL vsicurl, que retorna erro `Range downloading not supported by this server!`); 3 tentativas de download completo mediram 11,6–70 KB/s de throughput, projetando 25–130 min só para este arquivo de ~90 MB; interrompido por orçamento de sessão |

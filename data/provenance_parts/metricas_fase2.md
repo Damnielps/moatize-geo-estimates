@@ -20,7 +20,7 @@ Scripts: `pipeline/02_metrics/area_cagr.py`, `fragmentacao.py`,
   fonte que separa `urbano`/`industrial`/`reassentamento`. Toda área e
   fragmentação desta série é marcada `confiavel_para_tendencia=False` e
   carrega a acurácia do usuário medida em `data/processed/acuracia_por_ano.csv`
-  (0,27-0,63, ADR 0009): 37%-73% do que o mapa chama de construído não é.
+  (0,286-0,625, ADR 0009): 37,5%-71,4% do que o mapa chama de construído não é.
   Direção de expansão e tipologia (infill/borda/leapfrog) são declaradas
   robustas a essa comissão (um falso positivo disperso tende a virar
   "leapfrog" de baixa densidade, não inventa infill onde não há nada) — teto,
@@ -139,3 +139,31 @@ dependem do composto próprio.
   malha viária OSM; não permite comparar formal/informal ao longo do tempo,
   só descrever o padrão atual.
 <!-- SECAO_METRICAS_FASE2_FIM -->
+
+---
+
+## RESSALVA DE CHURN — acrescentada em 2026-09-08 (`docs/ADR/0013`)
+
+O bloco "Duas séries, dois papéis" acima atribui a robustez da **direção de expansão** e da
+**tipologia infill/borda/leapfrog** apenas ao viés de comissão de `docs/ADR/0009`. **Faltava
+a ressalva mais séria.**
+
+`docs/ADR/0013` mediu, para a camada `urbano`, um **churn de identidade pixel a pixel de 31 a
+54 %** entre anos-âncora consecutivos. A leitura correta é: **a área é utilizável; a
+localização não.**
+
+Isso atinge, nominalmente, toda métrica que dependa de **qual** pixel mudou:
+
+| métrica | efeito |
+|---|---|
+| tipologia infill / borda / leapfrog | a classificação de um pixel novo como infill ou leapfrog depende de onde estava a mancha no ano anterior — e até 54 % dos pixels da mancha anterior não são os mesmos |
+| matriz de transição entre classes | idem: a transição é definida pelo par de rótulos do mesmo pixel em dois anos |
+| rosa de expansão | menos afetada: agrega por setor angular, e o churn é aproximadamente isotrópico dentro do setor |
+| área, CAGR, fragmentação agregada | não afetadas por churn de identidade, apenas pela comissão de `docs/ADR/0009` |
+
+**Consequência prática:** nenhuma proporção de tipologia deste fragmento sustenta afirmação
+sobre *onde* a cidade cresceu num par de anos específico. O que resta defensável é a
+**tendência agregada** ao longo da série inteira, e ainda assim com a comissão declarada.
+
+Contrato que impede a reincidência:
+`pipeline/tests/test_coerencia_hipoteses.py::test_metricas_por_pixel_carregam_a_ressalva_de_churn`.

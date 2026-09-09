@@ -1,49 +1,48 @@
 #!/usr/bin/env python3
 """
-fetch_esa_worldcover.py — Download idempotente de ESA WorldCover 2020 e 2021.
+fetch_esa_worldcover.py — Download idempotente de ESA WorldCover 2020 e 2021, recortado na AOI.
 
 ESA WorldCover 10 m 2020 (v100) e 2021 (v200):
-- Página do produtor: https://esa-worldcover.org/en/data-access
+- Página do produtor: https://esa-worldcover.org/en/data-access (HTTP 200)
+- Licença: CC-BY 4.0, declarada na página do produtor
+  (https://esa-worldcover.org/en/data-access, seção "Data access").
 - Download real, tile(s) da grade de 3°x3° (nomeados pelo canto SW) que cobrem a
   AOI Tete-Moatize, bucket S3 público sem assinatura (confirmado por HTTP 200 em
-  2026-09-07):
+  2026-09-08):
     2020: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v100/2020/map/ESA_WorldCover_10m_2020_v100_<TILE>_Map.tif
     2021: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_<TILE>_Map.tif
-  onde <TILE> é derivado da AOI em config/study.yaml (ver _config.tile_sw_corners).
-  Para a AOI confirmada (docs/ADR/0001-aoi-final.md), o único tile necessário é
-  S18E033 (a grade de 3° cobre 33..36E, então xmax=34.10 ainda cai no mesmo tile).
-- Digital Earth Africa (`data.digitalearthafrica.org`) foi testado em 2026-09-07 e
-  NÃO RESPONDE (timeout) — removido como via alternativa (T3).
+  <TILE> é DERIVADO da AOI de config/study.yaml via `_config.tile_sw_corners`
+  (grade de 3°) — nunca hardcoded. Para a AOI confirmada em 2026-09-08, o único
+  tile resultante é S18E033 (canto SW: lat0=-18.0, lon0=33.0).
 - Resolução: 10 m
-- Licença: CC-BY 4.0
 - Citação: Zanaga, D. et al. (2022), DOI 10.5281/zenodo.5571936 (2020) /
-  10.5281/zenodo.7254221 (2021) — confirmados via Zenodo/Crossref.
+  10.5281/zenodo.7254221 (2021).
 
-AOI: lida de config/study.yaml em tempo de execução (§11.2.1). Nunca fixar aqui.
+Cada tile tem ~180 MB (confirmado por Content-Length). Em vez de mirrorar o tile
+inteiro, este script lê a janela da AOI (+ margem de 0.02 grau) via GDAL
+`/vsicurl/` (rasterio) — mesma lógica de fetch_glad_cropland.py.
 
-Saída:
-  data/raw/esa_worldcover_<ano>_<tile_lower>.tif (+ .sha256 + .meta.json)
-
-Comportamento idempotente e falho-explícito: ver docstring de fetch_glad_cropland.py.
-Nenhum sucesso é registrado (.sha256/.meta.json) sem download efetivo verificado.
+Saída: data/raw/esa_worldcover_<ano>_<tile_lower>_aoi.tif (+ .sha256 + .meta.json)
 """
 
 import hashlib
 import json
 import sys
-import urllib.error
-import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 
+import rasterio
 from _config import carregar_aoi, tile_sw_corners
+from rasterio.windows import from_bounds
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_RAW = PROJECT_ROOT / "data" / "raw"
 
 WORLDCOVER_TILE_SIZE_DEG = 3.0
+MARGEM_GRAUS = 0.02
 
 LICENSE = "CC-BY 4.0"
+LICENSE_URL = "https://esa-worldcover.org/en/data-access"
 
 BASE_URLS = {
     2020: (
@@ -57,14 +56,8 @@ BASE_URLS = {
 }
 
 CITATIONS = {
-    2020: (
-        'Zanaga, D. et al. (2022). "ESA WorldCover 10 m 2020 v100." '
-        "DOI 10.5281/zenodo.5571936"
-    ),
-    2021: (
-        'Zanaga, D. et al. (2022). "ESA WorldCover 10 m 2021 v200." '
-        "DOI 10.5281/zenodo.7254221"
-    ),
+    2020: ('Zanaga, D. et al. (2022). "ESA WorldCover 10 m 2020 v100." DOI 10.5281/zenodo.5571936'),
+    2021: ('Zanaga, D. et al. (2022). "ESA WorldCover 10 m 2021 v200." DOI 10.5281/zenodo.7254221'),
 }
 
 SOURCE_PAGE = "https://esa-worldcover.org/en/data-access"
@@ -96,39 +89,27 @@ def write_meta(filepath: Path, url: str, ano: int, citation: str, aoi: dict, til
         "download_date": datetime.now(UTC).isoformat(),
         "size_bytes": filepath.stat().st_size,
         "license": LICENSE,
+        "license_url": LICENSE_URL,
         "level": "A",
+        "selo": "observado",
         "source_page": SOURCE_PAGE,
         "ano": ano,
+        "anos_cobertos": str(ano),
         "aoi_bbox": aoi,
         "tile": tile,
         "citation": citation,
-        "nota": f"Tile {tile} (nao recortado para a AOI); recorte em 02_metrics.",
+        "nota": (
+            f"Recortado da AOI (+{MARGEM_GRAUS} grau de margem) via leitura em janela "
+            "GDAL /vsicurl/ no momento do fetch; o tile 3x3 grau inteiro NÃO foi "
+            "mirrorado."
+        ),
     }
     meta_path = filepath.with_name(filepath.name + ".meta.json")
     meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def download(url: str, dest: Path) -> None:
-    req = urllib.request.Request(url, headers={"User-Agent": "tete-moatize-fetch/1.0"})
-    tmp = dest.with_suffix(dest.suffix + ".part")
-    try:
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            if resp.status != 200:
-                raise RuntimeError(f"HTTP {resp.status} para {url}")
-            with tmp.open("wb") as out:
-                while True:
-                    chunk = resp.read(1 << 20)
-                    if not chunk:
-                        break
-                    out.write(chunk)
-        tmp.replace(dest)
-    finally:
-        if tmp.exists():
-            tmp.unlink()
-
-
-def fetch_one(ano: int, url: str, citation: str, aoi: dict, tile: str) -> bool:
-    filename = f"esa_worldcover_{ano}_{tile.lower()}.tif"
+def fetch_one(ano: int, remote_url: str, citation: str, aoi: dict, tile: str) -> bool:
+    filename = f"esa_worldcover_{ano}_{tile.lower()}_aoi.tif"
     filepath = DATA_RAW / filename
     sidecar = filepath.with_name(filepath.name + ".sha256")
 
@@ -137,26 +118,52 @@ def fetch_one(ano: int, url: str, citation: str, aoi: dict, tile: str) -> bool:
         digest = compute_sha256(filepath)
         if len(registrado) < 2 or registrado[0] != digest:
             print(
-                f"ERRO [{ano}]: hash de {filename} não confere com {sidecar.name}",
-                file=sys.stderr,
+                f"ERRO [{ano}]: hash de {filename} não confere com {sidecar.name}", file=sys.stderr
             )
             return False
         print(f"OK [{ano}]: {filename} já presente e íntegro.")
         return True
 
-    print(f"Baixando [{ano}]: {url}")
+    vsi_url = f"/vsicurl/{remote_url}"
+    print(f"Lendo janela AOI [{ano}]: {remote_url}")
     try:
-        download(url, filepath)
-    except (urllib.error.URLError, RuntimeError, TimeoutError, OSError) as exc:
-        print(f"ERRO [{ano}]: falha ao baixar {url}: {exc}", file=sys.stderr)
+        with rasterio.open(vsi_url) as src:
+            win = from_bounds(
+                aoi["xmin"] - MARGEM_GRAUS,
+                aoi["ymin"] - MARGEM_GRAUS,
+                aoi["xmax"] + MARGEM_GRAUS,
+                aoi["ymax"] + MARGEM_GRAUS,
+                src.transform,
+            )
+            data = src.read(1, window=win)
+            out_transform = src.window_transform(win)
+            profile = src.profile.copy()
+            profile.update(
+                height=data.shape[0],
+                width=data.shape[1],
+                transform=out_transform,
+                compress="deflate",
+            )
+            tmp = filepath.with_suffix(filepath.suffix + ".part")
+            with rasterio.open(tmp, "w", **profile) as dst:
+                dst.write(data, 1)
+            tmp.replace(filepath)
+    except Exception as exc:
+        print(f"ERRO [{ano}]: falha ao ler/recortar {remote_url}: {exc}", file=sys.stderr)
+        tmp = filepath.with_suffix(filepath.suffix + ".part")
+        if tmp.exists():
+            tmp.unlink()
         if filepath.exists():
             filepath.unlink()
         return False
 
     digest = compute_sha256(filepath)
     write_sha256(filepath, digest)
-    write_meta(filepath, url, ano, citation, aoi, tile)
-    print(f"OK [{ano}]: {filename} baixado, {filepath.stat().st_size} bytes, sha256={digest}")
+    write_meta(filepath, remote_url, ano, citation, aoi, tile)
+    print(
+        f"OK [{ano}]: {filename} gravado (recorte AOI), "
+        f"{filepath.stat().st_size} bytes, sha256={digest}"
+    )
     return True
 
 
@@ -168,10 +175,10 @@ def main() -> int:
     if not tiles:
         print("ERRO: nenhum tile ESA WorldCover derivado da AOI.", file=sys.stderr)
         return 1
+    print(f"Tile(s) ESA WorldCover derivado(s) da AOI: {tiles}")
     if len(tiles) > 1:
         print(
-            f"AVISO: AOI cruza {len(tiles)} tiles ESA WorldCover ({tiles}); "
-            "baixando todos.",
+            f"AVISO: AOI cruza {len(tiles)} tiles ESA WorldCover ({tiles}); baixando todos.",
             file=sys.stderr,
         )
 

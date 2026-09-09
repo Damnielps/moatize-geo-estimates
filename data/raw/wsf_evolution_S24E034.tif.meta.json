@@ -1,0 +1,20 @@
+{
+  "url": "https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_34_-24.tif",
+  "download_date": "2026-09-08T16:52:41.433051+00:00",
+  "size_bytes": 1626342,
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "level": "nao classificado - cabe ao auditor-dados",
+  "source_page": "https://geoservice.dlr.de/web/datasets/wsf_evo",
+  "citation": "Marconcini, M., Metz-Marconcini, A., Esch, T., Gorelick, N. (2021). \"Understanding Current Trends in Global Urbanisation - The World Settlement Footprint Suite.\" GI_Forum 2021, Issue 1, p. 33-38. DOI: 10.1553/giscience2021_01_s33",
+  "anos_cobertos": "1985-2015 (valor de pixel = ano de primeira deteccao; 0 = sem dado)",
+  "resolucao_m": 30,
+  "selo": "observado",
+  "pixel_value": "ano de primeira deteccao de assentamento (1985-2015); 0 = sem dado (confirmado na aba Abstract de https://geoservice.dlr.de/web/datasets/wsf_evo)",
+  "aoi_bbox": {
+    "nota": "controle: tile derivado das coordenadas da capital, nao da AOI de estudo"
+  },
+  "tile_id": "34_-24",
+  "md5_produtor": "56f89967b4523ad993efa9f8680dc100",
+  "nota": "Tile 34_-24 (grade 2x2 graus do produtor; nao recortado para a AOI)."
+}

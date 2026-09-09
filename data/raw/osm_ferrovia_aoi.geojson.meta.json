@@ -1,0 +1,13 @@
+{
+  "url": "https://www.openstreetmap.org/copyright (dados) via Overpass API https://overpass-api.de/api/interpreter",
+  "download_date": "2026-09-08",
+  "size_bytes": 36691,
+  "license": "Open Database License (ODbL) 1.0 - https://www.openstreetmap.org/copyright",
+  "attribution": "© OpenStreetMap contributors",
+  "level": "não classificado (papel do auditor-dados)",
+  "source_page": "https://overpass-api.de/api/interpreter",
+  "overpass_query": "[out:json][timeout:120];(way[\"railway\"~\"^(rail|light_rail|narrow_gauge)$\"](-16.40,33.45,-16.05,34.15););out geom tags;",
+  "feature_count": 57,
+  "aoi_bbox_wgs84": "minLon=33.45, minLat=-16.40, maxLon=34.15, maxLat=-16.05 (config/study.yaml bbox + folga 0.05 grau)",
+  "crs": "EPSG:4326, RFC 7946, sem membro crs"
+}

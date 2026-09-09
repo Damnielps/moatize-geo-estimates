@@ -1,0 +1,14 @@
+{
+  "ano_unico": 2020,
+  "estimador": "Olofsson et al. (2014), estratificado pelo mapa, 3 estratos",
+  "interpretes": [
+    "Claude (Sonnet 5), interpretação visual automatizada de recorte RGB — não humana, não verdade de campo"
+  ],
+  "n_por_estrato": 12,
+  "saidas": [
+    "data/processed/acuracia_cultivo_por_ano.csv",
+    "data/processed/matriz_confusao_cultivo.csv"
+  ],
+  "data_processamento": "2026-09-08T15:33:01.577864+00:00",
+  "script": "pipeline/01_imagery/acuracia_cultivo.py"
+}

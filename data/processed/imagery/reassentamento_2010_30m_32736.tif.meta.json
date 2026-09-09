@@ -15,13 +15,13 @@
     "povoados_ativos": [
       "Cateme"
     ],
-    "mediana_ndvi_seca_paisagem": 0.35995686054229736,
-    "mediana_ndvi_chuva_paisagem": 0.4770430326461792,
-    "area_solo_nu_persistente_km2": 73.4715,
+    "mediana_ndvi_seca_paisagem": 0.35994410514831543,
+    "mediana_ndvi_chuva_paisagem": 0.47702622413635254,
+    "area_solo_nu_persistente_km2": 73.7127,
     "area_envelope_mina_km2": 116.4384,
     "area_poligonos_maus_km2": 59.1849,
-    "cobertura_poligonos_maus": 0.06973738233907635,
-    "cobertura_poligonos_maus_apos_permanencia": 0.06973738233907635
+    "cobertura_poligonos_maus": 0.06955490336217515,
+    "cobertura_poligonos_maus_apos_permanencia": 0.06955490336217515
   },
   "regras_temporais": {
     "R1_confirmacao_primeira_deteccao": "primeira detecção só vale se confirmada no ano-âncora seguinte; confirmada",
@@ -30,8 +30,8 @@
   "papel_wsf": "semente de treino (não é validação — ver docstring do script)",
   "papel_ghsl": "referência independente de concordância (não entra em treino)",
   "selo": "observado",
-  "data_processamento": "2026-09-08T12:48:23.194715+00:00",
-  "commit_git": "desconhecido (git indisponível)",
+  "data_processamento": "2026-09-08T14:46:17.330550+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
   "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "hash_config_seeds_yaml": "3bd52590e495f4eeb8327c17eeefaa9b4c2b1c78c827ebfc70edddacfad0997f",
   "script": "pipeline/01_imagery/classificacao.py",

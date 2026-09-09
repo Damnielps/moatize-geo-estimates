@@ -1,0 +1,21 @@
+{
+  "url": "https://gladxfer.umd.edu/Potapov/Global_Crop/Data/Global_cropland_SE_2007.tif",
+  "download_date": "2026-09-08T13:11:01.275566+00:00",
+  "size_bytes": 71953,
+  "license": "CC-BY 4.0",
+  "license_url": "https://glad.umd.edu/dataset/croplands",
+  "level": "A",
+  "selo": "observado",
+  "source_page": "https://glad.umd.edu/dataset/croplands",
+  "ano": 2007,
+  "anos_cobertos": "composto quinquenal centrado em 2007",
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.35,
+    "xmax": 34.1,
+    "ymax": -16.0,
+    "crs": "EPSG:4326"
+  },
+  "citation": "Potapov, P., Turubanova, S., Hansen, M.C., Tyukavina, A., Zalles, V., Khan, A., Song, X.-P., Pickens, A., Shen, Q., Cortez, J. (2021). \"Global maps of cropland extent and change show accelerated cropland expansion in the twenty-first century.\" Nature Food 3, 19-28. DOI 10.1038/s43016-021-00429-z",
+  "nota": "Recortado da AOI (+0.02 grau de margem) via leitura em janela GDAL /vsicurl/ no momento do fetch; o arquivo global 'SE' NÃO foi mirrorado inteiro."
+}

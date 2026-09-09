@@ -1,0 +1,18 @@
+{
+  "ano_unico": 2020,
+  "motivo_ano_unico": "custo de interpretação visual manual, sem verdade de campo; ver docstring de amostras_validacao_cultivo.py",
+  "estratos": [
+    "cultivo_sequeiro",
+    "cultivo_irrigado",
+    "outro"
+  ],
+  "n_por_estrato": 12,
+  "seed": 424243,
+  "folhas_de_contato": [
+    "data/processed/validacao/chips_cultivo/folha_cultivo_2020_01.png",
+    "data/processed/validacao/chips_cultivo/folha_cultivo_2020_02.png",
+    "data/processed/validacao/chips_cultivo/folha_cultivo_2020_03.png"
+  ],
+  "data_geracao": "2026-09-08T15:32:02.360422+00:00",
+  "script": "pipeline/01_imagery/amostras_validacao_cultivo.py"
+}

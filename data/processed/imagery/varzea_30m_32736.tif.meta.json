@@ -1,0 +1,26 @@
+{
+  "camada": "varzea",
+  "arquivo_raster": "data/processed/imagery/varzea_30m_32736.tif",
+  "arquivo_vetor": "data/processed/imagery/varzea.geojson",
+  "n_poligonos_vetor": 1490,
+  "area_km2": 650.1825,
+  "resolucao_m": 30.0,
+  "crs": "EPSG:32736",
+  "metodo": "HAND aproximado por vizinho mais próximo no plano (scipy.ndimage.distance_transform_edt), NÃO por caminho de fluxo D8 — ver docstring de varzea.py para a limitação declarada",
+  "parametros": {
+    "hand_max_m": 10.0,
+    "dist_max_rio_m": 1000.0
+  },
+  "fonte_dem": [
+    "data/raw/copernicus_dem_glo30_S17_00_E033_00.tif",
+    "data/raw/copernicus_dem_glo30_S17_00_E034_00.tif"
+  ],
+  "fonte_drenagem": "data/raw/hydrorivers_af_v10.gdb.zip",
+  "n_trechos_hydrorivers_na_aoi": 130,
+  "natureza": "camada ESTÁTICA (geomorfologia; não varia por ano-âncora) — cruzar com cultivo_irrigado/cultivo_sequeiro de cada ano em cultivo_varzea_por_ano.csv para a leitura de 'cultivo de vazante' de §3",
+  "selo": "modelado (HAND derivado de DEM observado + rede de drenagem observada)",
+  "data_processamento": "2026-09-08T15:32:00.164678+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
+  "script": "pipeline/01_imagery/varzea.py"
+}

@@ -8,7 +8,81 @@ parâmetros com hash do YAML, data, versão do ambiente e selo
 > Não edite este arquivo à mão: edite o fragmento da família e reexecute o script.
 
 
-Consolidado em 2026-09-08.
+Consolidado em 2026-09-09.
+
+
+---
+
+<!-- fonte: data/provenance_parts/adensamento.md -->
+
+<!-- SECAO_ADENSAMENTO_INICIO -->
+## Adensamento 2020-2025 — concordância de três sinais (docs/ADR/0016, §5.2/§5.6)
+
+Script: `pipeline/02_metrics/adensamento.py`.
+Gerado em 2026-09-09.
+
+Camada `modelado`, grade de 240 m (8×
+8 pixels de 30 m), domínio = células completas
+(`n_pixels_30m == 64`; 43416 células,
+2500.76 km²). Três sinais (S1 fração construída própria, S2
+inclinação Theil-Sen de luz noturna, S3 resíduo de pegada de edificações Open
+Buildings) convertidos a posto (ECDF) e votados contra um corte de quantil
+(`TAU = 0.7` declarado; realizado
+`TAU_s1=0.007436`, `TAU_s2=0.001117`,
+`TAU_s3=0.352931`) — voto exige também `dominio_ocupado`
+(Emenda 2 do ADR 0016). `adensando ⇔ Σ votos ≥ 2`. Sete classes por precedência,
+partição exaustiva.
+
+### Área por classe (km², contagem real de pixels de 30 m — ver `docs/ADR/0016`,
+### achado 2 do portão da Frente B: `fora_de_dominio` NÃO usa `n_células × área
+### nominal`, que superestimava por ~2,67×)
+
+| classe | área (km²) |
+|---|---|
+| `fora_de_dominio` | 5.7888 |
+| `vazio_estavel` | 2365.8624 |
+| `esparso_estavel` | 44.1792 |
+| `adensando` | 15.3216 |
+| `expansao_nova` | 10.3104 |
+| `consolidado` | 19.6416 |
+| `pegada_industrial` | 45.4464 |
+
+### Sensibilidade
+
+Razão máxima entre a variante mais extrema e a base, no primeiro decil de células
+adensando: **2.2931** — regime de publicação:
+**publicada só como padrão espacial e ordem de grandeza, NÃO como área (razão em (2.0, 5.0])** (`publicavel_como=padrao_espacial`).
+Ver `data/processed/adensamento_sensibilidade.csv` (todas as variantes `tau_0*`/`qalto_0*`/
+`qbaixo_0*`, pré-registradas antes de ver o resultado, §Decisão-9 do ADR).
+
+### Riscos declarados (R1-R10, ver ADR para detalhe)
+
+- **R1**: erro espacialmente estruturado sobrevive ao posto
+- **R2**: S1 e S3 partilham f_2020 — votos não são independentes
+- **R3**: camada não detecta esvaziamento (S1 censurado por baixo pela catraca R2 de urbano)
+- **R4**: luz sobreamostrada de ~500 m para 240 m
+- **R5**: S3 pode ser desacordo de sensor, não construção
+- **R6**: janela real de S3 é 2020 -> ~2023, não 2020->2025
+- **R7**: churn de pixel de 31% sobrevive parcialmente à agregação
+- **R8**: dependência dos cortes — ver sensibilidade acima
+- **R9**: moatize_vila possivelmente inflada (25 de Setembro sem geometria)
+- **R10**: camada modelada, risco de ser lida como observada — selo em 4 lugares
+
+### Saídas
+
+Raster 240 m: `data/processed/imagery/adensamento_2020_2025_240m_32736.tif`. Raster 30 m (desagregado, mesma classe
+em todos os pixels da célula): `data/processed/imagery/adensamento_2020_2025_30m_32736.tif`. Vetor:
+`data/processed/imagery/adensamento_2020_2025.geojson` (443 polígonos, atributos
+`f_2020`/`f_2025`/`s1`/`s2`/`s3`/`concordancia`/`fracao_industrial` — reconstroem
+`classe` e `concordancia` sem reexecutar o pipeline, contratos T2/T13 de
+`pipeline/tests/test_adensamento.py`). Por unidade:
+`data/processed/adensamento_2020_2025_por_unidade.csv`.
+
+Não alimenta `stats_by_year_by_unit.csv` (§ Makefile, alvo `metrics`): camada
+independente, lida por unidade/ano avulsos. Selo `modelado` em quatro lugares
+(raster 240 m, raster 30 m, GeoJSON, CSV por unidade) — risco R10.
+
+<!-- SECAO_ADENSAMENTO_FIM -->
 
 
 ---
@@ -322,6 +396,744 @@ permite testar H5; H6 permanece parcialmente testável, limitado pela ausência 
 tabulações domiciliares desagregadas para Tete/Moatize (Censos 2007/2017) e pela
 localização ainda pendente dos catálogos de IOF 2014/15 e 2019/20.
 
+---
+
+## RECONCILIAÇÃO OBRIGATÓRIA — 2026-09-08
+
+> **As avaliações de suficiência acima são da Fase 0' e foram FALSIFICADAS POR MEDIÇÃO.**
+> Elas julgavam **disponibilidade de dado**; o que veio depois mediu **desempenho da
+> classificação**, e o resultado é pior que a expectativa. Onde este fragmento diz que uma
+> hipótese é testável, vale o que segue.
+
+**`cultivo_sequeiro` NÃO é defensável** (`docs/ADR/0012`, confirmado após a correção de raiz
+em `docs/ADR/0014`):
+
+| métrica | valor |
+|---|---|
+| acurácia do usuário | **0,000** |
+| kappa | **−0,065** (pior que aleatório) |
+| Jaccard contra GLAD Cropland e ESA WorldCover | **0,001 a 0,002** |
+| área classificada × área do GLAD na mesma AOI | 359–761 km² × **~20 km²** |
+
+A correção de `docs/ADR/0014` resolveu a classe de água e as classes de cobertura e **não**
+melhorou o cultivo — o que localiza a falha na **abordagem fenológica bianual**, não nos
+limiares, e **reforça** o ADR 0012.
+
+**`cultivo_irrigado`** é utilizável com ressalva: acurácia do usuário 0,556 ± 0,344,
+Jaccard 0,043–0,098.
+
+### Consequência para as hipóteses
+
+- **H5 — sustentada FRACAMENTE, não "respondível".** O único apoio é o enriquecimento
+  relativo em várzea: `cultivo_irrigado` aparece 2 a 3 vezes mais concentrado na zona de
+  várzea que `cultivo_sequeiro`, em 4 dos 6 anos-âncora. É sinal de razão entre classes, não
+  medida de área agrícola — e a classe de sequeiro, que é o termo de comparação, tem
+  acurácia nula.
+- **H6 — SEM RESPOSTA.** Não é lacuna de dado domiciliar, como este fragmento supunha na
+  Fase 0': é que **a série de área de cultivo que sustentaria a hipótese tem kappa negativo
+  e não mede cropland**. Nenhuma leitura de "a agricultura urbana cresceu no bust" se
+  sustenta com o que existe.
+- **Pergunta 8 de §1** fica respondível apenas na parte de **localização de várzea** e de
+  cultivo irrigado com ressalva. "Quanto ocupam" e "como evoluíram" não são respondíveis.
+
+
+---
+
+<!-- fonte: data/provenance_parts/agricultura_fase2b.md -->
+
+# Proveniência — Fase 2b: agricultura e várzea (§5.6)
+
+Fragmento consolidado por `scripts/consolidar_registros.py` em `PROVENANCE.md`. Não editar à mão as seções entre marcadores: são geradas pelo script correspondente.
+
+
+<!-- SECAO_CULTIVO_INICIO -->
+
+## Cultivo — separação fenológica sequeiro × irrigado (§5.6.1, Fase 2b)
+
+Gerado por `pipeline/01_imagery/cultivo.py`. `cultivo_sequeiro` e `cultivo_irrigado` são recortes fenológicos DENTRO de `solo_exposto` e `vegetacao` (§5.1), não camadas novas na partição mutuamente exclusiva da AOI: sobrepõem essas duas camadas por construção e são mutuamente exclusivas apenas em relação a `urbano`/`industrial`/`reassentamento`/`agua`.
+
+**Limiar relativo à paisagem do próprio ano** (ratio_irrigado_amp=0.5, ratio_sequeiro_amp=1.3, ratio_sequeiro_chuva=1.0), pelo mesmo motivo de docs/ADR/0011: NDVI absoluto não é comparável entre os anos-âncora desta série.
+
+**Limitação declarada:** fenologia bianual não separa cultivo de vegetação natural com o mesmo padrão sazonal. `cultivo_sequeiro` mede vegetação de fenologia estacional acentuada (inclui savana herbácea/arbustiva sazonal); `cultivo_irrigado` mede verde persistente de baixa amplitude (inclui mata ripária). A acurácia do usuário medida por interpretação visual está em `acuracia_cultivo.py` / `data/processed/acuracia_cultivo_por_ano.csv`.
+
+**Instabilidade herdada da Fase 1:** a proporção vegetacao/solo_exposto muda de forma não monotônica entre anos-âncora por diferença de sensor/pluviosidade (mesmo efeito de docs/ADR/0008 e ADR/0009). A série de área de cultivo herda essa instabilidade e não deve ser lida como mudança real de uso do solo sem controlar por ela.
+
+| ano | sequeiro km² | irrigado km² | domínio veg km² | domínio solo km² | mediana amplitude | mediana NDVI seca | mediana NDVI chuva |
+|---|---|---|---|---|---|---|---|
+| 2000 | 576.6 | 47.1 | 235.3 | 2219.7 | 0.235 | 0.233 | 0.475 |
+
+<!-- SECAO_CULTIVO_FIM -->
+
+
+
+
+<!-- SECAO_VARZEA_INICIO -->
+
+## Várzea — HAND aproximado (§5.6.2, Fase 2b)
+
+Gerado por `pipeline/01_imagery/varzea.py`. Camada ESTÁTICA (não varia por ano-âncora): geomorfologia, não cobertura do solo.
+
+**Aproximação declarada:** HAND por vizinho mais próximo NO PLANO (`scipy.ndimage.distance_transform_edt`), não por caminho de fluxo D8 — nenhuma biblioteca de roteamento hidrológico (`pysheds`/`richdem`/`whitebox`) está disponível neste ambiente. A aproximação tende a superestimar a várzea em relevo dissecado; é aceitável no vale de baixa declividade do Zambeze/Revúbuè dentro da AOI, mas não foi corrigida onde falha. Ver docstring completa do script.
+
+- **Parâmetros (config/study.yaml):** hand_max_m=10.0, dist_max_rio_m=1000.0
+- **Fonte de drenagem:** HydroRIVERS v10 África, 130 trechos na AOI, sem filtro de ordem de fluxo (riachos pequenos incluídos)
+- **Área de várzea:** 650.2 km²
+- **Selo:** modelado (HAND derivado de DEM observado + rede de drenagem observada)
+
+<!-- SECAO_VARZEA_FIM -->
+
+
+
+<!-- SECAO_ACURACIA_CULTIVO_INICIO -->
+
+## Acurácia por classe — cultivo (§5.6.1, §10)
+
+Gerado por `pipeline/01_imagery/acuracia_cultivo.py`. **Não editar à mão.**
+
+**Ano validado:** 2020 (único — ver `amostras_validacao_cultivo.py`). **Intérprete(s):** Claude (Sonnet 5), interpretação visual automatizada de recorte RGB — não humana, não verdade de campo.
+
+| classe | prevalência no mapa | n | AU | IC95 AU | AP | AP estimável? |
+|---|---|---|---|---|---|---|
+| cultivo_sequeiro | 0.1682 | 8 | 0.0 | 0.0 | 0.0 | True |
+| cultivo_irrigado | 0.0138 | 9 | 0.5556 | 0.3443 | 0.154 | True |
+
+**Acurácia global:** 0.621 ± 0.262 · **kappa:** -0.065 · **n indeterminado:** 11 de 36.
+
+AU = acurácia do usuário (1 − comissão) · AP = acurácia do produtor (1 − omissão).
+
+n=12/estrato, ANO ÚNICO (2020) — ver amostras_validacao_cultivo.py para o motivo do desenho reduzido em relação a acuracia.py (construído: 24/estrato, 6 anos). NÃO generalizar este número aos outros 5 anos-âncora. Rótulos por interpretação visual automatizada (mesmo tipo de intérprete de ADR 0007), não verdade de campo. Produtor não é confiável quando produtor_estimavel_* é False — ver alavanca_maxima_1_ponto_*: fração da área da AOI que UM ponto do estrato de maior peso entre os outros dois carrega no estimador.
+
+**Referência externa:** GLAD Cropland / ESA WorldCover / Dynamic World não estavam espelhados em `data/raw/` no momento desta execução (Fase 0' registrou URLs quebradas). Esta validação é só interna (interpretação visual); nenhuma métrica contra produto externo de cobertura de cultivo é reportada. Se os arquivos aparecerem depois, a validação externa é trabalho futuro — não duplicado aqui.
+
+<!-- SECAO_ACURACIA_CULTIVO_FIM -->
+
+
+
+
+<!-- SECAO_VALIDACAO_EXTERNA_CULTIVO_INICIO -->
+
+## Validação externa de cultivo — GLAD Cropland / ESA WorldCover
+
+Gerado por `pipeline/01_imagery/validacao_externa_cultivo.py`. **Concordância, não acurácia** (mesma ressalva de `concordancia_ghsl` em `classificacao.py`): produtos com erro próprio, resolução e definição de cultivo diferentes.
+
+| referência | ano ref. | ano cultivo | camada | área mapa km² | área ref. km² | Jaccard | recall/ref. |
+|---|---|---|---|---|---|---|---|
+| GLAD_Global_Cropland | 2003 | 2005 | cultivo_sequeiro | 358.671 | 19.895 | 0.001 | 0.0196 |
+| GLAD_Global_Cropland | 2003 | 2005 | cultivo_irrigado | 16.389 | 19.895 | 0.0686 | 0.1171 |
+| GLAD_Global_Cropland | 2007 | 2005 | cultivo_sequeiro | 358.671 | 17.956 | 0.0007 | 0.0138 |
+| GLAD_Global_Cropland | 2007 | 2005 | cultivo_irrigado | 16.389 | 17.956 | 0.0976 | 0.1701 |
+| GLAD_Global_Cropland | 2011 | 2010 | cultivo_sequeiro | 760.501 | 20.989 | 0.0011 | 0.0398 |
+| GLAD_Global_Cropland | 2011 | 2010 | cultivo_irrigado | 152.651 | 20.989 | 0.0433 | 0.3436 |
+| GLAD_Global_Cropland | 2015 | 2015 | cultivo_sequeiro | 398.902 | 24.991 | 0.0018 | 0.0309 |
+| GLAD_Global_Cropland | 2015 | 2015 | cultivo_irrigado | 42.66 | 24.991 | 0.1287 | 0.3087 |
+| GLAD_Global_Cropland | 2019 | 2020 | cultivo_sequeiro | 421.7 | 40.063 | 0.0006 | 0.0066 |
+| GLAD_Global_Cropland | 2019 | 2020 | cultivo_irrigado | 34.552 | 40.063 | 0.1445 | 0.2352 |
+| ESA_WorldCover | 2020 | 2020 | cultivo_sequeiro | 421.7 | 42.467 | 0.0043 | 0.0463 |
+| ESA_WorldCover | 2020 | 2020 | cultivo_irrigado | 34.552 | 42.467 | 0.0327 | 0.0574 |
+
+Concordância baixa não piora o veredito de docs/ADR/0012 (`cultivo_sequeiro` já reprovado por interpretação visual própria); concordância alta seria evidência de apoio, não validação por si — ver limitações na docstring do script.
+
+<!-- SECAO_VALIDACAO_EXTERNA_CULTIVO_FIM -->
+
+
+---
+
+<!-- fonte: data/provenance_parts/agricultura_validacao.md -->
+
+# Proveniência — Validação de Cultivo (Fase 2b)
+
+Um bloco por arquivo efetivamente baixado (§ regra de PROVENANCE.md). Fragmento novo —
+não edita `agricultura.md` da Fase 0'.
+
+## GLAD Global Cropland
+
+- Arquivos: `data/raw/glad_cropland_{2003,2007,2011,2015,2019}_aoi.tif`
+- URL: https://gladxfer.umd.edu/Potapov/Global_Crop/Data/Global_cropland_SE_<ANO>.tif
+- Acesso: 2026-09-08
+- Licença: CC-BY 4.0 (https://glad.umd.edu/dataset/croplands)
+- Citação: Potapov, P. et al. (2021). "Global maps of cropland extent and change show
+  accelerated cropland expansion in the twenty-first century." Nature Food 3, 19-28.
+  DOI 10.1038/s43016-021-00429-z
+- Resolução: 30 m; recorte da AOI (config/study.yaml) + margem de 0.02 grau, via leitura
+  em janela GDAL /vsicurl/ (o mosaico regional "SE" global NÃO foi mirrorado inteiro)
+- Nível geográfico: recorte da AOI Tete-Moatize
+- Anos cobertos: compostos quinquenais 2003, 2007, 2011, 2015, 2019 (observado)
+
+## ESA WorldCover
+
+- Arquivos: `data/raw/esa_worldcover_2020_s18e033_aoi.tif`, `data/raw/esa_worldcover_2021_s18e033_aoi.tif`
+- URL: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v100/2020/map/ESA_WorldCover_10m_2020_v100_S18E033_Map.tif
+  e https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_S18E033_Map.tif
+- Acesso: 2026-09-08
+- Licença: CC-BY 4.0 (https://esa-worldcover.org/en/data-access)
+- Citação: Zanaga, D. et al. (2022). "ESA WorldCover 10 m 2020 v100." DOI
+  10.5281/zenodo.5571936; "ESA WorldCover 10 m 2021 v200." DOI 10.5281/zenodo.7254221
+- Resolução: 10 m; tile S18E033 derivado da AOI (config/study.yaml) via grade de 3°;
+  recorte da AOI + margem de 0.02 grau, via leitura em janela GDAL /vsicurl/ (o tile
+  3x3 grau inteiro, ~180 MB, NÃO foi mirrorado)
+- Nível geográfico: recorte da AOI Tete-Moatize
+- Anos cobertos: 2020, 2021 (observado)
+
+## Copernicus Global Land Cover CGLS-LC100
+
+- Arquivos: `data/raw/cgls_lc100_{2015,2016,2017,2018,2019}_aoi.tif`
+- URL: resolvida via API Zenodo por época (registros 3939038, 3518026, 3518036,
+  3518038, 3939050), arquivo `*_Discrete-Classification-map_EPSG-4326.tif`
+- Acesso: 2026-09-08
+- Licença: CC-BY 4.0 (declarada em cada registro Zenodo, ex. https://zenodo.org/records/3518036)
+- Citação: Buchhorn, M. et al. (2020). "Copernicus Global Land Service: Land Cover
+  100m: Collection 3: epoch <ANO>: Globe." Zenodo. DOI 10.5281/zenodo.<record_id>
+- Resolução: 100 m; recorte da AOI (config/study.yaml) + margem de 0.02 grau, via
+  leitura em janela GDAL /vsicurl/ (o arquivo global "Discrete-Classification-map",
+  ~1,7 GB por época, NÃO foi mirrorado inteiro)
+- Nível geográfico: recorte da AOI Tete-Moatize
+- Anos cobertos: 2015, 2016, 2017, 2018, 2019 (observado)
+
+## ESRI/Impact Observatory 10 m Annual LULC
+
+- Arquivos: `data/raw/esri_io_lulc_<ANO>_{36k,36l}_aoi.tif`, ANO em 2017-2024
+- URL: https://io-10m-annual-lulc.s3.us-west-2.amazonaws.com/<CELULA>_<ANO>.tif
+- Acesso: 2026-09-08
+- Licença: CC-BY 4.0 (https://registry.opendata.aws/io-lulc/)
+- Citação: Karra, K., Kontgis, C., Statman-Weil, Z., Mazzariello, J.C., Mathis, M.,
+  Brumby, S.P. (2021). "Global land use/land cover with Sentinel-2 and deep
+  learning." IGARSS 2021. Impact Observatory/Microsoft/Esri (2023, atualizado
+  anualmente). "Sentinel-2 10m Land Use/Land Cover Time Series."
+- Resolução: 10 m; células MGRS GZD (3 caracteres) 36K e 36L, DERIVADAS da AOI por
+  amostragem de grade com a biblioteca `mgrs` (a AOI cruza a fronteira de banda de
+  latitude K/L em -16.00°) e confirmadas por listagem do bucket S3 e leitura de
+  janela; recorte da AOI + margem de 2000 m em EPSG:32736 (CRS nativo dos tiles),
+  via leitura em janela GDAL /vsicurl/ (o tile inteiro da célula, ~200-250 MB, NÃO
+  foi mirrorado)
+- Nível geográfico: recorte da AOI Tete-Moatize
+- Anos cobertos: 2017-2024 (observado). 2025 não publicado no bucket em 2026-09-08.
+
+
+---
+
+<!-- fonte: data/provenance_parts/app_fase4.md -->
+
+## Fase 4 — artefatos do app (`data/processed/app/` e `app/src/content/`)
+
+### `data/processed/app/imagery/` — camadas para a web
+
+- **Gerado por:** `pipeline/05_app/build_web_assets.py`, alvo `app-data` do Makefile.
+- **Selo:** derivado de `data/processed/imagery/`; nenhum dado novo é medido.
+- **Nível da fonte:** A (deriva apenas de `data/processed/`).
+- **Transformações, todas declaradas em `DECISOES.md` e `manifest.json` locais:**
+  reprojeção EPSG:32736 → EPSG:4326 (RFC 7946, sem membro `crs`); precisão de coordenada
+  truncada a 6 decimais (~0,1 m); simplificação Douglas-Peucker adaptativa em EPSG:32736,
+  com tolerância escolhida por busca gulosa e **teto de 1 % de erro de área** declarado em
+  `config/tolerances.yaml → app_geometria_simplificacao`.
+- **Erro de área medido, arquivo a arquivo: 0,0000 %.** Conferido de forma independente
+  pelo orquestrador comparando a área original em EPSG:32736 com a versão web reprojetada
+  de volta: diferença de **+0,0004 % a −0,0007 %**, contagem de feições idêntica.
+- **Volume:** 367 MB → 25 MB. O inchaço era **precisão de coordenada**, não complexidade
+  geométrica — 15 dígitos por número em UTM.
+- **`cultivo_sequeiro` é entregue como grade de 1 km**, não como 42 mil polígonos. Não é
+  economia de bytes: com acurácia do usuário 0,000 (`docs/ADR/0012`), polígono comunica
+  "objeto detectado" e grade comunica "candidato agregado". A forma da representação passa
+  a coincidir com a confiança do dado.
+- **`vegetacao` e `solo_exposto` excluídos:** não são camadas de mapa de §6 e carregam a
+  instabilidade de 32× a 41× de `docs/ADR/0013`.
+
+### `app/src/content/metodologia.json` — página de metodologia
+
+- **Gerado por:** `pipeline/05_app/gerar_metodologia.py`, com carimbo `gerado_por`.
+- **Fontes:** `PROVENANCE.md`, `data/DATA_AUDIT.md`, `docs/ADR/*` e **`uv.lock`**.
+- **Nunca redigido à mão** (§6-A). As versões de biblioteca são extraídas do lockfile;
+  `pipeline/tests/test_transparencia_metodologica.py` reprova versão divergente.
+
+### Decisão de animação temporal
+
+O slider faz **troca dura de ano ou crossfade de opacidade, nunca interpolação de
+geometria**. A identidade pixel a pixel de `urbano` troca 31 % a 54 % entre anos-âncora
+(`docs/ADR/0013`): animar isso exibiria instabilidade de classificação como movimento no
+terreno, e movimento persuade mais que número.
+
+### Ressalvas que o app exibe onde o número aparece, não em página separada
+
+Comissão de `urbano` (37,5 %–71,4 %, com **IC95 de ±0,20 e prevalência de 0,5–1,9 %**, e a
+nota de que **nenhum dos 15 pares de anos-âncora tem IC95 sem sobreposição** — a variação
+entre anos não é distinguível de ruído); catraca R2 e incapacidade de detectar contração;
+churn de 31 %–54 % junto à tipologia e à matriz de transição; piso de inferência
+p = 1/6 ≈ 0,167 ao lado de qualquer p; veredito CONTRAFACTUAL NÃO SUSTENTADO nas quatro
+quebras; proibição de atribuir a queda de luz de 2022 à mina (`docs/ADR/0015`).
+
+### O que §6 pede e o app NÃO entrega, declarado em vez de simulado
+
+- **Anéis periurbanos por ano e modo "transições":** o dado não existe
+  (`logit_conversao_status.csv` = NÃO DETERMINÁVEL). O app declara a ausência no painel de
+  camadas em vez de desenhar geometria plausível.
+- **Swipe com WSF/GHSL:** essas camadas não foram preparadas para consumo web.
+
+
+---
+
+<!-- fonte: data/provenance_parts/arbitragem_p1_2022.md -->
+
+# Arbitragem — placebo espacial P1, quebra de 2022 (S_HARM_soma)
+
+- **Data:** 2026-09-08
+- **Papel:** segunda opinião obrigatória da Fase 3 (`docs/DESENHO_FASE3.md` §3.1) e arbitragem pedida em `ORCHESTRATION_LOG.md` 3-10.
+- **Lido:** `docs/DESENHO_FASE3.md` (§0–§11), `pipeline/03_causal/placebos.py`, `data/processed/causal/{placebos,its_quebras,veredito_fase3,did_efeitos,did_sintetico_pesos,serie_luzes_anual}.csv`, `docs/ADR/0013`, `docs/ADR/0014`, log 3-09 e 3-10.
+- **Nada foi alterado** em `pipeline/`, `data/processed/`, `docs/`.
+
+## 0. O fato que muda a pergunta
+
+A pergunta foi posta como "Tete cai enquanto as cinco capitais sobem". A série já publicada em
+`serie_luzes_anual.csv` (coluna `soma_radiancia_adm2_int_recorte`, sensibilidade exigida por E6)
+mostra que **a queda de 2022 não está na cidade de Tete**:
+
+| 2021→2022, log-% | valor |
+|---|---|
+| Retângulo AOI (série primária) | **−6,2 %** |
+| ADM2 `MZ0501` Cidade de Tete ∩ recorte (cobertura 0,845) | **+0,7 %** |
+| Resto do retângulo (= Moatize + mina + corredor; 2 207 km² dos 2 494) | **−13,6 %** |
+
+Dentro da cidade a luz não cai em 2022; cai **fora** dela, no lado do retângulo onde ficam
+a mina e a vila de Moatize. A `max_radiancia` cai 63,7→49,9 no mesmo ano (E5) — o pixel mais
+brilhante da AOI é, com toda a probabilidade, a planta de beneficiamento, não um bairro. E o
+recorte de Tete tem 2 494 km² contra ~1 000–1 090 km² dos cinco controles: é o único dos seis
+que **contém uma pegada industrial de escala** dentro da geometria.
+
+A decomposição obrigatória de §2.3 ("dentro da pegada `industrial` / `urbano` fora da pegada /
+resto — sem isso, uma queda de luz por fechamento de planta seria lida como queda de atividade
+urbana") **não foi produzida**: não existe artefato em `data/processed/causal/` e nenhum script
+de `pipeline/03_causal/` referencia a pegada. O desenho previu exatamente esta confusão e a
+proibiu; a execução pulou a etapa.
+
+Segundo fato: "Tete cai" é um ponto. 2023 +14,4 %, 2024 +3,6 %, 2025 +7,4 %; a soma de 2025
+(9 366) está 19 % acima da de 2021. O que é verdade é **mais fraco**: Tete cresce 19 % (AOI) ou
+37 % (ADM2) entre 2021 e 2025 enquanto os controles crescem 40–61 %, partindo de tendências
+pré quase planas (b1 = −0,016 a +0,036) contra 0,072 de Tete. O b2 positivo dos cinco controles
+é uma **aceleração comum a partir de 2021** (+13 %, +13 %, +3 %, +5 %, +13 % já em 2021), que o
+modelo com t0 = 2022 aloca em nível + inclinação. Cinco capitais não tratadas acelerando em
+uníssono de ~0 para ~13 %/ano em 2021–2025 é choque nacional ou produto (V2 estendido a 2025,
+Dataverse V10) — em qualquer dos casos, não é contrafactual de Tete.
+
+## 1. Veredito de P1 em 2022: manter, rever ou indeterminado?
+
+**A favor de manter "FALHA".** A regra foi escrita antes do dado; o código (`placebos.py:185`)
+implementa a disjunção b2-OU-b3 de forma literal; o ramo b3 dispara. Qualquer revisão depois
+de ver que a regra reprova o resultado desejado é especificação procurada — o próprio
+orquestrador o disse em 3-10. Manter o veredito custa nada e preserva o pré-registro.
+
+**A favor de rever para "passa".** O ramo b3 não testou nada: 0,5 × |0,0083| = 0,0042 é
+satisfeito por qualquer inclinação positiva. Um teste que não pode reprovar não é teste. E o
+próprio desenho, em E8 (escrito **antes** de estimar placebos), declara que a inclinação pós
+de 2022 é **"não estimável com 4 pontos"**. Aplicar a P1 um coeficiente que o pré-registro já
+declarou não estimável não é seguir a regra; é violar E8. Só pelo ramo b2, zero controles
+replicam e P1 "passa".
+
+**A favor de "indeterminado".** Mesmo restringindo a b2, o que P1 compararia é a soma sobre
+um retângulo com mina contra somas sobre retângulos sem mina. A divergência de sinal em b2
+some quando a geometria é a cidade (ADM2: +0,7 %). P1 não está medindo "Tete vs. controles";
+está medindo "mina de Moatize vs. cinco cidades". O teste está mal-posto em geometria, e um
+teste mal-posto não passa nem falha.
+
+**Conclusão: "não estimável — motivo", que é veredito admissível por §4.5, e não "FALHA" nem
+"passa".** Motivo em uma linha: *o ramo b3 é vazio por E8 e o ramo b2 compara geometrias não
+comparáveis sem a decomposição de §2.3*. "FALHA" está errado (o teste não reprovou Tete;
+reprovou a si mesmo). "Passa" está errado (P1 pelo ramo b2 passaria por um artefato de
+recorte). Registrar "FALHA" no artigo levaria o leitor a crer que os controles replicaram a
+queda de Tete, o que é o oposto do que os dados mostram.
+
+## 2. O defeito é genuíno? É do critério ou da aplicação?
+
+**Genuíno, e é do critério — mas já estava coberto por uma cláusula pré-registrada que a
+aplicação ignorou.** Duas camadas:
+
+- **Critério:** "≥ 50 % da magnitude de Tete" é um teste de razão cujo denominador pode ser
+  zero. Quando o coeficiente de referência é indistinguível de zero, a razão é indefinida e
+  qualquer valor a satisfaz. É a mesma família de defeito de `docs/ADR/0014` (limiar relativo
+  a denominador que colapsa), agora num critério estatístico. O desenho tinha à mão a
+  ferramenta que faltou: em P2 (§4.2) o mesmo teste exige "IC95 que exclua zero" — em P1
+  (§4.1) não. A assimetria é inexplicada e é a raiz.
+- **Aplicação:** §4.1 diz "quebra do mesmo sinal e de magnitude ≥ 50 % da de Tete" sem nomear
+  coeficiente. A leitura "b2 OU b3" é uma escolha de implementação (`placebos.py:185`),
+  coerente com §4.2, mas **incompatível com E8**, que exclui b3 de 2022 como estimável. A
+  aplicação usou um coeficiente que o próprio pré-registro tinha retirado da mesa.
+
+Portanto: defeito de critério (denominador nulo) + erro de aplicação (ignorar E8). Nenhum dos
+dois é "leitura do orquestrador": a leitura está correta.
+
+## 3. Um conserto agora é lícito?
+
+**Regra geral: não.** Corrigir o critério depois de ver que reprova o resultado atraente é a
+definição de especificação procurada, independentemente de a correção ser "óbvia".
+
+**Condições que tornariam uma emenda defensável, e se estão presentes:**
+
+| Condição | Presente? |
+|---|---|
+| (a) A correção deriva de uma cláusula **já pré-registrada** antes do resultado, não de uma ideia nova | **Sim** para o ramo b3: E8 (2022: inclinação pós não estimável) antecede a estimação dos placebos. Aplicá-lo é cumprir o pré-registro, não emendá-lo |
+| (b) A correção é **neutra quanto ao resultado**: aplicada a todas as quebras, não só à que incomoda | Aplicando "ramo só sobre coeficiente estimável e com IC que exclua zero" a 2005, 2011, 2016 e 2022: 2005 (1 replica) continua "passa"; 2011 (Tete b2 IC inclui zero; b3 exclui) — cai a 3 replicas em b3 (Chimoio, Lichinga, Xai-Xai), continua FALHA; 2016 continua FALHA (5 em b2); 2022 vai a 0 em b2. **Neutra em três de quatro; muda só a que degenera** |
+| (c) A emenda é **datada, declara que o autor viu o dado**, e mantém o veredito original legível ao lado | Exigido por §10; fácil de cumprir |
+| (d) A emenda **não produz resultado causal publicável** que antes não existia | **Sim**: F3 e F4 já disparam para B_luz_HARM 2022 (RMSPE pré > ½ DP; sintético = Inhambane com peso 1,0); DiD −0,12 com IC [−0,276; +0,035]; p de permutação 0,333. O contrafactual de 2022 está "NÃO SUSTENTADO" por critérios que não dependem de P1. Um P1 "passa" não reabilita nada |
+
+**Veredito sobre licitude:** aplicar E8 ao ramo b3 é lícito porque não é emenda — é execução
+de cláusula anterior. **Acrescentar** "IC que exclua zero" a P1 (espelhando P2) é emenda
+genuína: lícita só como **emenda datada, declarada pós-dado, aplicada às quatro quebras, com
+os dois vereditos (original e emendado) publicados lado a lado** e com a demonstração (b)
+de que só altera a quebra degenerada. Recomendo fazê-la assim, e nunca substituindo o
+veredito original no CSV: coluna nova `veredito_emenda2`, não sobrescrita.
+
+O que **não** é lícito: reformular P1 para "b2 apenas" porque em 2022 b2 dá o resultado
+atraente. Isso escolhe o coeficiente pelo resultado.
+
+## 4. A divergência de sinal em 2022 é substantiva ou artefato?
+
+Argumento por explicação alternativa, em ordem de força:
+
+1. **Geometria (E6) — explica a queda de Tete quase por inteiro.** A queda está fora do ADM2
+   (−13,6 %) e ausente dentro (+0,7 %). Sem a decomposição de §2.3, o que se pode dizer é que
+   a luz da parte não-urbana do retângulo (mina, Moatize, corredor) caiu em 2022. Isso é
+   coerente com a transição Vale→Vulcan (venda concluída abr/2022) e pode ser resultado — mas
+   é resultado **sobre a pegada minerária**, não sobre "Tete". Como afirmação sobre a cidade,
+   é **artefato de recorte**.
+2. **Aceleração comum dos controles a partir de 2021** — explica o b2 positivo deles. Cinco
+   capitais a centenas de km acelerando em uníssono de ~0 para 10–25 %/ano é choque nacional
+   (expansão da rede EDM, pós-Covid) ou comportamento do produto V2 nos anos de extensão
+   (2023–2025 são anos recentes do V10). Tete também acelera em 2023 (+14,4 %). A "divergência
+   de sinal" é em boa parte "Tete já crescia a 7 %/ano e não acelerou; os outros partiram do
+   zero e aceleraram".
+3. **Costura DMSP→VIIRS (E4)** — fora da janela; **não** explica 2022. Concordo com E5.
+4. **Queda do máximo (E5)** — o argumento "soma sobe com máximo caindo = dispersão" é correto
+   para 2023–2025, mas em **2022** a soma **e** o máximo caem juntos (−6,2 % e 63,7→49,9). Em
+   2022 especificamente, E5 não separa produto de economia; separa só a partir de 2023. E o
+   pixel máximo estar fora do ADM2 reforça que é a planta.
+5. **P2 (2019)** passou por 2 pontos percentuais: b2 do placebo = −0,087, 48 % do real, com IC
+   que exclui zero e b3 = −0,054 também significativo. O modelo segmentado encontra "quebra"
+   negativa em 2019 quase tão grande quanto a de 2022. A datação é frágil.
+6. **p mínimo 1/6.** Rank 2 de 6, p = 0,333. Nada aqui atinge significância por permutação, e
+   HAC com T = 13 sub-cobre (§2.2.4).
+
+**Conclusão:** como afirmação "Tete diverge dos controles em 2022", **não há resultado
+defensável**. O que sobrevive é descritivo e mais estreito: (i) a luz na parte do retângulo
+fora da cidade de Tete caiu ~14 % em 2022 e não recuperou o ritmo anterior (2025 ≈ 2023);
+(ii) a luz da cidade (ADM2) não caiu em 2022 e cresceu 37 % em 2021–2025, abaixo dos controles
+(40–61 %). (i) só vira afirmação sobre a mina depois da decomposição de §2.3. (ii) é comparação
+bilateral sem contrafactual sustentado (F3, F4).
+
+## 5. ADR?
+
+**Sim — um ADR, decidindo quatro coisas:**
+
+1. **Regra geral de critérios relativos:** nenhum teste "≥ x % da magnitude de referência" é
+   aplicado a coeficiente cujo IC95 inclua zero ou que o desenho declare não estimável; nesse
+   caso o ramo é "vazio" e o veredito, se todos os ramos forem vazios, é "não estimável".
+   Aplicado retroativamente a P1 e P2 nas quatro quebras, com os dois vereditos publicados.
+2. **P1-2022: veredito reclassificado de "FALHA" para "não estimável — ramo b3 vazio (E8);
+   ramo b2 sem decomposição de §2.3"**, com o "FALHA" original mantido em coluna própria.
+3. **A decomposição de luz de §2.3 é pré-requisito** de qualquer frase sobre 2022, e sua
+   ausência é registrada como etapa não executada (não "não estimável": a pegada existe em
+   ADR 0011/0014). Até ela existir, a quebra de 2022 é publicada só com a série ADM2 ao lado.
+4. **Sétima ocorrência do padrão "denominador que colapsa"** (ADR 0014 lista seis), primeira
+   num critério estatístico — registrada como lição, com a assimetria P1/P2 como causa.
+
+O ADR **não** decide que 2022 é resultado. Decide que o teste estava mal-posto e que a
+afirmação sobre a cidade não sobrevive à sensibilidade de geometria já publicada.
+
+## Custo
+
+Fase 3, camada `03_causal`: (a) coluna `veredito_emenda2` em `placebos.py` (< 1 h);
+(b) decomposição de §2.3 — soma de radiância por máscara `industrial`/`urbano`/resto, 13 anos
+× 3 recortes, com a pegada de ADR 0011/0014 reamostrada a ~500 m (1 sessão); (c) ADR (< 1 h).
+Nada volta à Fase 1 ou 2.
+
+
+---
+
+<!-- fonte: data/provenance_parts/causal_fase3.md -->
+
+# Fase 3 — Proveniência de §5.4 (causal), §5.5/§5.6.7 (cenários) e §5.6.4 (logit)
+
+Autor: subagente `desenho-causal`. Data: 2026-09-08.
+Documento vinculante: `docs/DESENHO_FASE3.md` (pré-registro de 2026-09-08) **mais a
+EMENDA 1 (§11 do mesmo arquivo, datada 2026-09-08)**. A emenda foi escrita **depois** de
+ver a série de luzes e antes de qualquer estimação; a declaração exigida pelo §10 do
+pré-registro está no cabeçalho da emenda. Nenhuma afirmação de §0–§9 foi reescrita: as
+afetadas estão marcadas em linha com `⟨EMENDADO 2026-09-08 · E#⟩`.
+
+## 1. Fontes usadas nesta fase
+
+| Série | Fonte | Nível | Selo | Papel |
+|---|---|---|---|---|
+| `S_HARM_soma` | **Chen, Z., Yu, B. et al. (2021)**, *ESSD* 13:889–906, DOI `10.5194/essd-13-889-2021`; dataset Harvard Dataverse `10.7910/DVN/YGIVCD` (CC0) | A | observado | quebras de 2016 e 2022 |
+| `S_WSF_taxa` | DLR World Settlement Footprint Evolution, 30 m, 1985–2015 | A | observado | quebras de 2005 e 2011 |
+| geometria | HDX COD-AB ADM2 (cruzamento por nome + província, nunca por P-code) | A | observado | unidades |
+| população-base dos cenários | HDX COD-PS ADM2, vintage 2017 (observado) e 2025 (projeção do INE) | A | 2017 observado / 2025 **modelado** | §5.5 |
+| várzea e `urbano_2025` | classificação própria (§5.1) + HAND | A | observado, **com catraca R2** | zona de proteção |
+
+**Aviso de nomenclatura, deliberado.** Os arquivos em `data/raw/` têm prefixo
+`viirs_like_li2020_v2_*`. É **herança de erro** de uma delegação anterior: o produto é o de
+Chen/Yu, **não** o de Li et al. 2020 (`10.1038/s41597-020-0510-y`), que é um harmonizado
+distinto. `data/raw/` não foi editado por este subagente; os `.meta.json` já trazem a
+citação correta. Nenhuma saída desta fase cita Li et al. 2020.
+
+## 2. O que a emenda mudou, em uma linha cada
+
+- **E1** — os pré-requisitos (i) luzes e (ii) tiles WSF dos controles foram satisfeitos; **(iii) a série anual de NDVI de paisagem não foi construída**, e por isso P4 continua descritivo.
+- **E2** — `S_HARM` sobe de nível B ("só validação") para **A** e vira a série primária de luz.
+- **E3** — a premissa 4 (conciliar DMSP↔VIIRS por sobreposição própria) tornou-se **impossível**: VNL rebaixado a B, DMSP excluído em C. A conciliação existe, mas é interna ao produtor e **não auditável por este pipeline**.
+- **E4** — **achado novo:** a costura DMSP→VIIRS é visível no dado (as seis áreas colapsam em `n>0` em 2012–2013 e todas se recuperam). Janela homogênea das luzes = **2013–2025**; pré-janela de 2016 cai de 4 para **3** pontos; 2011–2012 não servem de base pré-tratamento; **2005 e 2011 perdem qualquer corroboração de luz**.
+- **E5** — a ressalva sobre 2022 **enfraquece e é reclassificada, não apagada**: a soma sobe em 2023–2025 enquanto o máximo cai, o que é dispersão da luz e não reescalonamento do produto. Continua obrigatória em toda figura da quebra de 2022, como "quebra de produto não descartada, com evidência direcional contra ela".
+- **E6** — a regra de geometria por polígono ADM2 **não é executável**: os recortes espelhados são retângulos e cobrem 0,182 (Lichinga) a 1,000 (Chimoio) do ADM2 respectivo. A geometria primária passa a ser o **recorte fixo**, e ADM2 ∩ recorte vira sensibilidade, sempre com a fração de cobertura ao lado.
+- **E7** — nada é afrouxado: F1–F7 como escritos, piso de p = 1/6, §8 inteiro, H4/H5/H6 rebaixadas.
+
+## 3. Determinismo
+
+`config/seeds.yaml`: controle sintético `13579` (20 partidas SLSQP determinísticas, a
+primeira uniforme e 19 de uma Dirichlet semeada); wild cluster bootstrap `97531`, 1000
+reamostragens; `logit_espacial.seed: 24680` **reservada e não usada** (§5.6.4 bloqueado).
+Nenhuma etapa depende de estado de sessão; ordem no alvo `causal` do Makefile.
+
+## 4. Aviso obrigatório sobre a inferência
+
+Com `T ≤ 23` (WSF) e `T = 13` (luzes), o HAC **sub-cobre**: os IC publicados são **piso**
+de incerteza, não teto. Com 1 tratado e 5 doadores o **p mínimo por permutação é 1/6 ≈
+0,167** — nenhum resultado desta fase atinge significância convencional, e isso é aritmética
+do pool, não fraqueza do efeito. Qualquer `p < 0,05` que apareça vem de inferência
+assintótica sobre 6 clusters e está marcado como não confiável.
+
+## 5. Causalidade reversa luz ↔ população
+
+Declarada e **não resolvida**. Não há instrumento nesta AOI. O desenho proibiu resolver por
+defasagem ou por VAR/Granger com esta amostra, e a proibição foi respeitada: as
+elasticidades são reportadas como **associação por fase**, com a contagem de pontos na mesma
+célula.
+
+## 6. Extrapolação do GHSL
+
+Nenhuma época GHSL 2025/2030 foi usada como âncora, série ou insumo de cenário. Os cenários
+partem de COD-PS 2025 (projeção do INE, marcada `modelado`) e da classificação própria de
+2025, não do GHSL.
+
+
+---
+
+<!-- fonte: data/provenance_parts/causal_fase3_adr0015.md -->
+
+# Fase 3 — Proveniência da execução do ADR 0015 (Emenda 2 do desenho)
+
+Autor: subagente `desenho-causal` (§5.4, §5.5, §5.6.4, §5.6.7). Data: **2026-09-08**.
+Documento vinculante: `docs/ADR/0015` e `docs/DESENHO_FASE3.md` **§12 (EMENDA 2)**.
+Antecedentes: `data/provenance_parts/arbitragem_p1_2022.md` (parecer do
+`revisor-adversarial`), `ORCHESTRATION_LOG.md` 3-10 e 3-11.
+Complementa — não substitui — `data/provenance_parts/causal_fase3.md`.
+
+**Natureza da emenda, declarada de saída:** é **pós-dado**. Foi motivada por contestação
+do orquestrador ao veredito de P1 em 2022, arbitrada pelo `revisor-adversarial`, e a
+arbitragem deu **contra quem contestou**: a queda de 2022 não está na Cidade de Tete
+(2021→2022: cidade **+0,7 %**, resto do retângulo **−12,7 %**; 2021→2025: cidade
+**+45,0 %**, resto **−2,5 %**). A emenda é lícita porque **não reabilita nada** — ver §4.
+
+---
+
+## 1. O que mudou no código
+
+| Arquivo | Mudança |
+|---|---|
+| `pipeline/03_causal/placebos.py` | regra do **ramo vazio** (ADR 0015 §1) aplicada a **P1 e P2**; P1 passa a exigir IC próprio que exclua zero, como P2 sempre exigiu; colunas novas `veredito_pre_adr0015`, `mudanca_apos_adr0015`, `ramo_b2_estado`, `ramo_b3_estado`, `b2_real_ic95_inf/sup`, `b3_real_ic95_inf/sup` |
+| `pipeline/03_causal/veredito_fase3.py` | propaga `veredito_pre_adr0015` e `mudanca_apos_adr0015` para `veredito_fase3.csv` |
+| `pipeline/03_causal/decomposicao_luz.py` | **novo** — decomposição de §2.3, registrada como etapa não executada em ADR 0015 decisão 4 |
+| `Makefile` | `decomposicao_luz.py` entra no alvo `causal`, antes de `placebos.py` |
+| `docs/DESENHO_FASE3.md` | **§12, EMENDA 2** (E10, E11, E12) + três marcas `⟨EMENDADO · E10/E11⟩` em §2.3, §4.1 e §4.2 |
+
+**Nada foi sobrescrito.** O veredito pré-ADR 0015 fica em coluna própria de
+`data/processed/causal/placebos.csv` e de `veredito_fase3.csv`, ao lado do novo.
+
+**Determinismo:** nenhum passo novo é estocástico. `config/seeds.yaml` continua sendo a
+única fonte de seeds da fase e não foi alterado; `decomposicao_luz.py` não consome seed
+porque não sorteia — declarado no cabeçalho do script para que a ausência não seja lida
+como omissão.
+
+---
+
+## 2. Placebos sob a regra do ramo vazio — as quatro quebras
+
+Artefato: `data/processed/causal/placebos.csv` (colunas `veredito_pre_adr0015`,
+`veredito`, `mudanca_apos_adr0015`, linhas `unidade == AGREGADO`).
+
+| Quebra | Série | P1 pré | **P1 novo** | P2 pré | **P2 novo** |
+|---|---|---|---|---|---|
+| 2005 | `S_WSF_taxa` | passa (1 replica) | **não estimável** | passa | **não estimável** |
+| 2011 | `S_WSF_taxa` | FALHA (4) | **FALHA** (3) | FALHA | **passa** (afrouxamento; ver §3) |
+| 2016 | `S_HARM_soma` | FALHA (5) | **FALHA** (4) | não estimável | não estimável |
+| 2022 | `S_HARM_soma` | FALHA (5) | **não estimável** | passa | **não estimável** |
+
+Motivo de cada ramo vazio, com o coeficiente de referência de Tete
+(`its_quebras.csv`, variante `principal_log_HAC`):
+
+| Quebra | `b2` de Tete (IC95) | `b3` de Tete (IC95) | ramo `b2` | ramo `b3` |
+|---|---|---|---|---|
+| 2005 | −0,4024 [−1,2374; +0,4327] | +0,0636 [−0,0312; +0,1584] | vazio (IC inclui 0) | vazio (IC inclui 0) |
+| 2011 | +0,6129 [−0,0084; +1,2342] | −0,1830 [−0,3126; −0,0534] | vazio (IC inclui 0) | aplicável |
+| 2016 | −0,1516 [−0,2148; −0,0885] | −0,1233 [−0,1449; −0,1017] | aplicável | aplicável |
+| 2022 | −0,1814 [−0,2586; −0,1042] | +0,0083 [−0,0159; +0,0324] | **vazio por desenho** (ADR 0015 dec. 2/4: geometrias não comparáveis) | **vazio por E8** (inclinação pós não estimável com 4 pontos) + IC inclui 0 |
+
+### Duas divergências em relação ao parecer do revisor
+
+Registradas porque são informação sobre o **parecer**, não só sobre o código.
+
+1. **2005 não "continua passa".** O parecer previa que sim. Pela regra que ele próprio
+   propôs, os dois coeficientes de referência de Tete em 2005 incluem zero: **os dois
+   ramos ficam vazios** e P1 em 2005 é **não estimável**. Em consequência, a condição (b)
+   do parecer — "neutra em três de quatro quebras; muda só a que degenera" — **não se
+   verifica**: a regra muda **duas** das quatro quebras em P1 e **três** das quatro em P2.
+   A direção continua sendo de enfraquecimento, que é o que mantém a emenda lícita, mas
+   a demonstração de neutralidade que o parecer ofereceu não sobrevive à execução.
+2. **2016 tem 4 réplicas, não 5.** Quelimane sai: `b2` = −0,0763 com IC
+   [−0,1860; +0,0333], que inclui zero, e P1 passa a exigir IC próprio que o exclua.
+   Veredito inalterado: **FALHA**.
+
+---
+
+## 3. O único afrouxamento, e por que não é reabilitação
+
+**P2 em 2011 vai de FALHA para "passa".** O ramo que disparava era `b2`, e o `b2` real de
+Tete em 2011 (+0,613) tem IC [−0,008; +1,234] que inclui zero: não há efeito de nível a
+datar. Não reabilita a quebra de 2011 porque, independentemente de P2:
+
+- **P1 em 2011 continua FALHA** (3 controles replicam em `b3`: Chimoio, Lichinga, Xai-Xai);
+- o painel `A_area_WSF|2011` continua **"CONTRAFACTUAL NÃO SUSTENTADO"** em
+  `veredito_fase3.csv`, por critérios F que não dependem de placebo;
+- o `b2` de 2011 é ele próprio indistinguível de zero.
+
+A linha `mudanca_apos_adr0015` marca o afrouxamento em texto, no CSV, para que ninguém o
+leia como resultado.
+
+---
+
+## 4. A emenda não reabilita nada — verificado por execução
+
+`data/processed/causal/veredito_fase3.csv`, bloco `criterio_F`, após reexecução:
+
+| painel | quebra | veredito |
+|---|---|---|
+| `A_area_WSF` | 2005 | CONTRAFACTUAL NÃO SUSTENTADO |
+| `A_area_WSF` | 2011 | CONTRAFACTUAL NÃO SUSTENTADO |
+| `B_luz_HARM` | 2016 | CONTRAFACTUAL NÃO SUSTENTADO |
+| `B_luz_HARM` | 2022 | CONTRAFACTUAL NÃO SUSTENTADO |
+
+Para 2022 especificamente, F3 e F4 continuam disparando com os mesmos números de antes da
+emenda: sintético = **Inhambane com peso 1,000**; DiD **−0,12**, IC95 **[−0,28; +0,03]**,
+p de permutação **0,333** (piso do pool = 1/6 = 0,167). **H4 não é reabilitada e H6
+continua rebaixada.**
+
+---
+
+## 5. Decomposição de luz de §2.3 — executada, e o que ela permite dizer
+
+Artefatos: `data/processed/causal/decomposicao_luz_por_camada.csv` e
+`decomposicao_luz_por_camada.meta.json`. Script: `pipeline/03_causal/decomposicao_luz.py`.
+
+**Insumos.** Luz: Chen/Yu 2021 (`10.5194/essd-13-889-2021`; Dataverse
+`10.7910/DVN/YGIVCD`, CC0), 19 anos, recorte fixo `tete_aoi`, ~500 m, EPSG:4326.
+Camadas: `industrial_*`, `urbano_*`, `reassentamento_*` a 30 m, EPSG:32736, seis
+anos-âncora. **Reconciliação verificada:** a soma total por ano reproduz
+`serie_luzes_anual.csv:soma_radiancia` com diferença máxima de **0,0004**.
+
+**Não é uma partição, e este é o ponto principal.** Um pixel de luz cobre ~278 pixels de
+camada; a repartição sub-pixel é indeterminada sem premissa sobre como a luz se distribui
+dentro do pixel. Publicam-se **duas envoltórias**, nunca uma:
+
+- **piso** — radiância repartida proporcionalmente à **área** de cada classe no pixel
+  (premissa: densidade de luz uniforme; subestima classe compacta e brilhante);
+- **teto** — pixel inteiro para a classe de maior prioridade presente
+  (`industrial > urbano > reassentamento`), com qualquer fração > 0 (superestima).
+
+Razão teto/piso, mediana sobre os anos: **industrial 2,12 · urbano 1,83 ·
+reassentamento 5,21**. **Nenhum nível e nenhum share desta tabela é publicável como
+número.** Só é afirmável o que tem **o mesmo sinal nas duas envoltórias**.
+
+**Agregação e bordas.** Máscara 0/1 reamostrada para a grade da luz por **média**
+(= fração de área da célula), `rasterio.warp.reproject`, `Resampling.average` — a única
+agregação que conserva área; vizinho mais próximo perderia a classe, que é sub-pixel.
+Efeito de borda: toda fronteira de classe fica difusa em ~500 m, ordem de grandeza da
+própria vila de Moatize e maior que vários bairros de Tete. Após a agregação as camadas
+**deixam de ser mutuamente exclusivas** no pixel de luz: 22 a 32 pixels contêm duas ou
+mais classes (0 em 2000 e 2005). A prioridade do teto resolve isso por convenção, não por
+medição.
+
+**Tempo e selo.** As camadas existem só nos seis anos-âncora; a luz é anual. Máscara
+categórica não se interpola: usa-se a do **ano-âncora mais próximo** (empate → âncora
+anterior), com `distancia_anos_ate_ancora` em coluna. **Selo `observado` apenas quando o
+ano da luz é o próprio ano-âncora; `interpolado` em todos os demais.** Toda comparação
+plurianual deve ser lida na variante **`mascara_fixa_2020`**, que é invariante à mudança
+de máscara e isola variação de luz de variação de classificação.
+
+**Vieses herdados, declarados e não corrigidos** (colunas próprias no CSV):
+`urbano` carrega a catraca **R2** (ADR 0013; fração do estoque herdada da união cumulativa
+0 / 0 / 3,4 / 6,1 / 12,7 / **18,0 %** em 2000…2025) e a **comissão** de ADR 0009 (acurácia
+do usuário de `construido` **0,286–0,625**: entre 37,5 % e 71,4 % do que a máscara chama de
+construído não é construído). As duas entram **inteiras** na parcela de luz atribuída a
+`urbano`. `industrial` e `reassentamento` não têm R2 (ADR 0014), mas o limiar de
+`industrial` foi calibrado contra Maus em 2020 — a concordância de 2020 não é validação
+independente.
+
+### 5.1 O que a decomposição sustenta (máscara fixa de 2020; sinal igual nas duas envoltórias)
+
+| Afirmação | piso | teto |
+|---|---|---|
+| 2021→2022, luz na pegada `industrial` **cai** | −15,3 % | −9,8 % |
+| 2021→2022, luz em `urbano` fica **plana** (sinal ambíguo) | +2,8 % | −1,7 % |
+| 2021→2025, luz em `urbano` **cresce** | +34,7 % | +32,4 % |
+| 2021→2025, luz na pegada `industrial` **não recupera** | −13,9 % | −4,3 % |
+
+### 5.2 O que ela NÃO sustenta — a restrição que importa
+
+Contribuição de cada classe para a queda total de **−6,04 %** entre 2021 e 2022, em pontos
+percentuais do total de 2021:
+
+| classe | piso | teto |
+|---|---|---|
+| `industrial` | −1,94 pp | −2,54 pp |
+| `urbano` | +0,77 pp | −0,89 pp |
+| `reassentamento` | +0,01 pp | +0,04 pp |
+| **`resto`** (sem camada classificada) | **−4,87 pp** | **−2,64 pp** |
+
+A pegada `industrial` responde por **32 % a 42 %** da queda. O maior contribuinte isolado,
+sob as duas envoltórias, está **fora** de tudo o que o pipeline classificou. Portanto, pela
+decisão 4 do ADR 0015, **não é autorizada** a frase "a luz da mina caiu em 2022 e explica a
+queda". O que é autorizado: *"a luz na pegada industrial caiu entre 10 % e 15 % em 2022 e
+não recuperou até 2025; ela responde por cerca de um terço a dois quintos da queda do
+retângulo, e o restante está em área não classificada"*.
+
+### 5.3 Alerta de série, novo e não previsto em nenhuma emenda anterior
+
+Entre 2013 e 2025 o crescimento do total (**+123 %**) é dominado por `resto`
+(**+171 %** piso / **+427 %** teto), isto é, por pixels fora das camadas classificadas.
+Compatível com (a) dispersão espacial da luz — a leitura de E5 —, (b) assentamento novo não
+captado pela máscara de 2020 e (c) comportamento do produto Chen/Yu nos anos de extensão.
+**As três não se separam com o conjunto A disponível.** Qualquer leitura da série de luz
+como "atividade econômica da cidade" carrega esta linha junto.
+
+---
+
+## 6. Premissas frágeis desta execução
+
+1. **Repartição sub-pixel indeterminada.** Teto/piso ≈ 2 em `industrial` e `urbano`, ≈ 5 em
+   `reassentamento`. Nenhum nível é publicável; só sinal comum às duas envoltórias.
+2. **Máscara interpolada.** Fora dos seis âncoras, a classificação é de outro ano (até 3
+   anos de distância). Nenhuma quebra anual pode ser lida na decomposição.
+3. **`urbano` = catraca R2 + comissão 0,286–0,625.** A parcela de luz de `urbano` cresce em
+   parte por construção da regra de permanência, não por acender luz.
+4. **`resto` domina.** Mais de metade da radiância, e o maior contribuinte tanto da queda
+   de 2022 quanto do crescimento de 2013–2025, está fora das camadas.
+5. **Geometria do recorte.** O retângulo `tete_aoi` (2.494 km²) contém a mina; os recortes
+   de controle (~1.000–1.090 km²) não. A decomposição atenua, mas não elimina, o problema
+   que reprovou a leitura de 2022 — porque a atenuação depende de `industrial` capturar a
+   pegada, e ela cobre 76 % dos polígonos de Maus em 2025 e menos antes disso.
+6. **Prioridade do teto é convenção.** `industrial > urbano > reassentamento` foi escolhida
+   pela ordem de §2.3, não medida. Afeta 22–32 pixels por ano-âncora.
+7. **Radiância negativa zerada** como ruído do produto, sem correção de viés — decisão de
+   uma linha, declarada aqui porque não está em nenhuma emenda anterior.
+8. **O afrouxamento de P2-2011** é consequência mecânica da regra, não achado. Lido
+   isoladamente, faria 2011 parecer mais sólido; lido com P1-2011 (FALHA) e com o critério
+   F (não sustentado), não faz.
+
 
 ---
 
@@ -558,13 +1370,74 @@ WSF Evolution (DLR), que passou a caminho crítico pelo ADR 0003.
 
 ---
 
+<!-- fonte: data/provenance_parts/demografia_dashboard.md -->
+
+<!-- SECAO_DEMOGRAFIA_DASHBOARD_INICIO -->
+## Dashboard de população 1997-2025 (§5.3, Frente A)
+
+Script: `pipeline/02_metrics/demografia_dashboard.py`.
+Gerado em 2026-09-09.
+
+Produz `data/processed/demografia_serie_1997_2025.csv`: uma linha por unidade
+× ano de população, mais linhas `cagr_<a>_<b>` e `indice_base_<ano>` por
+unidade. **Não entra em `stats_by_year_by_unit.csv`** — grava direto em
+`data/processed/`, fora do circuito de fragmentos/consolidador; carrega nível
+A, B, C e `ausente` lado a lado, cada linha com o seu.
+
+Unidades: Cidade de Tete, Distrito de Moatize (reaproveitados de
+`reconstrucao_demografica.montar_nucleo()`/`montar_contexto_b_c()`, sem
+retranscrição), Província de Tete e Moçambique (soma dos ADM2 do HDX
+COD-PS por nome de província 2017/2025; parse programático do HTML do
+Censo 2007 do INE para 2007), e Vila de Moatize — um único ponto (2017,
+`selo=modelado`, `nivel_fonte=A` mas fonte GRID3, não HDX COD-PS: estimativa
+dasimétrica de terceiros, reaproveitada de
+`populacao_vila_moatize.estimar()`, nunca contagem; sem CAGR — um ponto não
+faz taxa; piso/teto e o desvio da validação cruzada em Cidade de Tete vão na
+`nota`. Ver `data/processed/populacao_vila_moatize_sensibilidade.csv` e
+`data/provenance_parts/populacao_vila_moatize.md`.
+
+### Somas verificadas nesta execução
+
+| unidade | 2017 (soma COD-PS) | 2025 (soma COD-PS) |
+|---|---|---|
+| Província de Tete | 2551824 | 3432961 |
+| Moçambique | 26899102 | 35163992 |
+
+Soma provincial 2017 confere com a "população residente" publicada pelo INE
+(2.551.826) dentro de ±5 (diferença observada:
+-2). Soma nacional 2017 diverge da
+"população residente" publicada pelo INE (26.899.105) em
++3 pessoas — divergência esperada e
+documentada em cada linha nacional do CSV (decisão do usuário de 2026-09-09:
+usar a soma do COD-PS, não o total do INE, como base nacional).
+
+### Regras de selo/nível aplicadas
+
+População: 2017 observado/A; 2025 modelado/A; 1997/2007 observado com
+nível B, C ou `ausente` conforme a fonte disponível para a unidade. Toda
+linha `cagr_*`/`indice_base_*` carrega `nivel_fonte` = pior nível das duas
+pontas e `selo` = **pior selo das duas pontas** (`_pior_selo`: `modelado` se
+qualquer ponta for `modelado`; `interpolado` se nenhuma for `modelado` mas
+alguma for `interpolado`; `observado` só se as duas forem). Não é uma regra
+em função do ANO: a primeira versão desta regra dizia `selo = modelado`
+sempre que uma ponta fosse 2025, e coincidia com o executado enquanto a
+única origem de valor modelado fosse a projeção do INE para 2025 — errou no
+primeiro caso em que não era, a Vila de Moatize (2017, `selo=modelado` por
+ser estimativa dasimétrica sobre GRID3, não por ser 2025), cujo índice teria
+saído `observado` pela regra por ano.
+
+<!-- SECAO_DEMOGRAFIA_DASHBOARD_FIM -->
+
+
+---
+
 <!-- fonte: data/provenance_parts/demografia_fase2.md -->
 
 <!-- SECAO_DEMOGRAFIA_FASE2_INICIO -->
 ## Reconstrução demográfica e domiciliar (§5.3, Fase 2)
 
 Script: `pipeline/02_metrics/reconstrucao_demografica.py`.
-Gerado em 2026-09-08.
+Gerado em 2026-09-09.
 
 ### Núcleo A — o que existe
 
@@ -700,7 +1573,9 @@ Tentativa 4. Rastreabilidade de arquivos efetivamente baixados para `data/raw/`.
   NÃO.** Verificação direta: o TOTAL da linha "T O T A L" do Quadro 3 da província de Tete
   (2017) é **2.551.826** — exatamente igual à "População Residente" (não ajustada) do
   quadro nacional, e não aos 2.648.941 ajustados. Logo, **307.338 (Cidade de Tete) e 260.843
-  (Distrito de Moatize) são contagens residentes, sem o ajuste de omissão de 3,7-3,8%
+  (Distrito de Moatize) são contagens residentes, sem o ajuste de omissão — 3,8% na Província de Tete
+  (a taxa pertinente a estas unidades) e 3,7% no total nacional: duas taxas de
+  unidades diferentes, NÃO uma faixa de incerteza de uma só grandeza
   aplicado.** Isso é relevante para H1 e para qualquer comparação com o total oficial do
   país: os números distritais publicados sistematicamente subestimam a população "real"
   estimada pelo INE em cerca de 3-6% a mais, dependendo da província.
@@ -767,7 +1642,7 @@ de H1, com selo "não verificado em fonte primária".
 **parcialmente respondível, com lacuna séria na ponta 1997.** Os anos-âncora 2007 e 2017
 estão confirmados em fonte primária (Cidade de Tete: 155.870 em 2007, 307.338 em 2017;
 Distrito de Moatize: 215.092 em 2007, 260.843 em 2017 — todos não ajustados pela taxa de
-omissão de 3,7-3,8%). O ano-âncora 1997 **não foi confirmado em fonte primária** (busca
+omissão de 3,8% da Província de Tete; a nacional, 3,7%, é outra grandeza). O ano-âncora 1997 **não foi confirmado em fonte primária** (busca
 exaustiva no Wayback, ver seção acima) — os valores de §8 (101.984 e 109.103) continuam
 como citação de agregador, não verificável. Isso significa que a CAGR pré-2005 (ponta do
 H1) só pode ser calculada com um número não verificado, o que deve ser declarado
@@ -796,6 +1671,26 @@ não resolvida.
 2. Confirmação cartográfica de mudança de limites do Distrito de Moatize 1997→2007→2017
    (fora do escopo desta busca textual).
 3. Origem do número 305.722 (não localizado em nenhum documento primário consultado).
+
+---
+
+## RECONCILIAÇÃO — 2026-09-08
+
+A avaliação acima trata **H1 na formulação original, em população** ("aceleração de ~4 %/ano
+para ~7 %/ano"), e a classifica como "parcialmente respondível, com lacuna séria na ponta
+1997". Duas decisões posteriores mudam isso:
+
+- **`docs/ADR/0003`** reformulou H1 em termos de **área construída**, não de habitantes,
+  precisamente porque o Censo de 1997 não existe em fonte acessível. A formulação em
+  população **não é mais a hipótese do estudo**.
+- **A emenda de 2026-09-08 ao `docs/ADR/0008`** restringe ainda mais a formulação em área:
+  ela vale sobre **taxa de primeira detecção**, não sobre estoque, porque nem a classificação
+  própria (regra R2) nem o WSF Evolution (formato do dado) fornecem estoque sem
+  monotonicidade imposta.
+
+O conteúdo factual deste fragmento — licenças, âncoras verificadas, o que existe e o que não
+existe — **permanece válido**. O que caducou é a avaliação de testabilidade de H1, que foi
+feita antes das reformulações.
 
 
 ---
@@ -1034,6 +1929,24 @@ tentativas, igual a `ine.gov.mz`. Era a via mais promissora para 1997 e 2007 por
 porque o GPW publica os dados de entrada por unidade administrativa. Não foi falha de busca:
 o servidor não responde. **Retomar quando voltar.**
 
+---
+
+## RECONCILIAÇÃO — 2026-09-08 (revisão de `data/DATA_AUDIT.md`)
+
+Acima está escrito que a pergunta 6 passa de "não respondível" para **"respondível com
+ressalva de selo"**, graças à ponta de 2025 do COD-PS. A revisão do `data/DATA_AUDIT.md` de
+2026-09-08 acrescenta duas restrições que este fragmento não podia conhecer:
+
+1. **O par 2015–2020 da série própria de área está contaminado** pelo colapso do pool de
+   treino em 2015 (`docs/ADR/0013`), e **não pode ancorar magnitude de bust**. As séries de
+   luzes noturnas (VIIRS e DMSP) passam a ser a via primária pós-2015.
+2. **A circularidade de H4 é dos dois lados**, não de um: a população de 2025 é projeção
+   modelada **e** a série de `urbano` é catraca por R2. Usar as duas juntas confirmaria o
+   descolamento população–luz por construção.
+
+O achado central deste fragmento — que o HDX COD-PS torna 2017 publicável em nível A por um
+segundo caminho, com licença própria e verificável — **permanece válido e não é afetado**.
+
 
 ---
 
@@ -1141,6 +2054,168 @@ o servidor não responde. **Retomar quando voltar.**
 
 ---
 
+<!-- fonte: data/provenance_parts/fase3_auditoria_t3.md -->
+
+# Fase 3 — Proveniência da auditoria de classificação (T3)
+
+Complementa `data/provenance_parts/fase3_coleta_t2_proveniencia.md` com o selo de
+nível A/B/C que faltava (a coleta registrou apenas `.meta.json` com
+`"level": "nao classificado - cabe ao auditor-dados"`).
+
+| arquivo/família | nível final | selo | verificado contra |
+|---|---|---|---|
+| `viirs_like_li2020_v2_*.tif` (54 recortes, AOI Tete + 5 controles) | A | observado | JSON da API do Harvard Dataverse (`metadataBlocks.citation.license`), não agregador |
+| `wsf_evolution_S20E032.tif` (Chimoio) | A | observado (pixel = ano de 1ª detecção) | `grid.geojson` do produtor DLR + página de licença geoservice.dlr.de |
+| `wsf_evolution_S18E036.tif` (Quelimane) | A | observado | idem |
+| `wsf_evolution_S14E034.tif` (Lichinga) | A | observado | idem |
+| `wsf_evolution_S26E032.tif` (Xai-Xai) | A | observado | idem |
+| `wsf_evolution_S24E034.tif` (Inhambane) | A | observado | idem |
+| `moz_admin_boundaries.geojson.zip` | A | observado | API CKAN `package_show` de data.humdata.org |
+| VIIRS VNL V2 (EOG, `eogdata.mines.edu`) | B (rebaixada de A registrada em `economicos.md`) | não obtido | evidência HTTP 302→OAuth em todas as rotas testadas, 2026-09-08 |
+| DMSP-OLS estável (NOAA/NCEI) | C — excluída | não obtido | HTTP 404 na URL de `CLAUDE.md`; via sucessora bloqueada por OAuth |
+
+## Consequência para `docs/DESENHO_FASE3.md` — premissa 4 (§1.3 item 4)
+
+O desenho pré-registrado (`docs/DESENHO_FASE3.md`, fixado 2026-09-08, §1.1 tabela e
+§1.3 item 4) previa **duas séries de luz independentes que se sobrepõem em 2012–2013**
+(`S_VIIRS_soma`, EOG, 2012–2025, nível A antes desta auditoria; `S_DMSP_soma`,
+1992–2013, nível A) para conciliar DMSP↔VIIRS por um trecho de sobreposição estimado
+**por nós**, com critério pré-registrado em §1.3.4 e §4.4 (P4) do mesmo documento; o
+harmonizado (`S_HARM`, Li et al. 2020, ali já registrado como nível **B**) estava
+reservado a "só validação, nunca sustenta número publicado" — precisamente porque a
+conciliação interna ao produtor não é verificável por nós.
+
+Esta auditoria muda o insumo, não o julgamento already escrito no desenho: `S_VIIRS_soma`
+passa de A para B (item 4 acima) e `S_DMSP_soma` passa de A para C (item 5 acima, a
+única via de acesso identificada está bloqueada e a página original é 404). **As duas
+séries que dariam a conciliação independente deixam de existir em nível A.** A única
+série de luz que permanece A é `viirs_like_li2020_v2` (Chen/Yu, Harvard Dataverse) —
+que é, ela própria, **um harmonizado produzido pelo método do produtor** (calibração
+cruzada por super-resolução/aprendizado profundo, conforme Chen et al. 2021 e extensões
+posteriores), não uma soma bruta de radiância por sensor.
+
+## Resposta direta à pergunta do orquestrador
+
+**Sim, a perda de VIIRS VNL (rebaixada a B) e de DMSP-OLS (excluída, C) torna o
+harmonizado Chen/Yu a única série de luzes de nível A disponível**, e isso **não é
+aceitável como equivalente à premissa original do desenho**, pelos seguintes motivos,
+sem eufemismo:
+
+1. A premissa 4 do desenho supunha conciliação **estimada por nós**, com erro-padrão,
+   critério de falha e placebo publicáveis (§1.3.4, §4.4 P4 do `DESENHO_FASE3.md`).
+   Usar só o harmonizado do produtor substitui isso por uma conciliação **feita dentro
+   de um modelo de terceiros** (rede neural de super-resolução, no caso de Chen et al.),
+   cujos parâmetros, dados de treino e possíveis mudanças de versão **não são auditáveis
+   por este pipeline** — é uma caixa preta de calibração, não uma calibração
+   transparente.
+2. Isso é agravado, não apenas mencionado en passant, pela descontinuidade medida pelo
+   orquestrador (70,4→49,9 entre 2020 e 2022, estável em 49,9 até 2025) **coincidindo
+   com uma janela em que terceiros documentam reprocessamento do produto para
+   exatamente os anos 2021–2022** (ver `fase3_auditoria_t3.md`, seção de licenças). Sem
+   DMSP ou VNL bruto para comparar, **não há como distinguir estatisticamente, com os
+   dados hoje em `data/raw/`, uma quebra de produto de uma quebra de economia** na
+   quebra de 2022 do desenho causal (`docs/DESENHO_FASE3.md` §1.2, linha "2022").
+3. Nenhuma fonte B pode "resolver" isso: por §4.0, B é só validação, nunca sustenta
+   conclusão. Não há, hoje, nenhuma fonte A alternativa para cross-checar o harmonizado
+   na janela 2020–2022.
+
+**Consequência declarada para o desenho causal**: a quebra de 2022 em `S_VIIRS_soma`
+(agora `S_HARM`, o único disponível) deve ser tratada, além dos quatro placebos já
+exigidos (P1–P4 de `DESENHO_FASE3.md` §4), com um **quinto aviso obrigatório e
+explícito** em qualquer figura/tabela que a publique: "não distinguível de mudança de
+versão do produtor entre 2020 e 2022 — nenhuma fonte de nível A permite verificação
+independente". Isto não é um placebo executável (não há dado para rodá-lo); é uma
+lacuna a declarar, não a maquiar, seguindo o mesmo padrão de honestidade já adotado em
+`docs/DESENHO_FASE3.md` §1.3 e §8. Recomenda-se ao orquestrador que `docs/DESENHO_FASE3.md`
+receba uma emenda datada (§10 do próprio documento) registrando esta mudança de
+disponibilidade de dado, com a declaração explícita de que o autor da emenda **já viu**
+o valor da radiância (70,4/49,9) antes de escrevê-la — exigência do próprio protocolo de
+pré-registro.
+
+
+---
+
+<!-- fonte: data/provenance_parts/fase3_coleta_t2_proveniencia.md -->
+
+# Fase 3 (T2) — fragmento de proveniência
+
+Cada linha: arquivo, URL, data de acesso, licença, citação, resolução/nível geográfico, anos cobertos.
+Status inicial PENDENTE; atualizado incrementalmente conforme cada download é tentado.
+
+| arquivo | URL | data acesso | licença | resolução/nível | anos | status |
+|---|---|---|---|---|---|---|
+| viirs_like_li2020_v2_{ano}_tete_aoi.tif — 9 anos (2000,2005,2010,2011,2015,2016,2020,2022,2025) | https://dataverse.harvard.edu/api/access/datafile/{id} (ids: 13295261,13295251,13295266,13295270,13295271,13295278,13295279,14085057,14085060) | 2026-09-08 | CC0 1.0 | ~500 m (0,004492°); recorte AOI Tete/Moatize (config/study.yaml bbox) | ano-âncora único por arquivo, cobertura da série-fonte 1992-2025 | OK — 9 arquivos, 100% sucesso |
+| viirs_like_li2020_v2_{ano}_{cidade}.tif — 5 cidades de controle (chimoio, quelimane, lichinga, xaixai, inhambane) × 9 anos = 45 arquivos | mesma fonte acima | 2026-09-08 | CC0 1.0 | ~500 m; recorte de buffer 0,15° (~15 km) em torno do centro geográfico de cada capital (coordenadas Nominatim fornecidas pelo orquestrador) | idem | OK — 45 arquivos, 100% sucesso |
+
+Método: cada ano é um GeoTIFF global (~10 GB descomprimido) dentro de um .zip comprimido
+(82–186 MB) hospedado no Harvard Dataverse. O .zip foi baixado para scratch temporário,
+lido com GDAL /vsizip/ (janela de leitura, sem descompactar o global inteiro), recortado
+para a AOI de Tete e para um buffer de 0,15° em torno de cada uma das 5 capitais de
+controle, e o .zip global foi descartado após o recorte — **o raster global nunca foi
+mirrorado em data/raw/**, só os recortes (2–6 KB cada). 54/54 recortes obtidos, 0 falhas.
+Citação: Chen, Z., Yu, B., et al. "The global NPP-VIIRS-like nighttime light data
+(Version 2) for 1992-2025." Harvard Dataverse V10. DOI: 10.7910/DVN/YGIVCD.
+
+| VIIRS annual VNL V2 (EOG, eogdata.mines.edu) | https://eogdata.mines.edu/products/vnl/ | 2026-09-08 | não obtido | não obtido — todos os diretórios de download (/nighttime_light/annual/v10,v20,v21,v22/) e os links diretos .tif.gz retornam HTTP 302 para eogauth.mines.edu (login OAuth obrigatório via conta EOG; não é acesso anônimo) | 2012-presente (não coberto) | NÃO DISPONÍVEL — requer cadastro/login (EOG account), HTTP 302→OAuth em todas as rotas testadas |
+| DMSP-OLS estável (NOAA/NCEI) | https://ngdc.noaa.gov/eog/dmsp/downloadV4composites.html | 2026-09-08 | não obtido | página do CLAUDE.md (ngdc.noaa.gov/eog/dmsp/downloadV4composites.html) responde HTTP 404 (removida; www.ngdc.noaa.gov não tem mais seção /eog/); página sucessora eogdata.mines.edu/products/dmsp/ existe (HTTP 200) mas os links de download (wwwdata/dmsp/rad_cal/*.tgz) redirecionam HTTP 302 para eogauth.mines.edu (mesmo login obrigatório do VNL) | 1992-2013 (não coberto) | NÃO DISPONÍVEL — página original 404; sucessora exige login EOG |
+| wsf_evolution_S20E032.tif (Chimoio) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_32_-20.tif | 2026-09-08 | CC BY 4.0 | 30 m; tile 2x2 graus, canto SW confirmado no grid.geojson do produtor (id 32_-20) | 1985-2015 (pixel=ano de 1a deteccao; 0=sem dado) | OK — 1.657.913 bytes, MD5 verificado contra grid.geojson do produtor |
+| wsf_evolution_S18E036.tif (Quelimane) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_36_-18.tif | 2026-09-08 | CC BY 4.0 | 30 m; tile id 36_-18 | 1985-2015 | OK — 1.635.622 bytes, MD5 verificado |
+| wsf_evolution_S14E034.tif (Lichinga) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_34_-14.tif | 2026-09-08 | CC BY 4.0 | 30 m; tile id 34_-14 | 1985-2015 | OK — 1.936.190 bytes, MD5 verificado |
+| wsf_evolution_S26E032.tif (Xai-Xai) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_32_-26.tif | 2026-09-08 | CC BY 4.0 | 30 m; tile id 32_-26 | 1985-2015 | OK — 2.629.500 bytes, MD5 verificado (1a tentativa: broken pipe, retentada com sucesso) |
+| wsf_evolution_S24E034.tif (Inhambane) | https://download.geoservice.dlr.de/WSF_EVO/files//WSFevolution_v1_34_-24.tif | 2026-09-08 | CC BY 4.0 | 30 m; tile id 34_-24 | 1985-2015 | OK — 1.626.342 bytes, MD5 verificado |
+| moz_admin_boundaries.geojson.zip (HDX COD-AB, ADM0-4 + capitais) | https://data.humdata.org/dataset/5e8d83a5-1210-49be-b7d9-cf286dbc15df/resource/f1d97232-4cb5-4083-b3cc-d192aa9bdcfe/download/moz_admin_boundaries.geojson.zip | 2026-09-08 | CC BY-IGO 3.0 (declarada via CKAN API) | polígono admin, ADM0/1/2/3/4 + pontos de capital; fonte declarada INE via OCHA | vigente (valid_on 2025-01-01, version v02) | OK — 61.310.853 bytes |
+
+P-codes ADM2 lidos diretamente do arquivo moz_admin2.geojson extraído (não do agregador, não asseridos):
+- Cidade de Tete: MZ0501 (adm1 MZ05, Tete)
+- Moatize: MZ0510 (adm1 MZ05, Tete)
+- Cidade de Chimoio: MZ0601 (adm1 MZ06, Manica)
+- Quelimane: MZ0401 (adm1 MZ04, Zambézia)
+- Cidade de Lichinga: MZ0101 (adm1 MZ01, Niassa)
+- Xai-Xai: MZ0901 (adm1 MZ09, Gaza)
+- Cidade de Inhambane: MZ0801 (adm1 MZ08, Inhambane)
+
+Nota: estes são P-codes do esquema COD-AB (geometria). Conforme config/unidades.yaml,
+o esquema COD-PS (população/HDX) usa códigos INCOMPATÍVEIS com os mesmos dígitos apontando
+para entidades diferentes — cruzamento correto é por NOME normalizado + província, nunca
+por P-code entre os dois esquemas.
+
+
+---
+
+<!-- fonte: data/provenance_parts/fatos_verificados.md -->
+
+## `paper/FATOS_VERIFICADOS.md` — folha de fatos do artigo
+
+- **Gerado por:** `pipeline/04_figures/fatos_verificados.py`, alvo `figures` do Makefile.
+- **Selo:** derivado — nenhum valor é observado aqui; todos são recalculados de
+  `data/processed/` a cada execução.
+- **Nível da fonte:** A (todos os insumos são `data/processed/`, que só contém nível A).
+- **Não editar à mão.** O arquivo é sobrescrito por `make figures`.
+
+**Insumos:** `acuracia_por_ano.csv` · `causal/estabilidade_temporal_camadas.csv` ·
+`causal/decomposicao_luz_por_camada.csv` · `causal/its_quebras.csv` ·
+`causal/veredito_fase3.csv` · `causal/placebos.csv` · `causal/serie_luzes_anual.csv`.
+
+**Por que existe (ORCHESTRATION_LOG.md 4-03 a 4-11).** A Fase 4 reprovou seis vezes por
+**afirmação relacional**: número certo, qualificador errado — mediana citada como máximo,
+acurácia citada como comissão, valor anterior à reexecução do `docs/ADR/0014` citado como
+corrente. Todas vieram do orquestrador citando de memória. O artigo da Fase 5 é a maior
+superfície de prosa do projeto e escreveria sobre os mesmos números.
+
+Cada número aqui vem com **a estatística que ele é** (faixa entre anos, mediana, máximo,
+ano único) e uma linha **"Como escrever"** que declara o que pode e o que não pode ser
+afirmado sobre ele — por exemplo, que "até N" só admite o máximo medido, jamais a mediana;
+que um p = 0,000 descreve a série de Tete mas não mede efeito do carvão; e que a queda de
+luz de 2022 está fora da cidade e **não** pode ser atribuída à mina (`docs/ADR/0015`).
+
+**Erro relacional encontrado dentro da própria folha, na sexta passagem do portão:** a
+versão inicial dizia que os quatro painéis caíam "porque o placebo espacial mostra a mesma
+quebra em capitais sem carvão" — verdadeiro em 2011 e 2016, **falso** em 2005 e 2022, onde
+P1 é *não estimável*. O motivo passou a ser lido do CSV por quebra, em vez de generalizado.
+
+
+---
+
 <!-- fonte: data/provenance_parts/figuras.md -->
 
 # Proveniência — Figuras (`pipeline/04_figures/`)
@@ -1185,7 +2260,7 @@ sha256 de cada insumo — este fragmento resume o que já está lá, não o subs
   aqui e registrada em `docs/ADR/`.
 - **Honestidade cartográfica (obrigatória, embutida na figura, não só no texto):**
   1. Legenda com advertência textual: a camada `urbano` tem acurácia do usuário
-     medida entre 0,27 e 0,63 por ano-âncora (`docs/ADR/0009`) — entre 37% e 73% do
+     medida entre 0,286 e 0,625 por ano-âncora (`docs/ADR/0009`) — entre 37,5% e 71,4% do
      que o mapa chama de construído não é. A camada é insumo classificado, não
      cadastro.
   2. Rodapé: a série temporal de área construída (não plotada nesta figura, que é um
@@ -1418,6 +2493,36 @@ Os cinco compostos e todos os índices abaixo foram gerados **depois**
 dessa correção — nenhum artefato do defeito permanece em
 `data/processed/imagery/`.
 
+## Ano-âncora 2000
+
+- **Arquivo**: `data/processed/imagery/composto_2000_30m_32736.tif`
+- **Janela temporal**: `2000-05-01T00:00:00Z/2000-10-31T23:59:59Z` (janela_anos=1)
+- **Landsat**: landsat-7, 3 cenas
+- **Sentinel-2**: não incluído (fora do complemento do ano ou sem cobertura)
+- **Observações válidas por pixel**: mínimo 0, mediana 3.0
+- **Pixels sem nenhuma observação válida**: 12 de 2785056 (0.00%)
+- **Commit**: `a81ac6b5803ff36a1dfad3dc30efb0fe22da1442`
+- **Hash de `config/study.yaml`**: `f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a`
+- **Data de processamento**: 2026-09-08T14:18:38.641595+00:00
+- **Selo**: observado
+
+IDs das cenas Landsat: LE07_L2SP_168071_20000714_02_T1, LE07_L2SP_168071_20000831_02_T1, LE07_L2SP_168071_20001002_02_T1
+
+## Ano-âncora 2005
+
+- **Arquivo**: `data/processed/imagery/composto_2005_30m_32736.tif`
+- **Janela temporal**: `2005-05-01T00:00:00Z/2005-10-31T23:59:59Z` (janela_anos=1)
+- **Landsat**: landsat-5, 4 cenas
+- **Sentinel-2**: não incluído (fora do complemento do ano ou sem cobertura)
+- **Observações válidas por pixel**: mínimo 2, mediana 4.0
+- **Pixels sem nenhuma observação válida**: 0 de 2785056 (0.00%)
+- **Commit**: `a81ac6b5803ff36a1dfad3dc30efb0fe22da1442`
+- **Hash de `config/study.yaml`**: `f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a`
+- **Data de processamento**: 2026-09-08T14:18:56.643286+00:00
+- **Selo**: observado
+
+IDs das cenas Landsat: LT05_L2SP_168071_20050517_02_T1, LT05_L2SP_168071_20050720_02_T1, LT05_L2SP_168071_20050906_02_T1, LT05_L2SP_168071_20050922_02_T1
+
 ## Ano-âncora 2010
 
 - **Arquivo**: `data/processed/imagery/composto_2010_30m_32736.tif`
@@ -1426,12 +2531,61 @@ dessa correção — nenhum artefato do defeito permanece em
 - **Sentinel-2**: não incluído (fora do complemento do ano ou sem cobertura)
 - **Observações válidas por pixel**: mínimo 0, mediana 4.0
 - **Pixels sem nenhuma observação válida**: 130 de 2785056 (0.00%)
-- **Commit**: `desconhecido (git indisponível)`
-- **Hash de `config/study.yaml`**: `7b09119f1c8660a361e9711c5145ca5e2c134f6701204e6dc400f1469e9cfdfd`
-- **Data de processamento**: 2026-09-08T00:39:40.003841+00:00
+- **Commit**: `a81ac6b5803ff36a1dfad3dc30efb0fe22da1442`
+- **Hash de `config/study.yaml`**: `f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a`
+- **Data de processamento**: 2026-09-08T14:19:14.658606+00:00
 - **Selo**: observado
 
 IDs das cenas Landsat: LE07_L2SP_168071_20100507_02_T1, LE07_L2SP_168071_20100608_02_T1, LE07_L2SP_168071_20100827_02_T1, LE07_L2SP_168071_20101014_02_T1
+
+## Ano-âncora 2015
+
+- **Arquivo**: `data/processed/imagery/composto_2015_30m_32736.tif`
+- **Janela temporal**: `2015-05-01T00:00:00Z/2015-10-31T23:59:59Z` (janela_anos=1)
+- **Landsat**: landsat-8, 10 cenas
+- **Sentinel-2**: não incluído (fora do complemento do ano ou sem cobertura)
+- **Observações válidas por pixel**: mínimo 6, mediana 10.0
+- **Pixels sem nenhuma observação válida**: 0 de 2785056 (0.00%)
+- **Commit**: `a81ac6b5803ff36a1dfad3dc30efb0fe22da1442`
+- **Hash de `config/study.yaml`**: `f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a`
+- **Data de processamento**: 2026-09-08T14:19:53.314955+00:00
+- **Selo**: observado
+
+IDs das cenas Landsat: LC08_L2SP_168071_20150513_02_T1, LC08_L2SP_168071_20150529_02_T1, LC08_L2SP_168071_20150614_02_T1, LC08_L2SP_168071_20150630_02_T1, LC08_L2SP_168071_20150716_02_T1, LC08_L2SP_168071_20150817_02_T1, LC08_L2SP_168071_20150902_02_T1, LC08_L2SP_168071_20150918_02_T1, LC08_L2SP_168071_20151004_02_T1, LC08_L2SP_168071_20151020_02_T1
+
+## Ano-âncora 2020
+
+- **Arquivo**: `data/processed/imagery/composto_2020_30m_32736.tif`
+- **Janela temporal**: `2020-05-01T00:00:00Z/2020-10-31T23:59:59Z` (janela_anos=1)
+- **Landsat**: landsat-8, 9 cenas
+- **Sentinel-2**: 103 cenas
+- **Observações válidas por pixel**: mínimo 9, mediana 31.0
+- **Pixels sem nenhuma observação válida**: 0 de 2785056 (0.00%)
+- **Commit**: `a81ac6b5803ff36a1dfad3dc30efb0fe22da1442`
+- **Hash de `config/study.yaml`**: `f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a`
+- **Data de processamento**: 2026-09-08T14:23:48.798380+00:00
+- **Selo**: observado
+
+IDs das cenas Landsat: LC08_L2SP_168071_20200526_02_T1, LC08_L2SP_168071_20200611_02_T1, LC08_L2SP_168071_20200627_02_T1, LC08_L2SP_168071_20200713_02_T1, LC08_L2SP_168071_20200814_02_T1, LC08_L2SP_168071_20200830_02_T1, LC08_L2SP_168071_20200915_02_T1, LC08_L2SP_168071_20201001_02_T1, LC08_L2SP_168071_20201017_02_T1
+
+IDs das cenas Sentinel-2: S2A_MSIL2A_20200503T073621_R092_T36KWG_20200920T071754, S2A_MSIL2A_20200503T073621_R092_T36KXG_20200920T071802, S2A_MSIL2A_20200503T073621_R092_T36LWH_20200920T071815, S2A_MSIL2A_20200503T073621_R092_T36LXH_20200920T071818, S2A_MSIL2A_20200513T073621_R092_T36KWG_20200918T001320, S2A_MSIL2A_20200513T073621_R092_T36KWG_20200918T001335, S2A_MSIL2A_20200513T073621_R092_T36KXG_20200918T001328, S2A_MSIL2A_20200513T073621_R092_T36KXG_20200918T001339, S2A_MSIL2A_20200513T073621_R092_T36LWH_20200918T001337, S2A_MSIL2A_20200513T073621_R092_T36LWH_20200918T001341, S2A_MSIL2A_20200513T073621_R092_T36LXH_20200918T001335, S2A_MSIL2A_20200513T073621_R092_T36LXH_20200918T001350, S2A_MSIL2A_20200523T073621_R092_T36KWG_20200910T155537, S2A_MSIL2A_20200523T073621_R092_T36KXG_20200910T155551, S2A_MSIL2A_20200523T073621_R092_T36LWH_20200910T155602, S2A_MSIL2A_20200523T073621_R092_T36LXH_20200910T155605, S2A_MSIL2A_20200602T073621_R092_T36LWH_20200825T200719, S2A_MSIL2A_20200602T073621_R092_T36LXH_20200825T200721, S2A_MSIL2A_20200622T073621_R092_T36KWG_20200908T190853, S2A_MSIL2A_20200622T073621_R092_T36KXG_20200908T191021, S2A_MSIL2A_20200622T073621_R092_T36LWH_20200908T191748, S2A_MSIL2A_20200622T073621_R092_T36LXH_20200908T191924, S2A_MSIL2A_20200712T073621_R092_T36KWG_20200912T215411, S2A_MSIL2A_20200712T073621_R092_T36KWG_20200912T215421, S2A_MSIL2A_20200712T073621_R092_T36KXG_20200912T215419, S2A_MSIL2A_20200712T073621_R092_T36KXG_20200912T215428, S2A_MSIL2A_20200712T073621_R092_T36LWH_20200912T215438, S2A_MSIL2A_20200712T073621_R092_T36LWH_20200912T215443, S2A_MSIL2A_20200712T073621_R092_T36LXH_20200912T215441, S2A_MSIL2A_20200712T073621_R092_T36LXH_20200912T215450, S2A_MSIL2A_20200722T073621_R092_T36KWG_20200817T020801, S2A_MSIL2A_20200722T073621_R092_T36KXG_20200908T191022, S2A_MSIL2A_20200722T073621_R092_T36LXH_20200817T020828, S2A_MSIL2A_20200801T073621_R092_T36KWG_20201027T083643, S2A_MSIL2A_20200801T073621_R092_T36LWH_20200815T171202, S2A_MSIL2A_20200801T073621_R092_T36LXH_20200908T191927, S2A_MSIL2A_20200811T073621_R092_T36KWG_20200814T184913, S2A_MSIL2A_20200811T073621_R092_T36KXG_20200814T184850, S2A_MSIL2A_20200811T073621_R092_T36LWH_20200814T184841, S2A_MSIL2A_20200811T073621_R092_T36LXH_20200814T184909, S2A_MSIL2A_20200831T073621_R092_T36KWG_20200919T052429, S2A_MSIL2A_20200831T073621_R092_T36LWH_20200907T203302, S2A_MSIL2A_20200831T073621_R092_T36LXH_20200907T203139, S2A_MSIL2A_20200910T073621_R092_T36KWG_20200912T032248, S2A_MSIL2A_20200910T073621_R092_T36KXG_20200912T031437, S2A_MSIL2A_20200910T073621_R092_T36LWH_20200912T031541, S2A_MSIL2A_20200910T073621_R092_T36LXH_20200912T032250, S2A_MSIL2A_20200920T073621_R092_T36KWG_20201027T220553, S2A_MSIL2A_20200920T073621_R092_T36KXG_20201027T214743, S2A_MSIL2A_20200920T073621_R092_T36LWH_20201027T224117, S2A_MSIL2A_20200920T073621_R092_T36LXH_20201027T214710, S2A_MSIL2A_20200930T073721_R092_T36KWG_20201002T080946, S2A_MSIL2A_20200930T073721_R092_T36LXH_20201002T080902, S2A_MSIL2A_20201010T073831_R092_T36KWG_20201012T031508, S2A_MSIL2A_20201010T073831_R092_T36KXG_20201012T032006, S2A_MSIL2A_20201010T073831_R092_T36LWH_20201012T030002, S2A_MSIL2A_20201010T073831_R092_T36LXH_20201027T125105, S2A_MSIL2A_20201020T073941_R092_T36KWG_20201021T210400, S2A_MSIL2A_20201020T073941_R092_T36KXG_20201021T205233, S2A_MSIL2A_20201020T073941_R092_T36LWH_20201021T205550, S2A_MSIL2A_20201020T073941_R092_T36LXH_20201021T205220, S2A_MSIL2A_20201030T074041_R092_T36KWG_20201101T235804, S2A_MSIL2A_20201030T074041_R092_T36KXG_20201102T000300, S2A_MSIL2A_20201030T074041_R092_T36LWH_20201101T235823, S2A_MSIL2A_20201030T074041_R092_T36LXH_20201101T235804, S2B_MSIL2A_20200518T073609_R092_T36KWG_20201027T071120, S2B_MSIL2A_20200518T073609_R092_T36KXG_20200910T032436, S2B_MSIL2A_20200518T073609_R092_T36LWH_20200910T032436, S2B_MSIL2A_20200518T073609_R092_T36LXH_20201027T071121, S2B_MSIL2A_20200607T073619_R092_T36KWG_20200919T052433, S2B_MSIL2A_20200607T073619_R092_T36KXG_20200919T052438, S2B_MSIL2A_20200617T073619_R092_T36KWG_20200823T025222, S2B_MSIL2A_20200617T073619_R092_T36KXG_20201027T074459, S2B_MSIL2A_20200617T073619_R092_T36LWH_20201027T074455, S2B_MSIL2A_20200617T073619_R092_T36LXH_20200823T025229, S2B_MSIL2A_20200627T073619_R092_T36LXH_20200824T082726, S2B_MSIL2A_20200707T073619_R092_T36KXG_20200912T091123, S2B_MSIL2A_20200707T073619_R092_T36LWH_20200912T091124, S2B_MSIL2A_20200707T073619_R092_T36LXH_20201027T081734, S2B_MSIL2A_20200727T073619_R092_T36KWG_20200908T190907, S2B_MSIL2A_20200727T073619_R092_T36KXG_20200817T185010, S2B_MSIL2A_20200727T073619_R092_T36LWH_20200817T185021, S2B_MSIL2A_20200727T073619_R092_T36LXH_20200908T191927, S2B_MSIL2A_20200816T073619_R092_T36KWG_20200818T143332, S2B_MSIL2A_20200816T073619_R092_T36KXG_20200818T143242, S2B_MSIL2A_20200816T073619_R092_T36LWH_20200818T143319, S2B_MSIL2A_20200816T073619_R092_T36LXH_20200818T143328, S2B_MSIL2A_20200826T073619_R092_T36KWG_20200827T221401, S2B_MSIL2A_20200826T073619_R092_T36KXG_20200827T221205, S2B_MSIL2A_20200826T073619_R092_T36LWH_20201027T091234, S2B_MSIL2A_20200826T073619_R092_T36LXH_20200919T052629, S2B_MSIL2A_20200915T073619_R092_T36KWG_20200918T104345, S2B_MSIL2A_20200915T073619_R092_T36KXG_20200918T104323, S2B_MSIL2A_20200915T073619_R092_T36LWH_20200918T104325, S2B_MSIL2A_20200915T073619_R092_T36LXH_20200918T104315, S2B_MSIL2A_20200925T073649_R092_T36KWG_20201104T001607, S2B_MSIL2A_20200925T073649_R092_T36KXG_20201028T072056, S2B_MSIL2A_20200925T073649_R092_T36LWH_20201028T071744, S2B_MSIL2A_20200925T073649_R092_T36LXH_20201028T071754, S2B_MSIL2A_20201025T074009_R092_T36KWG_20201030T090351, S2B_MSIL2A_20201025T074009_R092_T36KXG_20201030T090339, S2B_MSIL2A_20201025T074009_R092_T36LWH_20201030T092504, S2B_MSIL2A_20201025T074009_R092_T36LXH_20201109T233238
+
+## Ano-âncora 2025
+
+- **Arquivo**: `data/processed/imagery/composto_2025_30m_32736.tif`
+- **Janela temporal**: `2025-05-01T00:00:00Z/2025-10-31T23:59:59Z` (janela_anos=1)
+- **Landsat**: landsat-9, 6 cenas
+- **Sentinel-2**: 162 cenas
+- **Observações válidas por pixel**: mínimo 32, mediana 42.0
+- **Pixels sem nenhuma observação válida**: 0 de 2785056 (0.00%)
+- **Commit**: `a81ac6b5803ff36a1dfad3dc30efb0fe22da1442`
+- **Hash de `config/study.yaml`**: `f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a`
+- **Data de processamento**: 2026-09-08T14:29:29.234284+00:00
+- **Selo**: observado
+
+IDs das cenas Landsat: LC09_L2SP_168071_20250516_02_T1, LC09_L2SP_168071_20250601_02_T1, LC09_L2SP_168071_20250804_02_T1, LC09_L2SP_168071_20250820_02_T1, LC09_L2SP_168071_20250905_02_T1, LC09_L2SP_168071_20251007_02_T1
+
+IDs das cenas Sentinel-2: S2A_MSIL2A_20250509T074021_R092_T36KWG_20250509T113013, S2A_MSIL2A_20250509T074021_R092_T36KXG_20250509T113013, S2A_MSIL2A_20250509T074021_R092_T36LWH_20250509T113013, S2A_MSIL2A_20250509T074021_R092_T36LXH_20250509T113013, S2A_MSIL2A_20250519T075451_R092_T36KWG_20250519T100916, S2A_MSIL2A_20250608T075451_R092_T36KWG_20250608T100815, S2A_MSIL2A_20250608T075451_R092_T36KXG_20250608T100815, S2A_MSIL2A_20250608T075451_R092_T36LWH_20250608T100815, S2A_MSIL2A_20250608T075451_R092_T36LXH_20250608T100815, S2A_MSIL2A_20250618T074021_R092_T36KWG_20250618T110116, S2A_MSIL2A_20250618T074021_R092_T36KXG_20250618T110116, S2A_MSIL2A_20250618T074021_R092_T36LWH_20250618T110116, S2A_MSIL2A_20250618T074021_R092_T36LXH_20250618T110116, S2A_MSIL2A_20250628T075451_R092_T36KWG_20250628T102909, S2A_MSIL2A_20250628T075451_R092_T36KXG_20250628T102909, S2A_MSIL2A_20250628T075451_R092_T36LWH_20250628T102909, S2A_MSIL2A_20250628T075451_R092_T36LXH_20250628T102909, S2A_MSIL2A_20250708T074031_R092_T36LWH_20250708T112915, S2A_MSIL2A_20250708T074031_R092_T36LXH_20250708T112915, S2A_MSIL2A_20250718T075451_R092_T36KWG_20250718T101120, S2A_MSIL2A_20250718T075451_R092_T36KXG_20250718T101120, S2A_MSIL2A_20250718T075451_R092_T36LWH_20250718T101120, S2A_MSIL2A_20250807T075451_R092_T36KWG_20250807T103914, S2A_MSIL2A_20250807T075451_R092_T36KXG_20250807T103914, S2A_MSIL2A_20250807T075451_R092_T36LWH_20250807T103914, S2A_MSIL2A_20250807T075451_R092_T36LXH_20250807T103914, S2A_MSIL2A_20250817T074021_R092_T36KWG_20250817T110213, S2A_MSIL2A_20250817T074021_R092_T36KXG_20250817T110213, S2A_MSIL2A_20250817T074021_R092_T36LWH_20250817T110213, S2A_MSIL2A_20250817T074021_R092_T36LXH_20250817T110213, S2A_MSIL2A_20250827T075451_R092_T36KWG_20250827T101719, S2A_MSIL2A_20250827T075451_R092_T36KXG_20250827T101719, S2A_MSIL2A_20250827T075451_R092_T36LWH_20250827T101719, S2A_MSIL2A_20250827T075451_R092_T36LXH_20250827T101719, S2A_MSIL2A_20250906T074021_R092_T36KXG_20250906T114026, S2A_MSIL2A_20250906T074021_R092_T36LWH_20250906T114026, S2A_MSIL2A_20250906T074021_R092_T36LXH_20250906T114026, S2A_MSIL2A_20250916T075451_R092_T36KWG_20250916T100824, S2A_MSIL2A_20250916T075451_R092_T36KXG_20250916T100824, S2A_MSIL2A_20250916T075451_R092_T36LWH_20250916T100824, S2A_MSIL2A_20250916T075451_R092_T36LXH_20250916T100824, S2A_MSIL2A_20251006T074031_R092_T36KWG_20251006T112017, S2A_MSIL2A_20251006T074031_R092_T36KXG_20251006T112017, S2A_MSIL2A_20251006T074031_R092_T36LWH_20251006T112017, S2A_MSIL2A_20251006T074031_R092_T36LXH_20251006T112017, S2A_MSIL2A_20251016T075451_R092_T36KWG_20251016T103126, S2A_MSIL2A_20251016T075451_R092_T36KXG_20251016T103126, S2A_MSIL2A_20251016T075451_R092_T36LWH_20251016T103126, S2A_MSIL2A_20251016T075451_R092_T36LXH_20251016T103126, S2A_MSIL2A_20251026T074031_R092_T36KWG_20251026T110418, S2A_MSIL2A_20251026T074031_R092_T36KXG_20251026T110418, S2A_MSIL2A_20251026T074031_R092_T36LXH_20251026T110418, S2B_MSIL2A_20250502T073619_R092_T36KWG_20250502T113003, S2B_MSIL2A_20250502T073619_R092_T36KXG_20250502T113003, S2B_MSIL2A_20250502T073619_R092_T36LWH_20250502T113003, S2B_MSIL2A_20250502T073619_R092_T36LXH_20250502T113003, S2B_MSIL2A_20250522T073619_R092_T36KWG_20250522T095453, S2B_MSIL2A_20250522T073619_R092_T36LWH_20250522T095453, S2B_MSIL2A_20250601T073619_R092_T36KWG_20250601T102230, S2B_MSIL2A_20250601T073619_R092_T36KXG_20250601T102230, S2B_MSIL2A_20250601T073619_R092_T36LWH_20250601T102230, S2B_MSIL2A_20250601T073619_R092_T36LXH_20250601T102230, S2B_MSIL2A_20250611T073609_R092_T36KXG_20250611T112907, S2B_MSIL2A_20250611T073609_R092_T36LWH_20250611T103259, S2B_MSIL2A_20250611T073609_R092_T36LWH_20250611T112907, S2B_MSIL2A_20250611T073609_R092_T36LXH_20250611T103259, S2B_MSIL2A_20250611T073609_R092_T36LXH_20250611T112907, S2B_MSIL2A_20250621T073619_R092_T36KWG_20250621T095930, S2B_MSIL2A_20250621T073619_R092_T36KXG_20250621T095930, S2B_MSIL2A_20250621T073619_R092_T36LWH_20250621T095930, S2B_MSIL2A_20250621T073619_R092_T36LXH_20250621T095930, S2B_MSIL2A_20250731T073609_R092_T36KWG_20250731T100050, S2B_MSIL2A_20250731T073609_R092_T36KXG_20250731T100050, S2B_MSIL2A_20250731T073609_R092_T36LWH_20250731T100050, S2B_MSIL2A_20250731T073609_R092_T36LXH_20250731T100050, S2B_MSIL2A_20250810T073619_R092_T36KWG_20250810T102333, S2B_MSIL2A_20250810T073619_R092_T36KXG_20250810T102333, S2B_MSIL2A_20250810T073619_R092_T36LWH_20250810T102333, S2B_MSIL2A_20250810T073619_R092_T36LXH_20250810T102333, S2B_MSIL2A_20250820T073619_R092_T36KWG_20250820T113111, S2B_MSIL2A_20250820T073619_R092_T36KXG_20250820T113111, S2B_MSIL2A_20250820T073619_R092_T36LWH_20250820T102406, S2B_MSIL2A_20250820T073619_R092_T36LWH_20250820T113111, S2B_MSIL2A_20250820T073619_R092_T36LXH_20250820T102406, S2B_MSIL2A_20250820T073619_R092_T36LXH_20250820T113111, S2B_MSIL2A_20250830T073619_R092_T36KWG_20250830T102143, S2B_MSIL2A_20250830T073619_R092_T36KXG_20250830T102143, S2B_MSIL2A_20250830T073619_R092_T36LWH_20250830T102143, S2B_MSIL2A_20250830T073619_R092_T36LXH_20250830T102143, S2B_MSIL2A_20250909T073609_R092_T36KWG_20250909T102706, S2B_MSIL2A_20250909T073609_R092_T36KXG_20250909T102706, S2B_MSIL2A_20250909T073609_R092_T36LWH_20250909T102706, S2B_MSIL2A_20250909T073609_R092_T36LXH_20250909T102706, S2B_MSIL2A_20250919T073609_R092_T36KWG_20250919T095927, S2B_MSIL2A_20250919T073609_R092_T36LXH_20250919T095927, S2B_MSIL2A_20250929T073619_R092_T36KWG_20250929T102250, S2B_MSIL2A_20250929T073619_R092_T36KXG_20250929T102250, S2B_MSIL2A_20250929T073619_R092_T36LWH_20250929T102250, S2B_MSIL2A_20250929T073619_R092_T36LXH_20250929T102250, S2B_MSIL2A_20251009T073729_R092_T36KWG_20251009T102743, S2B_MSIL2A_20251009T073729_R092_T36KXG_20251009T102743, S2B_MSIL2A_20251009T073729_R092_T36LWH_20251009T102743, S2B_MSIL2A_20251009T073729_R092_T36LXH_20251009T102743, S2B_MSIL2A_20251019T073839_R092_T36KWG_20251019T095556, S2B_MSIL2A_20251019T073839_R092_T36KXG_20251019T095556, S2B_MSIL2A_20251019T073839_R092_T36LWH_20251019T095556, S2B_MSIL2A_20251019T073839_R092_T36LXH_20251019T095556, S2B_MSIL2A_20251029T073939_R092_T36KWG_20251029T114333, S2B_MSIL2A_20251029T073939_R092_T36KXG_20251029T114333, S2B_MSIL2A_20251029T073939_R092_T36LWH_20251029T114333, S2B_MSIL2A_20251029T073939_R092_T36LXH_20251029T114333, S2C_MSIL2A_20250517T073631_R092_T36KWG_20250517T123613, S2C_MSIL2A_20250527T073631_R092_T36KWG_20250527T130031, S2C_MSIL2A_20250527T073631_R092_T36LWH_20250527T130031, S2C_MSIL2A_20250527T073631_R092_T36LXH_20250527T130031, S2C_MSIL2A_20250626T073631_R092_T36KWG_20250626T123815, S2C_MSIL2A_20250626T073631_R092_T36KXG_20250626T123815, S2C_MSIL2A_20250626T073631_R092_T36LWH_20250626T123815, S2C_MSIL2A_20250626T073631_R092_T36LXH_20250626T123815, S2C_MSIL2A_20250706T073641_R092_T36KWG_20250706T124023, S2C_MSIL2A_20250706T073641_R092_T36KXG_20250706T124023, S2C_MSIL2A_20250706T073641_R092_T36LWH_20250706T124023, S2C_MSIL2A_20250706T073641_R092_T36LXH_20250706T124023, S2C_MSIL2A_20250716T073641_R092_T36KWG_20250716T124416, S2C_MSIL2A_20250716T073641_R092_T36KXG_20250716T124416, S2C_MSIL2A_20250716T073641_R092_T36LWH_20250716T124416, S2C_MSIL2A_20250716T073641_R092_T36LXH_20250716T124416, S2C_MSIL2A_20250726T073641_R092_T36KWG_20250726T123415, S2C_MSIL2A_20250726T073641_R092_T36KXG_20250726T123415, S2C_MSIL2A_20250726T073641_R092_T36LWH_20250726T123415, S2C_MSIL2A_20250726T073641_R092_T36LXH_20250726T123415, S2C_MSIL2A_20250805T073631_R092_T36KWG_20250805T110921, S2C_MSIL2A_20250805T073631_R092_T36KXG_20250805T110921, S2C_MSIL2A_20250805T073631_R092_T36LWH_20250805T110921, S2C_MSIL2A_20250805T073631_R092_T36LXH_20250805T110921, S2C_MSIL2A_20250815T073631_R092_T36KWG_20250815T130315, S2C_MSIL2A_20250815T073631_R092_T36KXG_20250815T130315, S2C_MSIL2A_20250815T073631_R092_T36LWH_20250815T130315, S2C_MSIL2A_20250815T073631_R092_T36LXH_20250815T130315, S2C_MSIL2A_20250825T073631_R092_T36KWG_20250825T123913, S2C_MSIL2A_20250825T073631_R092_T36KXG_20250825T123913, S2C_MSIL2A_20250825T073631_R092_T36LWH_20250825T123913, S2C_MSIL2A_20250825T073631_R092_T36LXH_20250825T123913, S2C_MSIL2A_20250904T073631_R092_T36KWG_20250904T124917, S2C_MSIL2A_20250904T073631_R092_T36KXG_20250904T124917, S2C_MSIL2A_20250904T073631_R092_T36LWH_20250904T124917, S2C_MSIL2A_20250904T073631_R092_T36LXH_20250904T124917, S2C_MSIL2A_20250914T073631_R092_T36KWG_20250914T141320, S2C_MSIL2A_20250914T073631_R092_T36KXG_20250914T141320, S2C_MSIL2A_20250914T073631_R092_T36LWH_20250914T141320, S2C_MSIL2A_20250914T073631_R092_T36LXH_20250914T141320, S2C_MSIL2A_20250924T073651_R092_T36KWG_20250924T130114, S2C_MSIL2A_20250924T073651_R092_T36KXG_20250924T130114, S2C_MSIL2A_20250924T073651_R092_T36LWH_20250924T130114, S2C_MSIL2A_20250924T073651_R092_T36LXH_20250924T130114, S2C_MSIL2A_20251014T073911_R092_T36KWG_20251014T111716, S2C_MSIL2A_20251014T073911_R092_T36KXG_20251014T111716, S2C_MSIL2A_20251014T073911_R092_T36LWH_20251014T111716, S2C_MSIL2A_20251014T073911_R092_T36LXH_20251014T111716, S2C_MSIL2A_20251024T074011_R092_T36KWG_20251024T110917, S2C_MSIL2A_20251024T074011_R092_T36KXG_20251024T110917, S2C_MSIL2A_20251024T074011_R092_T36LXH_20251024T110917
 
 <!-- SECAO_CLASSIFICACAO_INICIO -->
 
@@ -1453,70 +2607,59 @@ Gerado por `pipeline/01_imagery/classificacao.py`. Substitui a versão reprovada
 
 **`industrial` e `reassentamento` NÃO são subconjuntos de `construido`.** Elas incluem rocha e solo exposto. Consequência aritmética: `urbano + industrial + reassentamento > area_construida`, e **só `urbano` é área construída** — a soma das três não tem significado. A máscara de construído é publicada à parte, em `construido_<ano>_30m_32736.tif`, e é ela que define o estrato da validação de acurácia.
 
-**O que não mudou, verificado e não presumido:** a classificação de construído é idêntica à anterior (o raio de exclusão de negativos do treino foi mantido em 1500 m, separado do raio de detecção de 1000 m); os 288 pontos de validação não se moveram (0 de 288); `data/processed/acuracia_por_ano.csv` é idêntico por diff e a acurácia do usuário de `construido` continua 0,27-0,63 (docs/ADR/0009); `urbano` dentro dos polígonos de mineração continua 0,0000 km² de 2010 em diante. O único efeito sobre `urbano` é a migração de construído do envelope minerário (planta, pátio ferroviário) para `industrial`: 44,02 -> 42,84 km² em 2025.
+**O que não mudou, verificado e não presumido:** a classificação de construído é idêntica à anterior (o raio de exclusão de negativos do treino foi mantido em 1500 m, separado do raio de detecção de 1000 m); os 288 pontos de validação não se moveram (0 de 288); `data/processed/acuracia_por_ano.csv` é idêntico por diff e a acurácia do usuário de `construido` continua 0,286-0,625 (docs/ADR/0009); `urbano` dentro dos polígonos de mineração continua 0,0000 km² de 2010 em diante. O único efeito sobre `urbano` é a migração de construído do envelope minerário (planta, pátio ferroviário) para `industrial`: 44,02 -> 42,84 km² em 2025.
 
 **Camada de reassentamento — incompleta por falta de dado:** Buffer de 1000 m em torno do ponto único de cada povoado (não há polígono de traçado real de nível A) delimitando ONDE PROCURAR. Dentro dele a camada é a pegada: solo exposto persistente (mesma regra e mesmo limiar razao_verde < 0.6 da pegada minerária) em união com o construído do ano. **A detecção não exige assinatura de construído** — foi esse o defeito corrigido: habitação de reassentamento é baixa, esparsa e de telhado metálico ou fibrocimento, e a 30 m um classificador de construído a perde (a camada anterior media 0,07 km², cerca de um décimo do piso plausível). **O que a camada mede é a pegada do povoado — lotes, vias e terreno alterado — não a área de telhado.** **A camada continua incompleta e isso é estrutural, não um bug**: o povoado urbano '25 de Setembro' (289 famílias, HRW 2013) tem `geometry: null` em data/raw/reassentamentos.geojson — Nominatim e Overpass não o localizaram e a coordenada não foi inventada. Consequência aritmética: o construído do 25 de Setembro está contado dentro de `urbano`, isto é, `urbano` inclui crescimento por reassentamento que §10 manda separar. A magnitude desse vazamento não é estimável sem a geometria.
 
 ### Ano-âncora 2000
 
 - **Método `industrial`:** classe própria de solo/rocha exposto persistente (razao_verde < 0.6) dentro do envelope de Maus et al. dilatado em 500 m, união com o construído do ano no mesmo envelope. Resultado 0,00 km²: PLACEBO TEMPORAL — a concessão da Vale é de 2004 e a licença de 2006, então a regra tinha de devolver ~zero aqui, e devolve. Sem acumulação (anterior a 2006).
-- **Área construída (km²):** sem restrição 16.9 · após R1 14.0 · após R2 (publicada) 14.0
-- **Camadas (km²):** urbano=14.04, industrial=0.00, reassentamento=0.00, vegetacao=266.51, solo_exposto=2187.35, agua=0.60 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
+- **Área construída (km²):** sem restrição 16.9 · após R1 13.8 · após R2 (publicada) 13.8
+- **Camadas (km²):** urbano=13.81, industrial=0.00, reassentamento=0.00, vegetacao=235.34, solo_exposto=2219.66, agua=30.34 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
 - **Pegada sem permanência (km²):** industrial=0.00, reassentamento=0.00 · cobertura dos polígonos de Maus: 0.0% · mediana NDVI(chuva) da paisagem: 0.474
-- **Importância das features (5 maiores):** ndvi=0.484, evi=0.202, ndwi=0.104, ndbi=0.048, red=0.029
+- **Importância das features (5 maiores):** ndvi=0.482, evi=0.171, ndwi=0.107, ndbi=0.050, nir=0.039
 
 ### Ano-âncora 2005
 
 - **Método `industrial`:** mesma regra de 2000. Resultado 0,00 km²: segundo ponto do placebo temporal, um ano antes da licença. Sem acumulação (anterior a 2006).
-- **Área construída (km²):** sem restrição 23.9 · após R1 20.7 · após R2 (publicada) 20.7
-- **Camadas (km²):** urbano=20.73, industrial=0.00, reassentamento=0.00, vegetacao=273.59, solo_exposto=2167.75, agua=0.62 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
+- **Área construída (km²):** sem restrição 23.6 · após R1 20.5 · após R2 (publicada) 20.5
+- **Camadas (km²):** urbano=20.48, industrial=0.00, reassentamento=0.00, vegetacao=239.83, solo_exposto=2202.24, agua=31.94 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
 - **Pegada sem permanência (km²):** industrial=0.00, reassentamento=0.00 · cobertura dos polígonos de Maus: 0.0% · mediana NDVI(chuva) da paisagem: 0.543
-- **Importância das features (5 maiores):** ndvi=0.469, evi=0.200, ndwi=0.098, red=0.043, ndbi=0.042
+- **Importância das features (5 maiores):** ndvi=0.441, evi=0.190, ndwi=0.106, ndbi=0.045, red=0.040
 
 ### Ano-âncora 2010
 
 - **Método `industrial`:** solo/rocha exposto persistente + construído, dentro do envelope, acumulado desde 2006. Obras desde ~2007; a mina só opera em mai/2011, então a pegada aqui é de decapagem e canteiro, não de lavra plena.
-- **Área construída (km²):** sem restrição 33.3 · após R1 28.5 · após R2 (publicada) 29.6
-- **Camadas (km²):** urbano=28.26, industrial=7.45, reassentamento=1.20, vegetacao=1891.85, solo_exposto=529.60, agua=1.63 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
-- **Pegada sem permanência (km²):** industrial=7.45, reassentamento=1.20 · cobertura dos polígonos de Maus: 7.0% · mediana NDVI(chuva) da paisagem: 0.477
-- **Importância das features (5 maiores):** ndvi=0.433, evi=0.161, ndwi=0.148, red=0.068, ndbi=0.041
+- **Área construída (km²):** sem restrição 33.3 · após R1 28.9 · após R2 (publicada) 29.9
+- **Camadas (km²):** urbano=28.16, industrial=7.43, reassentamento=1.20, vegetacao=254.31, solo_exposto=2168.11, agua=36.83 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
+- **Pegada sem permanência (km²):** industrial=7.43, reassentamento=1.20 · cobertura dos polígonos de Maus: 7.0% · mediana NDVI(chuva) da paisagem: 0.477
+- **Importância das features (5 maiores):** ndvi=0.369, ndwi=0.150, evi=0.141, red=0.072, ndbi=0.053
 
 ### Ano-âncora 2015
 
 - **Método `industrial`:** solo/rocha exposto persistente + construído, dentro do envelope, acumulado desde 2006. Operação da Vale desde 2011 e Benga desde 2012. O envelope vem de imagem 2017-2019, POSTERIOR a este ano: parte dele ainda não era lavra em 2015, e é por isso que a extensão é medida pela assinatura do ano e não pelo polígono.
-- **Área construída (km²):** sem restrição 51.7 · após R1 36.4 · após R2 (publicada) 38.8
-- **Camadas (km²):** urbano=36.76, industrial=30.15, reassentamento=1.93, vegetacao=2230.93, solo_exposto=152.37, agua=0.16 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
-- **Pegada sem permanência (km²):** industrial=27.66, reassentamento=1.64 · cobertura dos polígonos de Maus: 41.2% · mediana NDVI(chuva) da paisagem: 0.670
-- **Importância das features (5 maiores):** ndvi=0.398, ndwi=0.183, evi=0.116, mndwi=0.050, green=0.049
+- **Área construída (km²):** sem restrição 55.6 · após R1 39.6 · após R2 (publicada) 41.7
+- **Camadas (km²):** urbano=37.28, industrial=31.55, reassentamento=1.65, vegetacao=139.82, solo_exposto=2247.47, agua=37.27 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
+- **Pegada sem permanência (km²):** industrial=31.55, reassentamento=1.65 · cobertura dos polígonos de Maus: 45.9% · mediana NDVI(chuva) da paisagem: 0.670
+- **Importância das features (5 maiores):** ndvi=0.336, ndwi=0.153, evi=0.118, red=0.072, mndwi=0.068
 
 ### Ano-âncora 2020
 
 - **Método `industrial`:** solo/rocha exposto persistente + construído, dentro do envelope, acumulado desde 2006. Defasagem de ~1 ano em relação à referência — é neste ano que o limiar foi calibrado, e por isso a concordância com Maus em 2020 não é validação independente.
-- **Área construída (km²):** sem restrição 38.9 · após R1 36.1 · após R2 (publicada) 41.4
-- **Camadas (km²):** urbano=39.21, industrial=46.43, reassentamento=2.00, vegetacao=679.02, solo_exposto=1689.60, agua=2.95 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
-- **Pegada sem permanência (km²):** industrial=36.70, reassentamento=0.63 · cobertura dos polígonos de Maus: 62.7% · mediana NDVI(chuva) da paisagem: 0.579
-- **Importância das features (5 maiores):** ndvi=0.466, evi=0.207, ndwi=0.119, ndbi=0.041, red=0.040
+- **Área construída (km²):** sem restrição 42.0 · após R1 38.6 · após R2 (publicada) 44.3
+- **Camadas (km²):** urbano=39.46, industrial=41.49, reassentamento=0.70, vegetacao=302.44, solo_exposto=2074.27, agua=39.96 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
+- **Pegada sem permanência (km²):** industrial=41.49, reassentamento=0.70 · cobertura dos polígonos de Maus: 59.2% · mediana NDVI(chuva) da paisagem: 0.579
+- **Importância das features (5 maiores):** ndvi=0.413, evi=0.176, ndwi=0.118, ndbi=0.053, red=0.042
 
 ### Ano-âncora 2025
 
 - **Método `industrial`:** solo/rocha exposto persistente + construído, dentro do envelope, acumulado desde 2006. Defasagem de ~6 anos: o envelope dilatado em 500 m admite avanço de lavra posterior a 2019, mas expansão além dessa faixa fica fora e é subestimação declarada.
-- **Área construída (km²):** sem restrição 39.6 · após R1 39.6 · após R2 (publicada) 48.3
-- **Camadas (km²):** urbano=42.84, industrial=62.50, reassentamento=2.32, vegetacao=151.95, solo_exposto=2201.44, agua=40.31 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
-- **Pegada sem permanência (km²):** industrial=56.67, reassentamento=1.01 · cobertura dos polígonos de Maus: 76.3% · mediana NDVI(chuva) da paisagem: 0.331
-- **Importância das features (5 maiores):** ndvi=0.303, evi=0.212, ndwi=0.125, ndbi=0.074, mndwi=0.063
+- **Área construída (km²):** sem restrição 39.6 · após R1 39.6 · após R2 (publicada) 50.3
+- **Camadas (km²):** urbano=43.10, industrial=56.68, reassentamento=1.09, vegetacao=298.46, solo_exposto=2060.72, agua=41.22 (industrial e reassentamento são PEGADAS, não subconjuntos de construído)
+- **Pegada sem permanência (km²):** industrial=56.68, reassentamento=1.09 · cobertura dos polígonos de Maus: 70.5% · mediana NDVI(chuva) da paisagem: 0.331
+- **Importância das features (5 maiores):** ndvi=0.347, evi=0.238, ndwi=0.134, ndbi=0.061, swir22=0.048
 
 <!-- SECAO_CLASSIFICACAO_FIM -->
-
-
-
-
-
-
-
-
-
-
-
 
 <!-- SECAO_ACURACIA_INICIO -->
 
@@ -1528,17 +2671,17 @@ Gerado por `pipeline/01_imagery/acuracia.py`. **Não editar à mão.**
 
 **Cegamento.** As folhas de contato exibem `id_cego`, atribuído sobre uma permutação determinística que mistura os dois estratos. O intérprete não sabia, ao olhar o recorte, se o mapa classificava aquele pixel como construído. Sem isso a concordância mediria a pista, não a imagem.
 
-**Estimador.** Olofsson et al. (2014), estratificado pelas classes do mapa, com pesos `W_h` iguais à fração de área da AOI em cada estrato e IC de 95 %.
+**Estimador.** Olofsson et al. (2014) generalizado para **reúso da amostra sob o desenho congelado** (docs/ADR/0014): os estratos e os pesos `W_h` são os do mapa vigente **na época do sorteio** (`amostra_interpretada.csv`), e a classe do mapa **atual** em cada ponto é lida do raster do ano. Quando os dois mapas coincidem, a expressão colapsa na eq. 4 de Olofsson. **Consequência declarada:** a amostra não foi otimizada para os estratos do mapa atual, e o número correto de fazer depois de uma reclassificação é uma NOVA rodada de interpretação sobre `pontos_validacao.csv` (que já foi redesenhado e está sem rótulo). Até lá, este é um estimador não viesado mas de variância subótima para o mapa vigente.
 
 **Intérprete(s):** Claude (modelo multimodal, Anthropic) — interpretação visual de recortes RGB; NÃO é fotointerpretação humana nem verdade de campo
 
 | ano | n | AG | IC95 AG | kappa | AU construído | IC95 AU | AP construído | IC95 AP | indet. | W construído | alavanca de 1 ponto |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 2000 | 48 | 0.997 | ±0.001 | 0.684 | 0.522 | ±0.209 | 1.000 | ±0.000 | 1 | 0.0056 | 0.0414 |
-| 2005 | 48 | 0.997 | ±0.002 | 0.735 | 0.583 | ±0.202 | 1.000 | ±0.000 | 0 | 0.0083 | 0.0413 |
-| 2010 | 48 | 0.991 | ±0.002 | 0.426 | 0.273 | ±0.191 | 1.000 | ±0.000 | 4 | 0.0118 | 0.0449 |
-| 2015 | 48 | 0.950 | ±0.084 | 0.233 | 0.542 | ±0.204 | 0.164 | ±0.273 | 1 | 0.0155 | 0.0428 |
-| 2020 | 48 | 0.869 | ±0.133 | 0.090 | 0.522 | ±0.209 | 0.066 | ±0.070 | 1 | 0.0165 | 0.0410 |
+| 2000 | 48 | 0.997 | ±0.001 | 0.665 | 0.524 | ±0.218 | 0.917 | ±0.160 | 1 | 0.0056 | 0.0414 |
+| 2005 | 48 | 0.997 | ±0.002 | 0.755 | 0.609 | ±0.204 | 1.000 | ±0.000 | 0 | 0.0083 | 0.0413 |
+| 2010 | 48 | 0.992 | ±0.002 | 0.442 | 0.286 | ±0.198 | 1.000 | ±0.000 | 4 | 0.0118 | 0.0449 |
+| 2015 | 48 | 0.951 | ±0.084 | 0.239 | 0.591 | ±0.210 | 0.164 | ±0.273 | 1 | 0.0155 | 0.0428 |
+| 2020 | 48 | 0.868 | ±0.133 | 0.073 | 0.476 | ±0.218 | 0.055 | ±0.060 | 1 | 0.0165 | 0.0410 |
 | 2025 | 48 | 0.993 | ±0.004 | 0.766 | 0.625 | ±0.198 | 1.000 | ±0.000 | 0 | 0.0193 | 0.0409 |
 
 AG = acurácia global · AU = acurácia do usuário (1 − comissão) · AP = acurácia do produtor (1 − omissão).
@@ -1546,7 +2689,7 @@ AG = acurácia global · AU = acurácia do usuário (1 − comissão) · AP = ac
 **Como ler estes números, e como não ler.**
 
 1. A **acurácia global** cumpre a meta de §10 (≥ 0,85) em todos os anos, mas essa comparação é fraca aqui: o estrato `nao_construido` ocupa 98–99,5 % da AOI, e um mapa que errasse *toda* a classe construída ainda teria acurácia global ≈ 0,98. A meta de §10 não discrimina neste desenho.
-2. O que informa sobre a classe de interesse é a **acurácia do usuário**: 0,27–0,63. Cerca de metade dos pixels que o mapa chama de construído não parecem construídos ao intérprete — **comissão alta e consistente**, pior em 2010. É coerente com o viés já documentado no ADR 0008 e com a confusão solo exposto × construído na savana semiárida em estação seca.
+2. O que informa sobre a classe de interesse é a **acurácia do usuário**: 0,286–0,625. Cerca de metade dos pixels que o mapa chama de construído não parecem construídos ao intérprete — **comissão alta e consistente**, pior em 2010. É coerente com o viés já documentado no ADR 0008 e com a confusão solo exposto × construído na savana semiárida em estação seca.
 3. A **acurácia do produtor não é utilizável neste n**. A coluna `alavanca de 1 ponto` é a fração da área da AOI que **um único** ponto de referência do estrato `nao_construido` carrega no estimador (≈ 0,041). Em 2020, 3 pontos desse estrato foram lidos como construídos, o que projeta ~12 % da AOI como construído não mapeado — implausível. O valor de 0,07 mede a fragilidade do desenho, não o mapa.
 4. O **kappa** cai a 0,09–0,23 em 2015 e 2020 e não atinge a meta de 0,70 em 2010, 2015 e 2020. Kappa é instável para classe rara; é reportado por exigência de §5.1, não como critério.
 
@@ -1583,7 +2726,7 @@ Scripts: `pipeline/02_metrics/area_cagr.py`, `fragmentacao.py`,
   fonte que separa `urbano`/`industrial`/`reassentamento`. Toda área e
   fragmentação desta série é marcada `confiavel_para_tendencia=False` e
   carrega a acurácia do usuário medida em `data/processed/acuracia_por_ano.csv`
-  (0,27-0,63, ADR 0009): 37%-73% do que o mapa chama de construído não é.
+  (0,286-0,625, ADR 0009): 37,5%-71,4% do que o mapa chama de construído não é.
   Direção de expansão e tipologia (infill/borda/leapfrog) são declaradas
   robustas a essa comissão (um falso positivo disperso tende a virar
   "leapfrog" de baixa densidade, não inventa infill onde não há nada) — teto,
@@ -1703,6 +2846,168 @@ dependem do composto próprio.
   só descrever o padrão atual.
 <!-- SECAO_METRICAS_FASE2_FIM -->
 
+---
+
+## RESSALVA DE CHURN — acrescentada em 2026-09-08 (`docs/ADR/0013`)
+
+O bloco "Duas séries, dois papéis" acima atribui a robustez da **direção de expansão** e da
+**tipologia infill/borda/leapfrog** apenas ao viés de comissão de `docs/ADR/0009`. **Faltava
+a ressalva mais séria.**
+
+`docs/ADR/0013` mediu, para a camada `urbano`, um **churn de identidade pixel a pixel de 31 a
+54 %** entre anos-âncora consecutivos. A leitura correta é: **a área é utilizável; a
+localização não.**
+
+Isso atinge, nominalmente, toda métrica que dependa de **qual** pixel mudou:
+
+| métrica | efeito |
+|---|---|
+| tipologia infill / borda / leapfrog | a classificação de um pixel novo como infill ou leapfrog depende de onde estava a mancha no ano anterior — e até 54 % dos pixels da mancha anterior não são os mesmos |
+| matriz de transição entre classes | idem: a transição é definida pelo par de rótulos do mesmo pixel em dois anos |
+| rosa de expansão | menos afetada: agrega por setor angular, e o churn é aproximadamente isotrópico dentro do setor |
+| área, CAGR, fragmentação agregada | não afetadas por churn de identidade, apenas pela comissão de `docs/ADR/0009` |
+
+**Consequência prática:** nenhuma proporção de tipologia deste fragmento sustenta afirmação
+sobre *onde* a cidade cresceu num par de anos específico. O que resta defensável é a
+**tendência agregada** ao longo da série inteira, e ainda assim com a comissão declarada.
+
+Contrato que impede a reincidência:
+`pipeline/tests/test_coerencia_hipoteses.py::test_metricas_por_pixel_carregam_a_ressalva_de_churn`.
+
+
+---
+
+<!-- fonte: data/provenance_parts/osm_vias_lugares.md -->
+
+## Proveniência — OSM topônimos, vias e ferrovia (Fase 4, app)
+
+Bbox AOI (config/study.yaml, com folga de 0,05°): minLon=33.45, minLat=-16.40, maxLon=34.15, maxLat=-16.05
+Acesso: Overpass API, endpoint https://overpass-api.de/api/interpreter (HTTP 200 nas três consultas)
+Data de acesso: 2026-09-08
+Licença: ODbL 1.0 — © OpenStreetMap contributors — https://www.openstreetmap.org/copyright
+CRS de saída: EPSG:4326, RFC 7946, sem membro `crs`.
+Resolução/nível geográfico: estado atual da base OSM colaborativa (sem ano-âncora — não é série temporal histórica).
+
+### data/raw/osm_lugares_aoi.geojson
+- Query: `[out:json][timeout:120];(node["place"~"^(city|town|village|suburb|hamlet|neighbourhood)$"](-16.40,33.45,-16.05,34.15);way[...](mesmo filtro);relation[...](mesmo filtro););out center tags;`
+- Feições retornadas: 23 (nós e centróides de polígonos com tag `place`)
+- Campos: osm_type, osm_id, name, place
+
+### data/raw/osm_vias_aoi.geojson
+- Query: `[out:json][timeout:180];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary)$"](-16.40,33.45,-16.05,34.15););out geom tags;`
+- Feições retornadas: 219 — 0 motorway, 76 trunk, 17 primary, 23 secondary, 103 tertiary (inclui a N7, eixo Tete–Moatize, classificada como trunk/primary no OSM conforme o trecho)
+- Campos: osm_id, highway, name, ref
+
+### data/raw/osm_ferrovia_aoi.geojson
+- Query: `[out:json][timeout:120];(way["railway"~"^(rail|light_rail|narrow_gauge)$"](-16.40,33.45,-16.05,34.15););out geom tags;`
+- Feições retornadas: 57, todas `railway=rail` (0 light_rail, 0 narrow_gauge) — inclui a linha do Sena
+- Campos: osm_id, railway, name, usage
+
+Anos cobertos: nenhum — estado presente (2026-09-08) da base editável do OSM; não retroage a 1997–2025.
+
+
+---
+
+<!-- fonte: data/provenance_parts/populacao_vila_moatize.md -->
+
+<!-- SECAO_POPULACAO_VILA_MOATIZE_INICIO -->
+## População da Vila de Moatize — estimativa dasimétrica de terceiros (§3, §5.3)
+
+Script: `pipeline/02_metrics/populacao_vila_moatize.py`.
+Gerado em 2026-09-09.
+Correção de enquadramento em `docs/ADR/0017`: a banda deixou de ser composta só por
+variantes atenuadas por máscara de construído — a única variante que valida em Cidade
+de Tete (partição de Voronoi sem peso de construído) passou de "diagnóstico não
+publicável" a TETO da banda.
+
+### Por que este número não vem do HDX/INE
+
+O HDX COD-PS só publica população por ADM2 (Distrito de Moatize). A Vila de Moatize é
+ADM3 e não tem contagem oficial isolada em nenhuma fonte localizada (nível A ou B).
+
+### O que a validação cruzada em Cidade de Tete mostrou (leia isto antes da tabela)
+
+Nenhuma forma de aplicar a máscara de construído recupera o observado
+(307338, HDX COD-PS 2017) — nem o multiplicador de fração
+(classificação própria: -40.4%; GHSL: -74.5%), nem
+a pertença binária (fração > 0: -25.2%; fração ≥ mediana das células
+presentes: -50.4%). O GRID3 v1.1 já é um produto dasimétrico calibrado ao
+Censo 2017: pesá-lo de novo por uma máscara de construído própria restringe a população
+**duas vezes**, descartando gente que o produtor já havia colocado onde ela está. A única
+variante que reproduz o observado é a partição espacial (Voronoi por sede mais próxima)
+**sem nenhum peso de construído**: +1.6%. O que funciona é particionar,
+não pesar.
+
+### Banda — piso e teto (nenhum valor central)
+
+| variante | tipo | estimativa (hab.) | desvio em Tete |
+|---|---|---|---|
+| classificação própria (fração) | restrita | 29009 | -40.4% |
+| GHSL BUILT-S 2020 (fração) | restrita | 15192 | -74.5% |
+| pertença binária (fração > 0) | restrita | 40444 | -25.2% |
+| pertença por mediana (quantil, ADR 0014) | restrita | 24630 | -50.4% |
+| **sem peso de construído (cluster inteiro)** | **TETO** | **69301** | **+1.6%** |
+| **piso publicado** | menor das restritas | **15192** | — |
+
+Leitura: **piso** (15192) restringe ao construído e, pela validação em
+Tete, perde entre 25% e 74% das pessoas que o GRID3 lá coloca — limite
+INFERIOR.
+**teto** (69301) soma o GRID3 no cluster de Voronoi inteiro, sem peso de
+construído — inclui a área rural do cluster atribuída à sede mais próxima, logo é
+limite SUPERIOR para a vila, não a vila propriamente. Nenhuma das cinco variantes é
+publicada como "a estimativa"; cada uma é nomeada em
+`populacao_vila_moatize_sensibilidade.csv`.
+
+Ano de referência: 2017 (calibração do GRID3). Um único ponto — não há série, não há
+CAGR. Selo `modelado`, nível de fonte `A` (GRID3 é CC BY 4.0, produtor institucional
+WorldPop/Southampton — ver `data/provenance_parts/worldpop_grid3.md`), mas **não é
+contagem**: é estimativa dasimétrica de terceiros sobre uma grade já modelada.
+
+### Validação cruzada em Cidade de Tete — tabela completa
+
+O mesmo procedimento aplicado a Cidade de Tete, comparado contra os
+307338 habitantes observados (HDX COD-PS 2017, nível A):
+
+| variante | estimativa (hab.) | desvio frente ao observado |
+|---|---|---|
+| classificação própria (fração) | 183036 | -40.4% |
+| GHSL BUILT-S 2020 (fração) | 78512 | -74.5% |
+| pertença binária (fração > 0) | 229867 | -25.2% |
+| pertença por mediana (quantil) | 152462 | -50.4% |
+| sem peso de construído (teto) | 312300 | +1.6% |
+
+Este desvio — não um limiar de aprovação — é a medida de quanto confiar na estimativa da
+Vila de Moatize, que usa exatamente o mesmo método sem ter uma âncora observada própria
+contra a qual se comparar. Publicado mesmo se grande: **toda variante restrita por
+construído SUBESTIMA** a população observada de Cidade de Tete; só a partição sem peso
+não subestima. **A estimativa da Vila herda esse mesmo viés** — toda variante restrita
+publicada na banda é, à luz desta validação, mais provável de subestimar do que de
+superestimar a população real da vila; o teto é a única variante que a validação não
+desqualifica, ao custo de incluir população rural do cluster.
+
+### Correção da nota de comissão (dois referentes, não um)
+
+O peso 'classificação própria' carrega a comissão medida na classe construído
+(acurácia do usuário de `construido` = 0,286–0,625 (docs/ADR/0009; reexecutado em docs/ADR/0014): entre 37,5 % e 71,4 % do que o mapa chama de construído não é.). Essa comissão tem DUAS relações
+distintas, cada uma com seu referente: frente ao peso GHSL (o outro multiplicador de
+fração), tende a puxar a estimativa para CIMA. Frente à população OBSERVADA em Cidade
+de Tete, a mesma variante SUBESTIMA em 40.4% — a comissão de
+área não é grande o suficiente para compensar a dupla restrição imposta pela máscara
+sobre um GRID3 que já é dasimétrico.
+
+### Saídas
+
+`data/processed/populacao_vila_moatize_sensibilidade.csv` (as cinco variantes, piso/teto
+para Vila e Tete, mais a linha `validacao_cruzada`). Linha em
+`data/processed/demografia_serie_1997_2025.csv` (unidade "Vila de Moatize", ano 2017,
+`selo=modelado`, `nivel_fonte=A`, valor publicado = TETO — a variante validada —, com
+piso/desvios explícitos em `nota`, `comparabilidade` explicando a natureza do número).
+`config/unidades.yaml`: `moatize_vila` continua `comparavel_entre_familias: false` —
+existe estimativa modelada agora, mas continua não sendo contagem, e nenhuma razão
+população/área com essa vila deixa de ser inválida por causa disso.
+
+<!-- SECAO_POPULACAO_VILA_MOATIZE_FIM -->
+
 
 ---
 
@@ -1784,3 +3089,72 @@ nenhum valor foi escolhido como "correto" para substituir o outro.
 co-fonte da âncora §8 não foi localizado em URL de acesso primário (agência de notícias
 sem arquivo público estável identificado); a âncora §8, portanto, permanece rastreável
 apenas até HRW (2013) nesta Fase 0'.
+
+
+---
+
+<!-- fonte: data/provenance_parts/worldpop_grid3.md -->
+
+# WorldPop / GRID3 — fragmento de proveniência (Vila de Moatize, população)
+
+Objetivo: estimar população da Vila de Moatize (não publicada em nenhuma fonte; COD-PS só cobre distrito).
+Recorte por janela (rasterio/vsicurl) na AOI de `config/study.yaml`, sem espelhar o país inteiro.
+
+| Arquivo | URL | Data de acesso | Licença | Citação | Resolução/nível geográfico | Ano | Soma pop. na AOI |
+|---|---|---|---|---|---|---|---|
+| data/raw/grid3_moz_pop_v1_1_2020_100m_aoi.tif | https://wopr.worldpop.org/download/237 (catalogado em https://data.humdata.org/dataset/gridded-population-estimates-for-mozambique-2017-census-v1-1) | 2026-09-09 | CC BY 4.0 | Bondarenko M, Jones P, Leasure D, Lazar AN, Tatem AJ. 2020. Census disaggregated gridded population estimates for Mozambique (2017), version 1.1. WorldPop, University of Southampton. doi:10.5258/SOTON/WP00672 | ~100m grade (3 arc-sec), recorte AOI (33.50-34.10E, -16.35 a -16.00S), EPSG:4326 | calibrado ao Censo 2017 (nome de arquivo mantém rótulo "2020" pedido na tarefa, mas o dado v1.1 não tem versão 2020; ver nota de método no .meta.json) | 400.619 |
+| worldpop_moz_pop_2000_100m_aoi.tif -- **NÃO GERADO** | https://data.worldpop.org/GIS/Population/Global_2000_2020/2000/MOZ/moz_ppp_2000.tif | tentativa 2026-09-09, não concluída | CC BY 4.0 | WorldPop (www.worldpop.org). Mozambique 100m Population, 2000 (unconstrained). doi:10.5258/SOTON/WP00645 | ~100m grade, AOI (não recortado) | 2000 | N/A -- ver motivo de falha abaixo |
+| worldpop_moz_pop_2005_100m_aoi.tif -- **NÃO GERADO** | https://data.worldpop.org/GIS/Population/Global_2000_2020/2005/MOZ/moz_ppp_2005.tif | tentativa 2026-09-09, não concluída | CC BY 4.0 | WorldPop (www.worldpop.org). Mozambique 100m Population, 2005 (unconstrained). doi:10.5258/SOTON/WP00645 | ~100m grade, AOI (não recortado) | 2005 | N/A -- ver motivo de falha abaixo |
+| worldpop_moz_pop_2010_100m_aoi.tif -- **NÃO GERADO** | https://data.worldpop.org/GIS/Population/Global_2000_2020/2010/MOZ/moz_ppp_2010.tif | tentativa 2026-09-09, não concluída | CC BY 4.0 | WorldPop (www.worldpop.org). Mozambique 100m Population, 2010 (unconstrained). doi:10.5258/SOTON/WP00645 | ~100m grade, AOI (não recortado) | 2010 | N/A -- ver motivo de falha abaixo |
+| worldpop_moz_pop_2015_100m_aoi.tif -- **NÃO GERADO** | https://data.worldpop.org/GIS/Population/Global_2015_2030/R2024B/2015/MOZ/v1/100m/constrained/moz_pop_2015_CN_100m_R2024B_v1.tif | tentativa 2026-09-09, não concluída | CC BY 4.0 | WorldPop (www.worldpop.org). Mozambique 100m Population (constrained, R2024B), 2015. | ~100m grade, AOI (não recortado) | 2015 | N/A -- ver motivo de falha abaixo |
+| worldpop_moz_pop_2020_100m_aoi.tif -- **NÃO GERADO** | https://data.worldpop.org/GIS/Population/Global_2015_2030/R2024B/2020/MOZ/v1/100m/constrained/moz_pop_2020_CN_100m_R2024B_v1.tif | tentativa 2026-09-09, não concluída | CC BY 4.0 | WorldPop (www.worldpop.org). Mozambique 100m Population (constrained, R2024B), 2020. | ~100m grade, AOI (não recortado) | 2020 | N/A -- ver motivo de falha abaixo |
+
+## Método de recorte adotado (GRID3, bem-sucedido)
+
+Leitura completa do mosaico nacional (servidor `wopr.worldpop.org` não honra `Range`),
+recorte via `rasterio.windows.from_bounds` à AOI (33.50-34.10E, -16.35 a -16.00S,
+EPSG:4326), arquivo nacional descartado. Nenhum arquivo de país inteiro foi espelhado
+em `data/raw/`.
+
+## Escolha de produto WorldPop (constrained vs. unconstrained)
+
+- **2000, 2005, 2010**: só existe o produto *unconstrained* (Global_2000_2020) --
+  o *constrained* do WorldPop (calibrado com pegada de edificações Maxar/Microsoft)
+  só cobre 2015 em diante. Não é uma preferência, é a única opção verificada
+  (HTTP 200 nas URLs; ausência de diretório `constrained` para esses anos em
+  `data.worldpop.org/GIS/Population/Global_2015_2030/R2024B/{2000,2005,2010}/`).
+- **2015, 2020**: usado o produto *constrained*, release R2024B, calibração ajustada
+  por UN (`UNadj`), por ser mais preciso em área urbana (restringe a população a
+  pixels com pegada de edificações). Confirmado disponível via listagem de diretório
+  em `data.worldpop.org/GIS/Population/Global_2015_2030/R2024B/{2015,2020}/MOZ/v1/100m/constrained/`.
+- Calibração censitária: WorldPop unconstrained e constrained (R2024B) são calibrados
+  contra projeções da ONU/censo nacional (não contra o Censo 2017 de Moçambique
+  especificamente para todos os anos -- ver `MOZ_population_v1_1_README.pdf` do GRID3
+  para a calibração específica ao Censo 2017 de Moçambique, que é o único produto
+  desta lista calibrado diretamente ao censo nacional).
+
+## Falha de coleta -- WorldPop Population Counts (2000, 2005, 2010, 2015, 2020): NÃO OBTIDOS NESTA SESSÃO
+
+Todas as 5 URLs foram verificadas como válidas (`curl -I` retorna HTTP 200, tipo
+`image/tiff`, `Content-Length` correto: 446.768.688 bytes para 2000; 89.821.219 bytes
+para 2020 constrained). O download por leitura em janela (`/vsicurl/` + `rasterio`)
+falhou com o erro do GDAL `"Range downloading not supported by this server!"` --
+confirmado de forma independente: `curl -r 0-1023` (pedido de 1 KB) contra
+`data.worldpop.org` retornou o corpo completo (HTTP 200, não 206), isto é, o
+servidor anuncia `Accept-Ranges: bytes` no cabeçalho mas não honra `Range` em `GET`.
+
+Diante disso, a única rota possível é baixar o mosaico nacional inteiro (444-446 MB
+para os produtos *unconstrained* 2000/2005/2010; ~90-93 MB para os *constrained*
+2015/2020) e recortar localmente -- a mesma estratégia usada com sucesso para o GRID3.
+Três tentativas de download completo (`curl`, sem paralelismo na tentativa final)
+mediram taxas de transferência de 11,6 KB/s a ~70 KB/s (variável, possivelmente
+throttling do lado do servidor). Nessas taxas, o tempo projetado de download é de
+25 a 130 minutos por arquivo *constrained* e de 1,8 a 8 horas por arquivo
+*unconstrained* -- inviável dentro do orçamento desta sessão de coleta.
+
+**Nenhum dado foi inventado.** Os 5 arquivos `worldpop_moz_pop_{ano}_100m_aoi.tif`
+permanecem ausentes de `data/raw/`; nenhum `.sha256` ou `.meta.json` foi gravado para
+eles (regra: nunca gravar sidecar de arquivo que não existe). `pipeline/00_fetch/fetch_worldpop_grid3.py`
+foi corrigido (URL do GRID3 estava morta -- 404; adicionado suporte aos 5 anos WorldPop)
+e é idempotente: uma nova execução, com mais tempo ou banda melhor, retoma de onde
+parou (verifica hash antes de baixar) e completa os 5 arquivos que faltam.

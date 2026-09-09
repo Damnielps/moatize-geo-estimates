@@ -1,0 +1,32 @@
+bloco,id,serie,quebra,veredito,veredito_pre_adr0015,mudanca_apos_adr0015,detalhe
+placebo,P1_espacial,S_WSF_taxa,2005,nao estimavel,passa,"passa -> nao estimavel (ramo vazio, ADR 0015)","ADR 0015: falha se >=2 controles com quebra de mesmo sinal, >=50% da magnitude de Tete e IC95 proprio que exclui zero, contados APENAS em ramos aplicaveis (coeficiente de referencia com IC95 que exclui zero). Todos os ramos vazios => nao estimavel."
+placebo,P1_espacial,S_WSF_taxa,2011,FALHA,FALHA,inalterado,"ADR 0015: falha se >=2 controles com quebra de mesmo sinal, >=50% da magnitude de Tete e IC95 proprio que exclui zero, contados APENAS em ramos aplicaveis (coeficiente de referencia com IC95 que exclui zero). Todos os ramos vazios => nao estimavel."
+placebo,P1_espacial,S_HARM_soma,2016,FALHA,FALHA,inalterado,"ADR 0015: falha se >=2 controles com quebra de mesmo sinal, >=50% da magnitude de Tete e IC95 proprio que exclui zero, contados APENAS em ramos aplicaveis (coeficiente de referencia com IC95 que exclui zero). Todos os ramos vazios => nao estimavel."
+placebo,P1_espacial,S_HARM_soma,2022,nao estimavel,FALHA,"FALHA -> nao estimavel (ramo vazio, ADR 0015)","ADR 0015: falha se >=2 controles com quebra de mesmo sinal, >=50% da magnitude de Tete e IC95 proprio que exclui zero, contados APENAS em ramos aplicaveis (coeficiente de referencia com IC95 que exclui zero). Todos os ramos vazios => nao estimavel."
+placebo,P2_temporal,S_WSF_taxa,2005,nao estimavel,passa,"passa -> nao estimavel (ramo vazio, ADR 0015)","ADR 0015: falha se o placebo produz b2 ou b3 de mesmo sinal, >=50% da magnitude real, com IC95 que exclui zero, em ramo aplicavel. Todos os ramos vazios => nao estimavel."
+placebo,P2_temporal,S_WSF_taxa,2011,passa,FALHA,FALHA -> passa AFROUXAMENTO. NAO reabilita nada: o ramo que disparava usava um coeficiente de referencia de Tete cujo IC95 inclui zero. O veredito pre-ADR 0015 fica na coluna ao lado e continua publicavel.,"ADR 0015: falha se o placebo produz b2 ou b3 de mesmo sinal, >=50% da magnitude real, com IC95 que exclui zero, em ramo aplicavel. Todos os ramos vazios => nao estimavel."
+placebo,P2_temporal,S_HARM_soma,2016,nao estimavel,nao estimavel,inalterado,"ADR 0015: falha se o placebo produz b2 ou b3 de mesmo sinal, >=50% da magnitude real, com IC95 que exclui zero, em ramo aplicavel. Todos os ramos vazios => nao estimavel."
+placebo,P2_temporal,S_HARM_soma,2022,nao estimavel,passa,"passa -> nao estimavel (ramo vazio, ADR 0015)","ADR 0015: falha se o placebo produz b2 ou b3 de mesmo sinal, >=50% da magnitude real, com IC95 que exclui zero, em ramo aplicavel. Todos os ramos vazios => nao estimavel."
+placebo,P3_capacidade,serie propria (S_SUST),todas,passa (descritivo),,,6 anos-ancora: nao se ajusta modelo segmentado de 4 parametros. Reportado como serie pareada (§1.3 item 5).
+placebo,P3_capacidade,S_HARM_soma,todas,nao estimavel,,,"O produto Chen/Yu e um composto anual harmonizado; os recortes espelhados nao trazem a contagem de noites validas por pixel, e ela nao e derivavel do raster de radiancia. NAO ESTIMAVEL."
+placebo,P3_capacidade,S_WSF_taxa,todas,nao estimavel,,,"O WSF Evolution nao publica, nos tiles espelhados, a contagem de cenas Landsat por ano usada na deteccao. A capacidade de observacao do Landsat cresce no periodo e e uma explicacao alternativa viva para a taxa de primeira deteccao. NAO ESTIMAVEL — e e um limite real, nao formalidade."
+placebo,P4_radiometria_paisagem,"fracao AOI NDVI(seca)>=0,30",todas,FALHA (descritivo),,,"serie ANUAL de NDVI de paisagem 1997-2025 NAO foi construida (pre-requisito (iii) do §9, ainda nao satisfeito — EMENDA E1). Com 6 pontos o teste e descritivo, conforme a alternativa ja pre-registrada em §4.4."
+criterio_F,A_area_WSF|2005,A_area_WSF,2005,CONTRAFACTUAL NAO SUSTENTADO,,,F3_rmspe_pre_maior_que_meio_dp;F5_rank_nao_top2;F7_loo_desloca_mais_de_50pct
+criterio_F,A_area_WSF|2011,A_area_WSF,2011,CONTRAFACTUAL NAO SUSTENTADO,,,F3_rmspe_pre_maior_que_meio_dp;F5_rank_nao_top2;F7_loo_desloca_mais_de_50pct
+criterio_F,B_luz_HARM|2016,B_luz_HARM,2016,CONTRAFACTUAL NAO SUSTENTADO,,,F4_peso_concentrado_>0.80;F5_rank_nao_top2;F7_loo_desloca_mais_de_50pct
+criterio_F,B_luz_HARM|2022,B_luz_HARM,2022,CONTRAFACTUAL NAO SUSTENTADO,,,F3_rmspe_pre_maior_que_meio_dp;F4_peso_concentrado_>0.80
+tendencia_paralela,A_area_WSF|T1,A_area_WSF,pre-tratamento,nao dispara,,,
+tendencia_paralela,A_area_WSF|T2,A_area_WSF,pre-tratamento,nao dispara,,,
+tendencia_paralela,B_luz_HARM|T1,B_luz_HARM,pre-tratamento,nao estimavel,,,pre-janela de 3 pontos; interacoes unidade x t nao identificaveis
+tendencia_paralela,B_luz_HARM|T2,B_luz_HARM,pre-tratamento,nao estimavel,,,pre-janela de 3 pontos
+nao_estimavel,area 2016/2022,-,-,nao estimavel / nao determinavel,,,sem serie de area utilizavel pos-2015
+nao_estimavel,luz 2005/2011,-,-,nao estimavel / nao determinavel,,,EMENDA E4 item 4: sem DMSP em nivel A
+nao_estimavel,elasticidade populacao-luz,-,-,nao estimavel / nao determinavel,,,populacao em nivel A so em 2017 e 2025 (2025 modelado)
+nao_estimavel,elasticidade area-luz bust/transicao,-,-,nao estimavel / nao determinavel,,,sem serie de area pos-2015
+nao_estimavel,H4,-,-,nao estimavel / nao determinavel,,,NAO TESTADA e nao reabilitada
+nao_estimavel,H5 e logit §5.6.4,-,-,nao estimavel / nao determinavel,,,bloqueados (churn 31-54% e cultivo_sequeiro reprovado)
+nao_estimavel,H6,-,-,nao estimavel / nao determinavel,,,rebaixada e mantida rebaixada
+nao_estimavel,area agricola perdida / domicilios afetados,-,-,nao estimavel / nao determinavel,,,"regra 6.4 DISPAROU: acuracia do usuario de cultivo_irrigado 0,556 < 0,60"
+nao_estimavel,coorte-componente,-,-,nao estimavel / nao determinavel,,,nao executado: sem estrutura etaria em nivel A para 2025
+nao_estimavel,P4 como teste de quebra,-,-,nao estimavel / nao determinavel,,,serie anual de NDVI de paisagem nao construida
+inferencia,piso de p por permutacao,-,-,"1/6 = 0,167",,,"1 tratado + 5 doadores. Nenhum resultado desta fase atinge significancia convencional. Aritmetica do pool, nao fraqueza do efeito."

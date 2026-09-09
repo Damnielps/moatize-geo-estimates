@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-MZ">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Tete–Moatize · urbanização e mineração 1997–2025</title>
+    <meta name="description" content="Como o ciclo carbonífero de Moatize (Vale, Benga/ICVL, Corredor de Nacala) alterou a trajetória demográfica, a forma urbana, a economia e a agricultura urbana e periurbana de Tete e Moatize, Moçambique, 1997–2025 — com pipeline de dados e metodologia reprodutíveis e auditáveis." />
+    <link rel="canonical" href="__SITE_URL__/" />
+    <meta name="robots" content="index,follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Tete–Moatize · urbanização e mineração" />
+    <meta property="og:title" content="Tete–Moatize · urbanização e mineração 1997–2025" />
+    <meta property="og:description" content="Trajetória demográfica, forma urbana, economia de enclave e agricultura urbana e periurbana de Tete e Moatize (Moçambique) frente ao ciclo carbonífero de Moatize, 1997–2025." />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:image" content="__SITE_URL__/favicon.svg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Tete–Moatize · urbanização e mineração 1997–2025" />
+    <meta name="twitter:description" content="Trajetória demográfica, forma urbana e agricultura urbana e periurbana de Tete e Moatize frente ao ciclo carbonífero de Moatize, 1997–2025." />
+    <meta name="twitter:image" content="__SITE_URL__/favicon.svg" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Tete–Moatize · urbanização e mineração",
+      "url": "__SITE_URL__/",
+      "inLanguage": ["pt-MZ", "en"],
+      "description": "Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025: mapa temporal, reconstrução demográfica, análise causal e agricultura urbana e periurbana."
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      "name": "Urbanização induzida pela mineração em Tete e Moatize, 1997–2025",
+      "description": "Camadas classificadas (urbano, industrial-minerário, reassentamento, agricultura de sequeiro e irrigada), reconstrução demográfica e domiciliar, métricas de forma urbana e análise causal (séries interrompidas, DiD, controle sintético) para os núcleos urbanos de Tete e Moatize, Moçambique, em anos-âncora de 1997 a 2025, a partir de classificação própria de imagens Landsat/Sentinel-2 e de fontes públicas (WSF Evolution/DLR, GHSL/JRC, HDX COD-AB/COD-PS, NPP-VIIRS-like).",
+      "creator": { "@type": "Person", "name": "Daniel Pessini Sobreira" },
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "temporalCoverage": "1997-01-01/2025-12-31",
+      "spatialCoverage": { "@type": "Place", "name": "Tete e Moatize, Província de Tete, Moçambique" },
+      "keywords": ["urbanização", "mineração", "carvão", "Moatize", "Tete", "Moçambique", "reassentamento", "agricultura urbana", "sensoriamento remoto"],
+      "url": "__SITE_URL__/"
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Conteúdo indexável estático: substituído pelo React ao montar (ver src/main.jsx).
+           Como a navegação do app usa HashRouter (endereços com "#/..."), rastreadores que
+           não executam JavaScript só veem esta URL única — este bloco resume o projeto e
+           lista as seções, para não deixá-los diante de uma página vazia. -->
+      <main>
+        <header>
+          <h1>Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025</h1>
+        </header>
+        <p>
+          A partir de meados dos anos 2000 a bacia carbonífera de Moatize, na província de
+          Tete, recebeu um dos maiores ciclos de investimento minerário da África Austral
+          (Vale, Benga/Riversdale/ICVL, Corredor Logístico de Nacala), com reassentamento de
+          cerca de 1.300 famílias. Este estudo reconstrói como esse ciclo alterou a
+          população, a forma urbana, a economia local e a agricultura urbana e periurbana
+          de Tete e Moatize entre 1997 e 2025, a partir de classificação própria de imagens
+          Landsat/Sentinel-2 e de fontes públicas (WSF Evolution, GHSL, HDX, luzes noturnas),
+          com pipeline, dados e metodologia reprodutíveis e auditáveis.
+        </p>
+        <nav aria-label="Seções do app">
+          <ul>
+            <li><a href="/">Mapa temporal (2000–2025)</a></li>
+            <li><a href="/#/populacao">População e domicílios</a></li>
+            <li><a href="/#/graficos">Gráficos e séries</a></li>
+            <li><a href="/#/narrativa">Narrativa guiada</a></li>
+            <li><a href="/#/artigo">Artigo</a></li>
+            <li><a href="/#/metodologia">Metodologia</a></li>
+          </ul>
+        </nav>
+      </main>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+    <footer id="rodape-estatico">
+      <p>
+        Sistema Ardósia · classificação própria (Landsat/Sentinel-2), WSF Evolution (DLR),
+        GHSL (JRC), COD-AB/COD-PS (HDX) · dados de nível A, sem microdados de acesso
+        controlado · código sob MIT, dados derivados sob CC BY 4.0 (ver <code>LICENSE</code>
+        e <code>data/LICENSES.md</code>) · nenhuma leitura causal deste app é sustentada
+        sem o veredito da Fase 3 (<code>data/processed/app/causal/</code>) ao lado.
+      </p>
+    </footer>
+    <style>
+      /* Estilo mínimo do rodapé estático -- não depende do React montar, repetido (não
+         importado) de src/ardosia.css de propósito: precisa funcionar mesmo se o bundle
+         falhar ao carregar. */
+      #rodape-estatico { font: 11.5px/1.4 system-ui, sans-serif; color: #5b6b73; padding: 8px 16px;
+                          background: #eef2f3; border-top: 1px solid #d7dee0; }
+      #rodape-estatico code { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+      @media (prefers-color-scheme: dark) {
+        #rodape-estatico { background: #1a2b33; color: #a9b8bd; border-top-color: #24404f; }
+      }
+    </style>
+  </body>
+</html>

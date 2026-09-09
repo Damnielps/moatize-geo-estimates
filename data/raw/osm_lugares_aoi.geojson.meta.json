@@ -1,0 +1,13 @@
+{
+  "url": "https://www.openstreetmap.org/copyright (dados) via Overpass API https://overpass-api.de/api/interpreter",
+  "download_date": "2026-09-08",
+  "size_bytes": 4357,
+  "license": "Open Database License (ODbL) 1.0 - https://www.openstreetmap.org/copyright",
+  "attribution": "© OpenStreetMap contributors",
+  "level": "não classificado (papel do auditor-dados)",
+  "source_page": "https://overpass-api.de/api/interpreter",
+  "overpass_query": "[out:json][timeout:120];(node[\"place\"~\"^(city|town|village|suburb|hamlet|neighbourhood)$\"](-16.40,33.45,-16.05,34.15);way[\"place\"~\"^(city|town|village|suburb|hamlet|neighbourhood)$\"](-16.40,33.45,-16.05,34.15);relation[\"place\"~\"^(city|town|village|suburb|hamlet|neighbourhood)$\"](-16.40,33.45,-16.05,34.15););out center tags;",
+  "feature_count": 23,
+  "aoi_bbox_wgs84": "minLon=33.45, minLat=-16.40, maxLon=34.15, maxLat=-16.05 (config/study.yaml bbox + folga 0.05 grau)",
+  "crs": "EPSG:4326, RFC 7946, sem membro crs"
+}

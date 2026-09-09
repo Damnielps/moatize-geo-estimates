@@ -1,0 +1,36 @@
+{
+  "script": "pipeline/03_causal/series_base.py",
+  "desenho": "docs/DESENHO_FASE3.md (pré-registro) + EMENDA 1 de 2026-09-08 (§11)",
+  "geometria": "recorte fixo por unidade (E6); ADM2 ∩ recorte como sensibilidade",
+  "janela_homogenea_luzes": "2013-2025 (E4)",
+  "anos_luz": [
+    2000,
+    2005,
+    2008,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "unidades": [
+    "tete_aoi",
+    "chimoio",
+    "quelimane",
+    "lichinga",
+    "xaixai",
+    "inhambane"
+  ],
+  "estocastico": false
+}

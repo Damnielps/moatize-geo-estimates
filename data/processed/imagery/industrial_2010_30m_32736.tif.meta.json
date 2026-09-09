@@ -4,8 +4,8 @@
   "arquivo_raster": "data/processed/imagery/industrial_2010_30m_32736.tif",
   "arquivo_vetor": "data/processed/imagery/industrial_2010.geojson",
   "n_poligonos_vetor": 285,
-  "area_km2": 7.4529,
-  "n_pixels": 8281,
+  "area_km2": 7.4313,
+  "n_pixels": 8257,
   "resolucao_m": 30,
   "crs": "EPSG:32736",
   "metodo": "solo/rocha exposto persistente + construído, dentro do envelope, acumulado desde 2006. Obras desde ~2007; a mina só opera em mai/2011, então a pegada aqui é de decapagem e canteiro, não de lavra plena.",
@@ -15,13 +15,13 @@
     "povoados_ativos": [
       "Cateme"
     ],
-    "mediana_ndvi_seca_paisagem": 0.35995686054229736,
-    "mediana_ndvi_chuva_paisagem": 0.4770430326461792,
-    "area_solo_nu_persistente_km2": 73.4715,
+    "mediana_ndvi_seca_paisagem": 0.35994410514831543,
+    "mediana_ndvi_chuva_paisagem": 0.47702622413635254,
+    "area_solo_nu_persistente_km2": 73.7127,
     "area_envelope_mina_km2": 116.4384,
     "area_poligonos_maus_km2": 59.1849,
-    "cobertura_poligonos_maus": 0.06973738233907635,
-    "cobertura_poligonos_maus_apos_permanencia": 0.06973738233907635
+    "cobertura_poligonos_maus": 0.06955490336217515,
+    "cobertura_poligonos_maus_apos_permanencia": 0.06955490336217515
   },
   "regras_temporais": {
     "R1_confirmacao_primeira_deteccao": "primeira detecção só vale se confirmada no ano-âncora seguinte; confirmada",
@@ -30,8 +30,8 @@
   "papel_wsf": "semente de treino (não é validação — ver docstring do script)",
   "papel_ghsl": "referência independente de concordância (não entra em treino)",
   "selo": "observado",
-  "data_processamento": "2026-09-08T12:48:23.099880+00:00",
-  "commit_git": "desconhecido (git indisponível)",
+  "data_processamento": "2026-09-08T14:46:17.240204+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
   "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "hash_config_seeds_yaml": "3bd52590e495f4eeb8327c17eeefaa9b4c2b1c78c827ebfc70edddacfad0997f",
   "script": "pipeline/01_imagery/classificacao.py",

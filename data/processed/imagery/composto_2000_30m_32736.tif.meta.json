@@ -46,8 +46,8 @@
   },
   "colecao_sentinel2": null,
   "selo": "observado",
-  "data_processamento": "2026-09-08T12:05:52.977672+00:00",
-  "commit_git": "desconhecido (git indisponível)",
+  "data_processamento": "2026-09-08T14:18:38.641595+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
   "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "script": "pipeline/01_imagery/compostos.py"
 }

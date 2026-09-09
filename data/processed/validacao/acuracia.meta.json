@@ -15,6 +15,6 @@
     "data/processed/acuracia_por_ano.csv",
     "data/processed/matriz_confusao_por_ano.csv"
   ],
-  "data_processamento": "2026-09-08T12:49:10.176657+00:00",
+  "data_processamento": "2026-09-08T14:47:49.612890+00:00",
   "script": "pipeline/01_imagery/acuracia.py"
 }

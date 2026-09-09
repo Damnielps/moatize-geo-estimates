@@ -229,3 +229,21 @@ Não resolve 1997 nem 2007, que continuam sem fonte de nível A.
 tentativas, igual a `ine.gov.mz`. Era a via mais promissora para 1997 e 2007 por distrito,
 porque o GPW publica os dados de entrada por unidade administrativa. Não foi falha de busca:
 o servidor não responde. **Retomar quando voltar.**
+
+---
+
+## RECONCILIAÇÃO — 2026-09-08 (revisão de `data/DATA_AUDIT.md`)
+
+Acima está escrito que a pergunta 6 passa de "não respondível" para **"respondível com
+ressalva de selo"**, graças à ponta de 2025 do COD-PS. A revisão do `data/DATA_AUDIT.md` de
+2026-09-08 acrescenta duas restrições que este fragmento não podia conhecer:
+
+1. **O par 2015–2020 da série própria de área está contaminado** pelo colapso do pool de
+   treino em 2015 (`docs/ADR/0013`), e **não pode ancorar magnitude de bust**. As séries de
+   luzes noturnas (VIIRS e DMSP) passam a ser a via primária pós-2015.
+2. **A circularidade de H4 é dos dois lados**, não de um: a população de 2025 é projeção
+   modelada **e** a série de `urbano` é catraca por R2. Usar as duas juntas confirmaria o
+   descolamento população–luz por construção.
+
+O achado central deste fragmento — que o HDX COD-PS torna 2017 publicável em nível A por um
+segundo caminho, com licença própria e verificável — **permanece válido e não é afetado**.

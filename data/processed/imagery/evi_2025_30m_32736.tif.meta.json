@@ -5,10 +5,11 @@
   "arquivo_origem": "data/processed/imagery/composto_2025_30m_32736.tif",
   "hash_arquivo_origem": "c0f43864d0a8098528d6e9008440b25f66082970e7a0c57cbdbdf96ac683c634",
   "formula": "2.5*(nir-red)/(nir+6*red-7.5*blue+1)",
-  "denominador_min_mascarado": 0.1,
+  "criterio_mascara": "banda_de_reflectancia_nao_positiva",
+  "evi_denominador_min": 0.1,
   "selo": "observado",
-  "data_processamento": "2026-09-08T00:24:50.968115+00:00",
-  "commit_git": "desconhecido (git indisponível)",
-  "hash_config_study_yaml": "114b96c33d14fdaf89f8d41f5105338cb97da0b274e56f8b6be6b2392372d306",
+  "data_processamento": "2026-09-08T14:29:43.808952+00:00",
+  "commit_git": "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442",
+  "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "script": "pipeline/01_imagery/indices.py"
 }

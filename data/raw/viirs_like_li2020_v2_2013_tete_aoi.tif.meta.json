@@ -1,0 +1,23 @@
+{
+  "url": "https://dataverse.harvard.edu/api/access/datafile/13295267",
+  "download_date": "2026-09-08T18:12:10.711163+00:00",
+  "size_bytes": 3489,
+  "license": "CC0 1.0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0",
+  "level": "nao classificado - cabe ao auditor-dados",
+  "source_page": "https://doi.org/10.7910/DVN/YGIVCD",
+  "citation": "Chen, Z., Yu, B., et al. (2020/2025). \"The global NPP-VIIRS-like nighttime light data (Version 2) for 1992-2025.\" Harvard Dataverse, V10. DOI: 10.7910/DVN/YGIVCD. Método publicado em Chen, Z., Yu, B., Yang, C., et al. (2021). \"An extended time series (2000-2018) of global NPP-VIIRS-like nighttime light data from a cross-sensor calibration.\" Earth System Science Data, 13, 889-906. DOI: 10.5194/essd-13-889-2021",
+  "selo": "observado",
+  "ano": 2013,
+  "anos_cobertos": "2013",
+  "resolucao_deg": 0.004491576421,
+  "unidade_aproximada_m": 500,
+  "aoi_bbox": {
+    "xmin": 33.5,
+    "ymin": -16.350342960837985,
+    "xmax": 34.101871240414,
+    "ymax": -15.999999999999986
+  },
+  "regiao": "AOI Tete/Moatize (config/study.yaml)",
+  "nota": "Recortado da grade global via GDAL /vsizip/ (leitura em janela, rasterio.windows.from_bounds) a partir do zip 2013_Version2.zip (datafile id 13295267); arquivo global (~10 GB tif descomprimido) NAO foi mirrorado inteiro, so o zip comprimido temporario (85094407 bytes) foi baixado e descartado apos o recorte. Grade identica aos recortes ja existentes em data/raw/ (bounds lidos do ano 2020 como referencia; verificado por reproducao: leitura de 2020 via este metodo reproduz o arquivo ja em disco pixel a pixel, diff maxima 0.0)."
+}
