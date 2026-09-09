@@ -33,6 +33,12 @@ MANIFESTO = PROCESSED / "MANIFESTO.sha256"
 # pelo contrato de frescor e pelas métricas derivadas, e entrariam com centenas de MB.
 EXTENSOES = {".csv", ".geojson", ".json", ".md", ".parquet"}
 
+# Vetorizações auxiliares excluídas do git de propósito (.gitignore): insumo
+# intermediário da classificação de cultivo, não produto do estudo — nunca chegam a um
+# checkout limpo. Espelha exatamente os padrões `data/processed/imagery/solo_exposto_*.geojson`
+# e `data/processed/imagery/vegetacao_*.geojson` do `.gitignore`.
+NAO_VERSIONADOS = ("imagery/solo_exposto_", "imagery/vegetacao_")
+
 
 def sha256_de(caminho: Path) -> str:
     h = hashlib.sha256()
@@ -47,7 +53,10 @@ def artefatos() -> list[Path]:
         return []
     return sorted(
         p for p in PROCESSED.rglob("*")
-        if p.is_file() and p.suffix in EXTENSOES and p != MANIFESTO
+        if p.is_file()
+        and p.suffix in EXTENSOES
+        and p != MANIFESTO
+        and not str(p.relative_to(PROCESSED)).startswith(NAO_VERSIONADOS)
     )
 
 

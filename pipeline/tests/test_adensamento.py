@@ -96,6 +96,8 @@ def test_t1_dominio_por_aritmetica_de_grade(meta):
 
 
 def test_t1_raster_240m_tem_shape_esperado():
+    if not RASTER_240M.exists():
+        pytest.skip(f"{RASTER_240M} ausente (gitignored, regenerável por make imagery)")
     rasterio = pytest.importorskip("rasterio")
     with rasterio.open(RASTER_240M) as src:
         # ceil(1299/8) = 163 linhas de célula, 2144/8 = 268 colunas — a última linha
@@ -206,6 +208,8 @@ def test_t3_particao_exaustiva_soma_area_classes_igual_dominio(meta):
     (achado 2 do portão da Frente B, 2026-09-09; fator de erro ~2,67). Este contrato
     é o análogo, para área, do que T2 já faz para classe: nenhum valor medido é
     codificado aqui — tudo vem do raster e do `.meta.json` em tempo de execução."""
+    if not RASTER_30M.exists():
+        pytest.skip(f"{RASTER_30M} ausente (gitignored, regenerável por make imagery)")
     rasterio = pytest.importorskip("rasterio")
 
     with rasterio.open(RASTER_30M) as src:
@@ -243,6 +247,8 @@ def test_t3_particao_exaustiva_soma_area_classes_igual_dominio(meta):
 
 
 def test_t3_raster_240m_toda_celula_tem_exatamente_uma_classe_0_a_6():
+    if not RASTER_240M.exists():
+        pytest.skip(f"{RASTER_240M} ausente (gitignored, regenerável por make imagery)")
     rasterio = pytest.importorskip("rasterio")
     with rasterio.open(RASTER_240M) as src:
         arr = src.read(1)
@@ -600,6 +606,8 @@ def test_t14_toda_linha_de_sensibilidade_sem_zero_silencioso():
 
 
 def test_zz_reintroducao_de_defeitos_e_verificada(tmp_path, meta):
+    if not RASTER_240M.exists():
+        pytest.skip(f"{RASTER_240M} ausente (gitignored, regenerável por make imagery)")
     achados = {}
 
     # --- T5: reintroduz um limiar absoluto (literal fora da whitelist) sobre CÓPIA do

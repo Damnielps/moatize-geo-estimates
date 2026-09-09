@@ -462,6 +462,13 @@ def test_sidecars_nao_declaram_aoi_divergente(study):
         # correta é a unidade natural da grandeza — aqui, o pixel — e não um número.
         # O defeito que este teste existe para pegar (sidecar com o xmax obsoleto de
         # 33,95 em vez de 34,10) erra por 0,15°, ou ~33 pixels: continua sendo pego.
+        #
+        # O raster em si (data/raw/*.tif) não é versionado (§11.1, regenerável por
+        # `make fetch`) — num checkout limpo (CI) só o sidecar existe. Nesse caso a
+        # resolução vem do próprio `.meta.json` (`resolucao_deg`, ou `resolucao_m`
+        # convertido por uma aproximação grosseira de 111.320 m/grau — suficiente para
+        # uma tolerância, não para medição), preservando o mesmo raciocínio de "1,5
+        # pixel real", não uma constante.
         tol = 1e-9
         companheiro = raw / meta.name.replace(".meta.json", "")
         if companheiro.suffix == ".tif" and companheiro.exists():
@@ -472,6 +479,10 @@ def test_sidecars_nao_declaram_aoi_divergente(study):
                     tol = max(abs(src.res[0]), abs(src.res[1])) * 1.5
             except Exception:
                 pass
+        elif isinstance(dados.get("resolucao_deg"), (int, float)):
+            tol = dados["resolucao_deg"] * 1.5
+        elif isinstance(dados.get("resolucao_m"), (int, float)):
+            tol = (dados["resolucao_m"] / 111_320) * 1.5
         for chave in ("aoi_bbox", "aoi", "bbox"):
             valor = dados.get(chave)
             if not isinstance(valor, dict):

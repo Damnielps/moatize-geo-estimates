@@ -32,7 +32,7 @@
     ]
   },
   "script": "pipeline/04_figures/mapa_localizacao.py",
-  "commit_git": "0a6af052325c4005420ec22513435b0b4ec1ff77",
+  "commit_git": "dc0673bb9f6b048a6491a04c0a95157873f3a2e7",
   "hash_config_study_yaml": "f6de82755961c660a96ab2e3563b500b784d1680907e53fde54629d684fd5f1a",
   "crs_mapa_principal": "EPSG:32736",
   "crs_encartes": "EPSG:4326",
@@ -42,5 +42,5 @@
     "Série temporal de área construída é do WSF Evolution, não da classificação própria (docs/ADR/0008).",
     "'25 de Setembro' sem geometria localizável em fonte aberta — não representado no mapa, não inventado."
   ],
-  "data_geracao": "2026-09-09T20:45:23.851861+00:00"
+  "data_geracao": "2026-09-09T21:09:13.008536+00:00"
 }

@@ -104,6 +104,19 @@ def test_produtos_nao_sao_mais_antigos_que_os_insumos():
     assert not unicos, "; ".join(unicos)
 
 
+def _e_insumo_regeneravel_nao_versionado(padrao: str) -> bool:
+    """Padrões que apontam para zonas que o próprio `.gitignore` exclui de propósito
+    (mirror de `data/raw/`, `data/interim/` inteiro, rasters `.tif` de `data/processed/`)
+    — regeneráveis por `make fetch`/`make imagery`, nunca presentes num checkout limpo.
+    Ausência aí é a mesma legitimidade de "produto ainda não gerado", só do lado do insumo.
+    """
+    return (
+        padrao.startswith("data/raw/")
+        or padrao.startswith("data/interim/")
+        or (padrao.startswith("data/processed/") and padrao.endswith(".tif"))
+    )
+
+
 def test_toda_derivacao_declarada_aponta_para_caminhos_existentes():
     """Uma derivação que aponta para caminho inexistente não protege nada.
 
@@ -114,6 +127,6 @@ def test_toda_derivacao_declarada_aponta_para_caminhos_existentes():
         if not (ROOT / produto).exists():
             continue  # produto ainda não gerado: legítimo
         for padrao in padroes:
-            if not list(ROOT.glob(padrao)):
+            if not list(ROOT.glob(padrao)) and not _e_insumo_regeneravel_nao_versionado(padrao):
                 problemas.append(f"{produto}: padrão de insumo '{padrao}' não casa com nada")
     assert not problemas, "; ".join(problemas)
