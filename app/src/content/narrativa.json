@@ -1,0 +1,1821 @@
+{
+  "convencoes_marcadores": {
+    "leia_me": "Nenhum numero de dado aparece literal na prosa. Todo {nome} e resolvido pelo app a partir da receita declarada em `marcadores` do mesmo bloco (topo, KPI ou capitulo). Caminhos de `csv` sao relativos a data/processed/. Anos-ancora do mapa, nomes de periodo, nomes proprios (25 de Setembro) e anos de citacao bibliografica sao os unicos digitos admitidos no texto.",
+    "filtro": "Igualdade coluna a coluna; valores numericos comparados como numero (2021 casa com '2021' e com '2021.0'), textos como texto exato. `filtro_excluir` remove as linhas que casam. Com estatistica 'valor unico' o filtro tem de devolver exatamente uma linha, senao o app mostra traco e registra erro.",
+    "estatistica": {
+      "valor unico": "exatamente uma linha",
+      "maximo": "maximo da coluna nas linhas filtradas",
+      "minimo": "minimo da coluna nas linhas filtradas",
+      "contagem": "numero de linhas filtradas",
+      "derivado": "calculado de outros marcadores do mesmo bloco, ver `derivado`",
+      "marco": "campo de config/marcos.yaml"
+    },
+    "transformacao": {
+      "complemento_pct": "100 * (1 - valor); usado para comissao = 1 - acuracia do usuario",
+      "fracao_para_pct": "100 * valor"
+    },
+    "derivado": {
+      "diferenca": "a - b",
+      "razao": "a / b",
+      "variacao_pct": "100 * (para / de - 1)"
+    },
+    "formato": {
+      "inteiro": "separador de milhar pt-MZ (espaço), sem casas",
+      "decimal1": "uma casa, virgula",
+      "pct0": "valor ja em pontos percentuais, zero casas, sufixo de porcentagem com espaco fino",
+      "pct1": "idem, uma casa",
+      "pct1_sinal": "idem, com sinal explicito (+ ou menos tipografico)",
+      "pct1_abs": "idem, valor absoluto (a direcao esta no verbo da frase)",
+      "km2_1": "uma casa + ' km²'",
+      "km2_2": "duas casas + ' km²'",
+      "ano": "quatro primeiros caracteres do valor (marcos com mes ou dia viram ano)"
+    },
+    "auxiliar": "marcador com auxiliar=true nao aparece no texto; existe so para alimentar um derivado"
+  },
+  "topo": {
+    "kicker_pt": "Painel de pesquisa · Tete e Moatize, Moçambique, 2000–2025",
+    "titulo_pt": "Cidade, mina e reassentamento: três crescimentos que não se somam",
+    "lead_pt": "Este painel mede, com o mesmo protocolo de imagem de 2000 a 2025, a expansão da cidade de Tete, da vila de Moatize, dos povoados de reassentamento e da pegada da mineração de carvão, sem misturar as três camadas. A pegada da mineração cresceu mais, em área, do que a mancha urbana, e a luz noturna da cidade continuou a subir quando a do restante do recorte, onde estão a mina e a vila de Moatize, recuou. Nenhuma das {n_paineis} inflexões testadas do ciclo do carvão pode ser atribuída à mina com o grupo de comparação disponível.",
+    "marcadores": [
+      {
+        "nome": "n_paineis",
+        "csv": "causal/veredito_fase3.csv",
+        "filtro": {
+          "bloco": "criterio_F"
+        },
+        "coluna": "id",
+        "estatistica": "contagem",
+        "formato": "inteiro",
+        "selo": "observado"
+      }
+    ],
+    "kpis": [
+      {
+        "id": "populacao_tete",
+        "rotulo_pt": "Residentes na Cidade de Tete, censo de {ano_censo_2017}",
+        "valor_pt": "{pop_tete_2017}",
+        "delta_pt": "{pop_tete_2025} em 2025 é projeção do INE (modelado), não contagem",
+        "nota_pt": "INE, IV RGPH, via HDX COD-PS; sem ajuste pela omissão censitária",
+        "selo": "observado",
+        "serie": null,
+        "marcadores": [
+          {
+            "nome": "ano_censo_2017",
+            "marco": "censo_2017",
+            "campo": "inicio",
+            "estatistica": "marco",
+            "formato": "ano"
+          },
+          {
+            "nome": "pop_tete_2017",
+            "csv": "demografia_serie_1997_2025.csv",
+            "filtro": {
+              "unidade_geografica": "Cidade de Tete",
+              "ano": 2017,
+              "variavel": "populacao_total_residente"
+            },
+            "coluna": "valor",
+            "estatistica": "valor unico",
+            "formato": "inteiro",
+            "selo": "observado"
+          },
+          {
+            "nome": "pop_tete_2025",
+            "csv": "demografia_serie_1997_2025.csv",
+            "filtro": {
+              "unidade_geografica": "Cidade de Tete",
+              "ano": 2025,
+              "variavel": "populacao_total_residente"
+            },
+            "coluna": "valor",
+            "estatistica": "valor unico",
+            "formato": "inteiro",
+            "selo": "modelado"
+          }
+        ],
+        "rotulo_en": "Residents in Tete city, census of {ano_censo_2017}",
+        "delta_en": "{pop_tete_2025} in 2025 is an INE projection (modelled), not a count",
+        "nota_en": "INE, IV RGPH, via HDX COD-PS; unadjusted for census undercount",
+        "valor_en": "{pop_tete_2017}"
+      },
+      {
+        "id": "pegada_mineracao",
+        "rotulo_pt": "Pegada da mineração, 2025",
+        "valor_pt": "{ind_2025}",
+        "delta_pt": "{ind_2005} em 2005, antes das obras",
+        "nota_pt": "classificação própria, Landsat; inclui cava e estéril, não é área construída",
+        "selo": "observado",
+        "serie": [
+          {
+            "ano": 2000,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2000,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2005,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2005,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2010,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2010,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2015,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2015,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2020,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2020,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2025,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2025,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2"
+          }
+        ],
+        "destaque_ano": 2025,
+        "marcadores": [
+          {
+            "nome": "ind_2025",
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2025,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2",
+            "estatistica": "valor unico",
+            "formato": "km2_1",
+            "selo": "observado"
+          },
+          {
+            "nome": "ind_2005",
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2005,
+              "camada": "industrial"
+            },
+            "coluna": "area_publicada_km2",
+            "estatistica": "valor unico",
+            "formato": "km2_1",
+            "selo": "observado"
+          }
+        ],
+        "rotulo_en": "Mining footprint, 2025",
+        "delta_en": "{ind_2005} in 2005, before works began",
+        "nota_en": "own classification, Landsat; includes pit and waste rock, not built-up area",
+        "valor_en": "{ind_2025}"
+      },
+      {
+        "id": "mancha_urbana",
+        "rotulo_pt": "Mancha urbana orgânica, 2025",
+        "valor_pt": "{urb_2025}",
+        "delta_pt": "{urb_2000} em 2000",
+        "nota_pt": "classificação própria; conforme o ano, entre {comissao_min} e {comissao_max} do que o mapa chama de construído não é construído; série não decrescente por construção",
+        "selo": "observado",
+        "serie": [
+          {
+            "ano": 2000,
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2000
+            },
+            "coluna": "urbano_km2"
+          },
+          {
+            "ano": 2005,
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2005
+            },
+            "coluna": "urbano_km2"
+          },
+          {
+            "ano": 2010,
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2010
+            },
+            "coluna": "urbano_km2"
+          },
+          {
+            "ano": 2015,
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2015
+            },
+            "coluna": "urbano_km2"
+          },
+          {
+            "ano": 2020,
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2020
+            },
+            "coluna": "urbano_km2"
+          },
+          {
+            "ano": 2025,
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2025
+            },
+            "coluna": "urbano_km2"
+          }
+        ],
+        "destaque_ano": 2025,
+        "marcadores": [
+          {
+            "nome": "urb_2025",
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2025
+            },
+            "coluna": "urbano_km2",
+            "estatistica": "valor unico",
+            "formato": "km2_1",
+            "selo": "observado"
+          },
+          {
+            "nome": "urb_2000",
+            "csv": "area_construida_por_ano.csv",
+            "filtro": {
+              "ano": 2000
+            },
+            "coluna": "urbano_km2",
+            "estatistica": "valor unico",
+            "formato": "km2_1",
+            "selo": "observado"
+          },
+          {
+            "nome": "comissao_min",
+            "csv": "acuracia_por_ano.csv",
+            "filtro": {},
+            "coluna": "acuracia_usuario_construido",
+            "estatistica": "maximo",
+            "transformacao": "complemento_pct",
+            "formato": "pct1",
+            "selo": "observado",
+            "nota": "menor comissao = complemento da MAIOR acuracia do usuario; fonte primaria de FATOS_VERIFICADOS.md, secao de acuracia"
+          },
+          {
+            "nome": "comissao_max",
+            "csv": "acuracia_por_ano.csv",
+            "filtro": {},
+            "coluna": "acuracia_usuario_construido",
+            "estatistica": "minimo",
+            "transformacao": "complemento_pct",
+            "formato": "pct1",
+            "selo": "observado",
+            "nota": "maior comissao = complemento da MENOR acuracia do usuario"
+          }
+        ],
+        "rotulo_en": "Organic urban footprint, 2025",
+        "delta_en": "{urb_2000} in 2000",
+        "nota_en": "own classification; depending on the year, between {comissao_min} and {comissao_max} of what the map calls built-up is not built-up; series non-decreasing by construction",
+        "valor_en": "{urb_2025}"
+      },
+      {
+        "id": "pegada_reassentamento",
+        "rotulo_pt": "Pegada dos povoados de reassentamento, 2015",
+        "valor_pt": "{reas_2015}",
+        "delta_pt": "{reas_2025} em 2025; o bairro 25 de Setembro, sem geometria, fica fora",
+        "nota_pt": "terreno alterado em Cateme e Mwaladzi, não pessoas; sem regra de permanência",
+        "selo": "observado",
+        "serie": [
+          {
+            "ano": 2000,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2000,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2005,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2005,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2010,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2010,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2015,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2015,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2020,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2020,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2"
+          },
+          {
+            "ano": 2025,
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2025,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2"
+          }
+        ],
+        "destaque_ano": 2015,
+        "marcadores": [
+          {
+            "nome": "reas_2015",
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2015,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2",
+            "estatistica": "valor unico",
+            "formato": "km2_1",
+            "selo": "observado"
+          },
+          {
+            "nome": "reas_2025",
+            "csv": "pegada_por_ano.csv",
+            "filtro": {
+              "ano": 2025,
+              "camada": "reassentamento"
+            },
+            "coluna": "area_publicada_km2",
+            "estatistica": "valor unico",
+            "formato": "km2_1",
+            "selo": "observado"
+          }
+        ],
+        "rotulo_en": "Resettlement settlement footprint, 2015",
+        "delta_en": "{reas_2025} in 2025; the 25 de Setembro neighbourhood, without geometry, is excluded",
+        "nota_en": "altered ground in Cateme and Mwaladzi, not persons; no persistence rule",
+        "valor_en": "{reas_2015}"
+      },
+      {
+        "id": "luz_cidade",
+        "rotulo_pt": "Luz noturna da Cidade de Tete, {ano_luz_base}–2025",
+        "valor_pt": "{luz_cidade_var_base_25}",
+        "delta_pt": "{luz_resto_var_base_25} no restante do recorte (mina, vila de Moatize, corredor)",
+        "nota_pt": "NPP-VIIRS-like harmonizado, Chen, Yu et al. (2021); janela homogênea do produto",
+        "selo": "observado",
+        "serie": [
+          {
+            "ano": 2013,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2013
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2014,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2014
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2015,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2015
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2016,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2016
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2017,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2017
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2018,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2018
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2019,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2019
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2020,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2020
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2021,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2021
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2022,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2022
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2023,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2023
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2024,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2024
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          },
+          {
+            "ano": 2025,
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2025
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte"
+          }
+        ],
+        "destaque_ano": 2025,
+        "marcadores": [
+          {
+            "nome": "ano_luz_base",
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2021
+            },
+            "coluna": "ano",
+            "estatistica": "valor unico",
+            "formato": "ano",
+            "nota": "ano da serie de luz, lido do proprio CSV; coincide com o inicio do marco venda_moatize_vulcan"
+          },
+          {
+            "nome": "luz_cid_base",
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2021
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte",
+            "estatistica": "valor unico",
+            "formato": "decimal1",
+            "auxiliar": true
+          },
+          {
+            "nome": "luz_ret_base",
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2021
+            },
+            "coluna": "soma_radiancia",
+            "estatistica": "valor unico",
+            "formato": "decimal1",
+            "auxiliar": true
+          },
+          {
+            "nome": "luz_cid_2025",
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2025
+            },
+            "coluna": "soma_radiancia_adm2_int_recorte",
+            "estatistica": "valor unico",
+            "formato": "decimal1",
+            "auxiliar": true
+          },
+          {
+            "nome": "luz_ret_2025",
+            "csv": "causal/serie_luzes_anual.csv",
+            "filtro": {
+              "unidade": "tete_aoi",
+              "ano": 2025
+            },
+            "coluna": "soma_radiancia",
+            "estatistica": "valor unico",
+            "formato": "decimal1",
+            "auxiliar": true
+          },
+          {
+            "nome": "luz_resto_base",
+            "estatistica": "derivado",
+            "derivado": {
+              "op": "diferenca",
+              "a": "luz_ret_base",
+              "b": "luz_cid_base"
+            },
+            "formato": "decimal1",
+            "auxiliar": true,
+            "nota": "resto = retangulo fixo menos ADM2 da Cidade de Tete no recorte (mina, vila de Moatize, corredor)"
+          },
+          {
+            "nome": "luz_resto_2025",
+            "estatistica": "derivado",
+            "derivado": {
+              "op": "diferenca",
+              "a": "luz_ret_2025",
+              "b": "luz_cid_2025"
+            },
+            "formato": "decimal1",
+            "auxiliar": true
+          },
+          {
+            "nome": "luz_cidade_var_base_25",
+            "estatistica": "derivado",
+            "derivado": {
+              "op": "variacao_pct",
+              "de": "luz_cid_base",
+              "para": "luz_cid_2025"
+            },
+            "formato": "pct1_sinal",
+            "selo": "observado"
+          },
+          {
+            "nome": "luz_resto_var_base_25",
+            "estatistica": "derivado",
+            "derivado": {
+              "op": "variacao_pct",
+              "de": "luz_resto_base",
+              "para": "luz_resto_2025"
+            },
+            "formato": "pct1_sinal",
+            "selo": "observado"
+          }
+        ],
+        "rotulo_en": "Night-light of Tete city, {ano_luz_base}–2025",
+        "delta_en": "{luz_resto_var_base_25} in the rest of the study-area rectangle (mine, Moatize town, logistics corridor)",
+        "nota_en": "NPP-VIIRS-like harmonised, Chen, Yu et al. (2021); homogeneous product window",
+        "valor_en": "{luz_cidade_var_base_25}"
+      },
+      {
+        "id": "contrafactual",
+        "rotulo_pt": "Inflexões do ciclo com atribuição ao carvão sustentada",
+        "valor_pt": "{n_sustentados} de {n_paineis}",
+        "delta_pt": "controle sintético e placebos contra Chimoio, Quelimane, Lichinga, Xai-Xai e Inhambane",
+        "nota_pt": "critérios de rejeição fixados antes de a série de luz existir",
+        "selo": "observado",
+        "serie": null,
+        "marcadores": [
+          {
+            "nome": "n_paineis",
+            "csv": "causal/veredito_fase3.csv",
+            "filtro": {
+              "bloco": "criterio_F"
+            },
+            "coluna": "id",
+            "estatistica": "contagem",
+            "formato": "inteiro"
+          },
+          {
+            "nome": "n_sustentados",
+            "csv": "causal/veredito_fase3.csv",
+            "filtro": {
+              "bloco": "criterio_F"
+            },
+            "filtro_excluir": {
+              "veredito": "CONTRAFACTUAL NAO SUSTENTADO"
+            },
+            "coluna": "id",
+            "estatistica": "contagem",
+            "formato": "inteiro"
+          }
+        ],
+        "rotulo_en": "Breaks in the coal cycle with sustained attribution to coal",
+        "valor_en": "{n_sustentados} of {n_paineis}",
+        "delta_en": "synthetic control and placebos against Chimoio, Quelimane, Lichinga, Xai-Xai and Inhambane",
+        "nota_en": "rejection criteria set before the light series existed"
+      }
+    ],
+    "kicker_en": "Research panel · Tete and Moatize, Mozambique, 2000–2025",
+    "titulo_en": "City, mine and resettlement: three growths that do not add up",
+    "lead_en": "This panel measures, with the same image protocol from 2000 to 2025, the expansion of Tete city, Moatize town, resettlement settlements and the coal-mining footprint, without conflating the three layers. The mining footprint grew more in area than the urban footprint, and the city's night-light continued to rise when that of the rest of the study-area rectangle, where the mine and Moatize town lie, fell. None of the {n_paineis} tested breaks in the coal cycle can be attributed to the mine with the available comparison group."
+  },
+  "capitulos": [
+    {
+      "id": "linha_base",
+      "ano_mapa": 2000,
+      "ano_fantasma": null,
+      "periodo": "1997–2005",
+      "titulo_pt": "Antes da mina, Tete já crescia pela borda",
+      "paragrafos_pt": [
+        "A Vale obtém a concessão de Moatize em {ano_concessao_vale}. Antes disso, a regra que detecta a pegada da mineração encontra {ind_2000} em 2000 e {ind_2005} em 2005 dentro do envelope das minas atuais, e não há pegada de reassentamento. Esse zero anterior às obras é o principal teste de que a camada mede a mina e não outra coisa. No período, só a camada orgânica — a cidade e a vila — cresce.",
+        "O censo de {ano_censo_1997} não tem fonte aberta localizável, e a linha de base vem das imagens. Pelo World Settlement Footprint, que não depende da classificação própria, a área de assentamento da unidade de Tete passa de {wsf_tete_2000} em 2000 para {wsf_tete_2005} em 2005, {wsf_cagr_tete_00_05} ao ano; a da vila de Moatize, de {wsf_moatize_2000} para {wsf_moatize_2005}. É ritmo de ocupação de solo, não de população.",
+        "A expansão já é de borda: {borda_tete_00_05} do assentamento novo de Tete entre 2000 e 2005 é contíguo à mancha anterior, padrão que se repete em todos os quinquênios seguintes. A proporção descreve a tendência agregada, não o lugar exato de cada acréscimo. No ano da concessão, o ritmo de ocupação de solo não muda de forma distinguível do ruído."
+      ],
+      "marcos_ids": [
+        "censo_1997",
+        "concessao_vale"
+      ],
+      "marcadores": [
+        {
+          "nome": "ano_concessao_vale",
+          "marco": "concessao_vale",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_censo_1997",
+          "marco": "censo_1997",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ind_2000",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2000,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "ind_2005",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2005,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "wsf_tete_2000",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "tete",
+            "ano": 2000,
+            "variavel": "area_km2_assentamento_wsf"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "wsf_tete_2005",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "tete",
+            "ano": 2005,
+            "variavel": "area_km2_assentamento_wsf"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "wsf_cagr_tete_00_05",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "tete",
+            "ano": 2005,
+            "variavel": "cagr_pct_ano_desde_2000_assentamento_wsf"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "pct1",
+          "selo": "observado",
+          "nota": "taxa de area de assentamento (WSF), nao de populacao"
+        },
+        {
+          "nome": "wsf_moatize_2000",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "moatize_vila",
+            "ano": 2000,
+            "variavel": "area_km2_assentamento_wsf"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "wsf_moatize_2005",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "moatize_vila",
+            "ano": 2005,
+            "variavel": "area_km2_assentamento_wsf"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "borda_tete_00_05",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "tete",
+            "ano": 2005,
+            "variavel": "prop_borda_desde_2000"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "transformacao": "fracao_para_pct",
+          "formato": "pct0",
+          "selo": "observado"
+        }
+      ],
+      "refs": [
+        {
+          "citacao_curta": "Seto et al., 2011",
+          "achado_pt": "Em escala global, a área urbana cresce a taxas iguais ou superiores às da população, de modo que as cidades se tornam menos densas à medida que se expandem.",
+          "achado_en": "At global scale, urban area grows at rates equal to or exceeding those of population, so that cities become less dense as they expand."
+        },
+        {
+          "citacao_curta": "Marconcini et al., 2021",
+          "achado_pt": "O World Settlement Footprint reconstrói, a partir do arquivo Landsat, o ano em que cada área de assentamento foi detectada pela primeira vez, o que permite medir expansão onde não há cadastro.",
+          "achado_en": "World Settlement Footprint reconstructs, from the Landsat archive, the year each settlement area was first detected, making it possible to measure expansion where there is no cadastre."
+        }
+      ],
+      "camadas_mapa": [
+        "varzea",
+        "urbano",
+        "industrial",
+        "reassentamento"
+      ],
+      "titulo_en": "Before the mine, Tete already grew at the fringe",
+      "paragrafos_en": [
+        "Vale acquires the Moatize concession in {ano_concessao_vale}. Before this, the rule that detects the mining footprint finds {ind_2000} in 2000 and {ind_2005} in 2005 within the envelope of current mines, and there is no resettlement footprint. This zero before works began is the main test that the layer measures the mine and nothing else. In this period, only the organic layer — city and town — grows.",
+        "The {ano_censo_1997} census has no locatable open source, and the baseline comes from images. By World Settlement Footprint, which does not depend on own classification, the settlement area of the Tete unit rises from {wsf_tete_2000} in 2000 to {wsf_tete_2005} in 2005, {wsf_cagr_tete_00_05} per year; that of Moatize town, from {wsf_moatize_2000} to {wsf_moatize_2005}. It is a rate of land occupation, not population.",
+        "Expansion is already at the fringe: {borda_tete_00_05} of new settlement in Tete between 2000 and 2005 is contiguous to the prior footprint, a pattern repeating across all subsequent five-year periods. The proportion describes the aggregate trend, not the exact location of each increment. In the year of concession, the pace of land occupation does not change in a way distinguishable from noise."
+      ]
+    },
+    {
+      "id": "implantacao",
+      "ano_mapa": 2010,
+      "ano_fantasma": 2000,
+      "periodo": "2005–2011",
+      "titulo_pt": "O reassentamento chega antes da produção",
+      "paragrafos_pt": [
+        "A pedra fundamental da mina da Vale é lançada em {ano_obras_vale}. Entre {ano_reass_ini} e {ano_reass_fim}, antes de a mina produzir, a Vale reassenta famílias das aldeias de Chipanga, Bagamoyo, Mithete e Malabwe em Cateme, povoado rural construído a leste de Moatize, e no bairro 25 de Setembro, na vila. São pessoas deslocadas, não polígonos: a imagem mede terreno alterado, e as perdas de terra de cultivo, de água e de acesso a mercados foram documentadas por inquérito, não por satélite. As contagens de famílias divergem entre as fontes e não entram no painel como número.",
+        "No mapa de 2010, Cateme aparece como núcleo separado da mancha: {leapfrog_cateme_05_10} do assentamento novo da unidade entre 2005 e 2010 é salto, não extensão de borda. É o único salto que a série localiza sem ambiguidade, e foi planejado. A pegada do povoado soma {reas_cateme_2010}; a pegada da mineração, {ind_2010}; a mancha urbana orgânica, {urb_2010}. As três são medidas em separado e não se somam: as duas pegadas incluem solo exposto, não só construção.",
+        "O ritmo de ocupação de solo em Tete, {wsf_cagr_tete_05_10} ao ano entre 2005 e 2010, é o menor dos três quinquênios até 2015: a implantação não acelera a expansão física da cidade. Duas ressalvas pesam aqui. O bairro 25 de Setembro não tem geometria em nenhuma fonte aberta, e a parte urbana do reassentamento fica contida na mancha de Moatize, sem separação possível. E 2010 é o ano de validação mais fraco da camada urbana: {comissao_2010} do que o mapa classifica como construído nesse ano não é construído, segundo a amostra de validação."
+      ],
+      "marcos_ids": [
+        "obras_vale",
+        "reassentamento_cateme_25setembro",
+        "censo_2007"
+      ],
+      "marcadores": [
+        {
+          "nome": "ano_obras_vale",
+          "marco": "obras_vale",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_reass_ini",
+          "marco": "reassentamento_cateme_25setembro",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_reass_fim",
+          "marco": "reassentamento_cateme_25setembro",
+          "campo": "fim",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "leapfrog_cateme_05_10",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "cateme",
+            "ano": 2010,
+            "variavel": "prop_leapfrog_desde_2005"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "transformacao": "fracao_para_pct",
+          "formato": "pct0",
+          "selo": "observado"
+        },
+        {
+          "nome": "reas_cateme_2010",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "cateme",
+            "ano": 2010,
+            "variavel": "area_km2_reassentamento"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "ind_2010",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2010,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "urb_2010",
+          "csv": "area_construida_por_ano.csv",
+          "filtro": {
+            "ano": 2010
+          },
+          "coluna": "urbano_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "wsf_cagr_tete_05_10",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "tete",
+            "ano": 2010,
+            "variavel": "cagr_pct_ano_desde_2005_assentamento_wsf"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "pct1",
+          "selo": "observado",
+          "nota": "taxa de area de assentamento (WSF), nao de populacao; menor que as de 2000-2005 e 2010-2015 nas linhas vizinhas do mesmo CSV"
+        },
+        {
+          "nome": "comissao_2010",
+          "csv": "acuracia_por_ano.csv",
+          "filtro": {
+            "ano": 2010
+          },
+          "coluna": "acuracia_usuario_construido",
+          "estatistica": "valor unico",
+          "transformacao": "complemento_pct",
+          "formato": "pct1",
+          "selo": "observado",
+          "nota": "2010 e o ano de menor acuracia do usuario da serie"
+        }
+      ],
+      "refs": [
+        {
+          "citacao_curta": "Cernea, 1997",
+          "achado_pt": "O deslocamento involuntário expõe as famílias a riscos encadeados de empobrecimento — perda de terra, de trabalho e de moradia, insegurança alimentar, desarticulação social — que o reassentamento tem de reverter, e não apenas compensar.",
+          "achado_en": "Involuntary displacement exposes families to chained risks of impoverishment — loss of land, livelihood and housing, food insecurity, social disruption — which resettlement must reverse, not merely compensate for."
+        },
+        {
+          "citacao_curta": "Human Rights Watch, 2013",
+          "achado_pt": "Em Cateme, famílias reassentadas pela Vale relataram terra de cultivo de pior qualidade, acesso intermitente à água e perda de acesso a mercados e a fontes de renda.",
+          "achado_en": "In Cateme, families resettled by Vale reported lower-quality cropland, intermittent water access and lost access to markets and income sources."
+        }
+      ],
+      "camadas_mapa": [
+        "varzea",
+        "urbano",
+        "reassentamento",
+        "industrial"
+      ],
+      "titulo_en": "Resettlement arrives before production",
+      "paragrafos_en": [
+        "The foundation stone of Vale's mine is laid in {ano_obras_vale}. Between {ano_reass_ini} and {ano_reass_fim}, before the mine produces, Vale resettles families from the villages of Chipanga, Bagamoyo, Mithete and Malabwe to Cateme, a rural settlement built east of Moatize, and to the 25 de Setembro neighbourhood in town. These are displaced persons, not polygons: the image measures altered ground, and the losses of cropland, water access and market access were documented by survey, not by satellite. Household counts diverge across sources and do not enter the panel as a number.",
+        "On the 2010 map, Cateme appears as a separate nucleus from the footprint: {leapfrog_cateme_05_10} of new settlement in the unit between 2005 and 2010 is leapfrog, not fringe extension. It is the only leap the series locates without ambiguity, and it was planned. The settlement's footprint totals {reas_cateme_2010}; the mining footprint, {ind_2010}; the organic urban footprint, {urb_2010}. All three are measured separately and do not sum: the two footprints include exposed soil, not just built-up.",
+        "The pace of land occupation in Tete, {wsf_cagr_tete_05_10} per year between 2005 and 2010, is the lowest of three five-year periods to 2015: implantation does not accelerate the city's physical expansion. Two caveats matter here. The 25 de Setembro neighbourhood has no geometry in any open source, and the urban part of resettlement remains within Moatize's footprint without possible separation. And 2010 is the weakest validation year for the urban layer: {comissao_2010} of what the map classifies as built-up that year is not built-up, according to the validation sample."
+      ]
+    },
+    {
+      "id": "boom",
+      "ano_mapa": 2015,
+      "ano_fantasma": 2010,
+      "periodo": "2011–2015",
+      "titulo_pt": "No boom, a mina ocupa mais terreno novo que a cidade",
+      "paragrafos_pt": [
+        "A mina de Moatize entra em operação em {ano_operacao_vale}. A de Benga, da Riversdale, depois Rio Tinto, produz a partir de {ano_operacao_benga}, e com ela vem o reassentamento de Mwaladzi. A fase coincide com o pico dos preços internacionais do carvão.",
+        "Entre 2010 e 2015 a pegada da mineração cresce {ind_delta_10_15}, de {ind_2010} para {ind_2015}, e a mancha urbana orgânica cresce {urb_delta_10_15}: a mina ocupa cerca de {razao_ind_urb_10_15} vezes mais terreno novo que a cidade. Sem a separação das camadas, essa pegada teria sido contada como cidade. A pegada de reassentamento detectada fica em {reas_2015} e não inclui o bairro 25 de Setembro; a de Mwaladzi aparece em 2015, com {reas_mwaladzi_2015}.",
+        "A taxa anual de ocupação de solo tem um pico no ano em que a mina entra em operação e recua em seguida: é pico, não mudança de regime. Capitais de comparação sem carvão mostram a mesma inflexão, e os dados não permitem atribuí-la à mina. O limiar da pegada da mineração foi calibrado contra um mapa externo de minas; a prova de que ele mede a mina é o zero anterior às obras, não essa concordância. Em 2015, {comissao_2015} do que o mapa classifica como construído não é construído."
+      ],
+      "marcos_ids": [
+        "operacao_vale",
+        "operacao_benga"
+      ],
+      "marcadores": [
+        {
+          "nome": "ano_operacao_vale",
+          "marco": "operacao_vale",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_operacao_benga",
+          "marco": "operacao_benga",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ind_2010",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2010,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "ind_2015",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2015,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "urb_2010",
+          "csv": "area_construida_por_ano.csv",
+          "filtro": {
+            "ano": 2010
+          },
+          "coluna": "urbano_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "auxiliar": true
+        },
+        {
+          "nome": "urb_2015",
+          "csv": "area_construida_por_ano.csv",
+          "filtro": {
+            "ano": 2015
+          },
+          "coluna": "urbano_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "auxiliar": true
+        },
+        {
+          "nome": "ind_delta_10_15",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "diferenca",
+            "a": "ind_2015",
+            "b": "ind_2010"
+          },
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "urb_delta_10_15",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "diferenca",
+            "a": "urb_2015",
+            "b": "urb_2010"
+          },
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "razao_ind_urb_10_15",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "razao",
+            "a": "ind_delta_10_15",
+            "b": "urb_delta_10_15"
+          },
+          "formato": "decimal1",
+          "selo": "observado",
+          "nota": "razao entre acrescimos absolutos de area, nao entre taxas"
+        },
+        {
+          "nome": "reas_2015",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2015,
+            "camada": "reassentamento"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "reas_mwaladzi_2015",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "mwaladzi",
+            "ano": 2015,
+            "variavel": "area_km2_reassentamento"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_2",
+          "selo": "observado",
+          "nota": "valor de 2010 na linha vizinha e zero"
+        },
+        {
+          "nome": "comissao_2015",
+          "csv": "acuracia_por_ano.csv",
+          "filtro": {
+            "ano": 2015
+          },
+          "coluna": "acuracia_usuario_construido",
+          "estatistica": "valor unico",
+          "transformacao": "complemento_pct",
+          "formato": "pct1",
+          "selo": "observado"
+        }
+      ],
+      "refs": [
+        {
+          "citacao_curta": "Bryceson & MacKinnon, 2012",
+          "achado_pt": "Em África, a mineração gera urbanização acelerada em torno das jazidas, e a trajetória desses núcleos depende do ciclo do minério e do modo de exploração.",
+          "achado_en": "In Africa, mining generates accelerated urbanization around deposits, and the trajectory of these nuclei depends on the ore cycle and mode of exploitation."
+        },
+        {
+          "citacao_curta": "Maus et al., 2022",
+          "achado_pt": "A pegada da mineração — cavas, pilhas de estéril e rejeito, instalações de beneficiamento — pode ser delimitada por imagem de satélite em escala global.",
+          "achado_en": "The mining footprint — pits, waste-rock and tailings piles, processing facilities — can be delineated by satellite imagery at global scale."
+        }
+      ],
+      "camadas_mapa": [
+        "varzea",
+        "urbano",
+        "industrial",
+        "reassentamento"
+      ],
+      "titulo_en": "In the boom, the mine occupies more new ground than the city",
+      "paragrafos_en": [
+        "Moatize mine begins operation in {ano_operacao_vale}. Benga, of Riversdale, then Rio Tinto, operates from {ano_operacao_benga}, and with it comes the Mwaladzi resettlement. The phase coincides with peak international coal prices.",
+        "Between 2010 and 2015 the mining footprint grows {ind_delta_10_15}, from {ind_2010} to {ind_2015}, and the organic urban footprint grows {urb_delta_10_15}: the mine occupies roughly {razao_ind_urb_10_15} times more new ground than the city. Without layer separation, this footprint would have been counted as city. The detected resettlement footprint stands at {reas_2015} and excludes the 25 de Setembro neighbourhood; Mwaladzi's appears in 2015, with {reas_mwaladzi_2015}.",
+        "The annual land-occupation rate peaks in the year the mine begins operation and recedes thereafter: a peak, not a regime shift. Comparison capitals without coal show the same break, and the data does not allow attribution to the mine. The mining-footprint threshold was calibrated against an external mine map; the proof that it measures the mine is the zero before works, not this concordance. In 2015, {comissao_2015} of what the map classifies as built-up is not built-up."
+      ]
+    },
+    {
+      "id": "bust",
+      "ano_mapa": 2020,
+      "ano_fantasma": 2015,
+      "periodo": "2015–2019",
+      "titulo_pt": "O preço do carvão cai; a pegada da mina continua a crescer",
+      "paragrafos_pt": [
+        "Os preços internacionais do carvão caem entre {ano_queda_ini} e {ano_queda_fim}, e o Corredor Logístico de Nacala é inaugurado em {ano_nacala} (data de imprensa, sem confirmação em fonte primária). A pegada da mineração continua a crescer: {ind_2015} em 2015, {ind_2020} em 2020. A hipótese de que ela estabilizaria com a queda dos preços não aparece na série.",
+        "A mancha urbana orgânica passa de {urb_2015} para {urb_2020} e não poderia recuar: a série é não decrescente por construção, e a ausência de contração é propriedade do dado, não da cidade. Em 2020, {comissao_2020} do que o mapa classifica como construído não é construído. Nos povoados, onde não há essa regra, a pegada cai: Cateme passa de {reas_cateme_2015} para {reas_cateme_2020}. Revegetação de lotes, abandono parcial e erro de classificação produzem o mesmo sinal na imagem, e a série não os separa; ler essa queda como abandono seria afirmar algo sobre pessoas a partir de pixels.",
+        "O censo de {ano_censo_2017} conta {pop_tete_2017} residentes na Cidade de Tete e {pop_moatize_2017} no Distrito de Moatize, sem ajuste pela omissão estimada pelo INE. São os únicos pontos de população observados em fonte aberta; os censos anteriores entram só como contexto. Com um único ponto, a hipótese de que a luz noturna se descolaria da população depois da queda dos preços não pôde ser testada. A série de luz de Tete tem uma queda de nível logo após a queda dos preços, mas a mesma queda aparece, com força igual ou maior, na maioria das capitais de comparação sem carvão: os dados não permitem atribuí-la ao fim do boom."
+      ],
+      "marcos_ids": [
+        "queda_precos_carvao_2015_2016",
+        "corredor_nacala_operacao",
+        "censo_2017"
+      ],
+      "marcadores": [
+        {
+          "nome": "ano_queda_ini",
+          "marco": "queda_precos_carvao_2015_2016",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_queda_fim",
+          "marco": "queda_precos_carvao_2015_2016",
+          "campo": "fim",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_nacala",
+          "marco": "corredor_nacala_operacao",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano",
+          "nota": "marco de nivel secundario em config/marcos.yaml; a frase declara isso"
+        },
+        {
+          "nome": "ind_2015",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2015,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "ind_2020",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2020,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "urb_2015",
+          "csv": "area_construida_por_ano.csv",
+          "filtro": {
+            "ano": 2015
+          },
+          "coluna": "urbano_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "urb_2020",
+          "csv": "area_construida_por_ano.csv",
+          "filtro": {
+            "ano": 2020
+          },
+          "coluna": "urbano_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "comissao_2020",
+          "csv": "acuracia_por_ano.csv",
+          "filtro": {
+            "ano": 2020
+          },
+          "coluna": "acuracia_usuario_construido",
+          "estatistica": "valor unico",
+          "transformacao": "complemento_pct",
+          "formato": "pct1",
+          "selo": "observado"
+        },
+        {
+          "nome": "reas_cateme_2015",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "cateme",
+            "ano": 2015,
+            "variavel": "area_km2_reassentamento"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_2",
+          "selo": "observado"
+        },
+        {
+          "nome": "reas_cateme_2020",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "cateme",
+            "ano": 2020,
+            "variavel": "area_km2_reassentamento"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_2",
+          "selo": "observado"
+        },
+        {
+          "nome": "ano_censo_2017",
+          "marco": "censo_2017",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "pop_tete_2017",
+          "csv": "demografia_serie_1997_2025.csv",
+          "filtro": {
+            "unidade_geografica": "Cidade de Tete",
+            "ano": 2017,
+            "variavel": "populacao_total_residente"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "inteiro",
+          "selo": "observado"
+        },
+        {
+          "nome": "pop_moatize_2017",
+          "csv": "demografia_serie_1997_2025.csv",
+          "filtro": {
+            "unidade_geografica": "Distrito de Moatize",
+            "ano": 2017,
+            "variavel": "populacao_total_residente"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "inteiro",
+          "selo": "observado",
+          "nota": "limites do distrito mudaram entre censos; so o ponto de 2017 e usado"
+        }
+      ],
+      "refs": [
+        {
+          "citacao_curta": "Henderson, Storeygard & Weil, 2012",
+          "achado_pt": "A luz noturna vista do espaço acompanha o crescimento do produto e pode complementar as contas nacionais onde elas são fracas.",
+          "achado_en": "Night-light from space tracks economic growth and can complement national accounts where they are weak."
+        },
+        {
+          "citacao_curta": "Chen & Nordhaus, 2011",
+          "achado_pt": "A luminosidade acrescenta informação útil sobretudo onde as estatísticas oficiais são de baixa qualidade, e pouca onde elas são boas.",
+          "achado_en": "Luminosity adds useful information above all where official statistics are poor quality, and little where they are good."
+        }
+      ],
+      "camadas_mapa": [
+        "varzea",
+        "urbano",
+        "industrial",
+        "reassentamento"
+      ],
+      "titulo_en": "Coal price falls; the mine footprint keeps growing",
+      "paragrafos_en": [
+        "International coal prices fall between {ano_queda_ini} and {ano_queda_fim}, and the Nacala Logistics Corridor opens in {ano_nacala} (press date, unconfirmed in primary source). The mining footprint keeps growing: {ind_2015} in 2015, {ind_2020} in 2020. The hypothesis that it would stabilize with price collapse does not appear in the series.",
+        "The organic urban footprint rises from {urb_2015} to {urb_2020} and cannot fall: the series is non-decreasing by construction, and absence of contraction is a property of the data, not the city. In 2020, {comissao_2020} of what the map calls built-up is not built-up. In the settlements, where no such rule applies, the footprint falls: Cateme drops from {reas_cateme_2015} to {reas_cateme_2020}. Vegetation recovery, partial abandonment and classification error produce the same signal in the image, and the series does not separate them; reading this fall as abandonment would be asserting something about people from pixels.",
+        "The {ano_censo_2017} census counts {pop_tete_2017} residents in Tete city and {pop_moatize_2017} in Moatize district, unadjusted for undercount estimated by INE. These are the only observed population points in open source; earlier censuses enter only as context. With a single point, the hypothesis that night-light would decouple from population after price collapse could not be tested. Tete's light series shows a level drop soon after price collapse, but the same drop appears with equal or greater force in most comparison capitals without coal: the data does not allow attribution to the boom's end."
+      ]
+    },
+    {
+      "id": "transicao",
+      "ano_mapa": 2025,
+      "ano_fantasma": 2020,
+      "periodo": "2019–2025",
+      "titulo_pt": "A luz da cidade sobe; a queda no resto do recorte não é atribuível à mina",
+      "paragrafos_pt": [
+        "A Vale anuncia a venda da mina de Moatize e do Corredor de Nacala à Vulcan, do grupo Jindal, em {ano_anuncio_venda}, e conclui a operação em {ano_conclusao_venda}. Entre {ano_luz_base} e {ano_luz_queda}, a luz noturna somada sobre o recorte de estudo cai {luz_ret_var_base_queda_abs}. A queda não está na cidade: na Cidade de Tete a luz varia {luz_cidade_var_base_queda}; no restante do recorte — mina, vila de Moatize e corredor — varia {luz_resto_var_base_queda}.",
+        "Os dados não permitem atribuir essa queda à mina. A pegada da mineração responde por uma parte dela, e a maior contribuição isolada vem de área que nenhuma camada classifica; uma revisão do próprio produto de luz nesses anos também não está descartada. Até 2025, a luz da cidade cresce {luz_cidade_var_base_25} sobre o nível de {ano_luz_base} — menos que os recortes das capitais de comparação, que não têm mina —, enquanto a do restante do recorte varia {luz_resto_var_base_25}.",
+        "Na imagem de 2025, a pegada da mineração chega a {ind_2025}, maior em área que a mancha urbana orgânica, de {urb_2025}. A pegada de Cateme fica abaixo da de 2015, em {reas_cateme_2025}, e a de Mwaladzi volta a um nível próximo ao de 2015, com {reas_mwaladzi_2025}. Entre 2020 e 2025, uma camada modelada — não observada — combina área construída, luz e edificações do Google Open Buildings e localiza onde áreas já ocupadas se intensificam: sobretudo no anel imediatamente externo à mancha de 2020, mais em Tete que em Moatize. Ela mostra onde, não quanto; não detecta esvaziamento; e o registro de edificações é de um único ano, anterior a 2025. Em 2025, {comissao_2025} do que o mapa classifica como construído não é construído."
+      ],
+      "marcos_ids": [
+        "venda_moatize_vulcan"
+      ],
+      "marcadores": [
+        {
+          "nome": "ano_anuncio_venda",
+          "marco": "venda_moatize_vulcan",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_conclusao_venda",
+          "marco": "venda_moatize_vulcan",
+          "campo": "fim",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "ano_luz_base",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2021
+          },
+          "coluna": "ano",
+          "estatistica": "valor unico",
+          "formato": "ano",
+          "nota": "anos da comparacao de luz lidos do proprio CSV, nao do marco; se o marco venda_moatize_vulcan mudar, a frase 'Entre ... e ...' continua a mostrar os anos de fato comparados"
+        },
+        {
+          "nome": "ano_luz_queda",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2022
+          },
+          "coluna": "ano",
+          "estatistica": "valor unico",
+          "formato": "ano"
+        },
+        {
+          "nome": "luz_ret_base",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2021
+          },
+          "coluna": "soma_radiancia",
+          "estatistica": "valor unico",
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_cid_base",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2021
+          },
+          "coluna": "soma_radiancia_adm2_int_recorte",
+          "estatistica": "valor unico",
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_ret_queda",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2022
+          },
+          "coluna": "soma_radiancia",
+          "estatistica": "valor unico",
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_cid_queda",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2022
+          },
+          "coluna": "soma_radiancia_adm2_int_recorte",
+          "estatistica": "valor unico",
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_ret_2025",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2025
+          },
+          "coluna": "soma_radiancia",
+          "estatistica": "valor unico",
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_cid_2025",
+          "csv": "causal/serie_luzes_anual.csv",
+          "filtro": {
+            "unidade": "tete_aoi",
+            "ano": 2025
+          },
+          "coluna": "soma_radiancia_adm2_int_recorte",
+          "estatistica": "valor unico",
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_resto_base",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "diferenca",
+            "a": "luz_ret_base",
+            "b": "luz_cid_base"
+          },
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_resto_queda",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "diferenca",
+            "a": "luz_ret_queda",
+            "b": "luz_cid_queda"
+          },
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_resto_2025",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "diferenca",
+            "a": "luz_ret_2025",
+            "b": "luz_cid_2025"
+          },
+          "formato": "decimal1",
+          "auxiliar": true
+        },
+        {
+          "nome": "luz_ret_var_base_queda_abs",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "variacao_pct",
+            "de": "luz_ret_base",
+            "para": "luz_ret_queda"
+          },
+          "formato": "pct1_abs",
+          "selo": "observado",
+          "nota": "variacao negativa; a direcao esta no verbo 'cai'"
+        },
+        {
+          "nome": "luz_cidade_var_base_queda",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "variacao_pct",
+            "de": "luz_cid_base",
+            "para": "luz_cid_queda"
+          },
+          "formato": "pct1_sinal",
+          "selo": "observado"
+        },
+        {
+          "nome": "luz_resto_var_base_queda",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "variacao_pct",
+            "de": "luz_resto_base",
+            "para": "luz_resto_queda"
+          },
+          "formato": "pct1_sinal",
+          "selo": "observado"
+        },
+        {
+          "nome": "luz_cidade_var_base_25",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "variacao_pct",
+            "de": "luz_cid_base",
+            "para": "luz_cid_2025"
+          },
+          "formato": "pct1_sinal",
+          "selo": "observado",
+          "nota": "comparacao com controles (soma_radiancia dos recortes de chimoio, quelimane, lichinga, xaixai, inhambane no mesmo intervalo): todos os cinco crescem mais que a cidade"
+        },
+        {
+          "nome": "luz_resto_var_base_25",
+          "estatistica": "derivado",
+          "derivado": {
+            "op": "variacao_pct",
+            "de": "luz_resto_base",
+            "para": "luz_resto_2025"
+          },
+          "formato": "pct1_sinal",
+          "selo": "observado"
+        },
+        {
+          "nome": "ind_2025",
+          "csv": "pegada_por_ano.csv",
+          "filtro": {
+            "ano": 2025,
+            "camada": "industrial"
+          },
+          "coluna": "area_publicada_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "urb_2025",
+          "csv": "area_construida_por_ano.csv",
+          "filtro": {
+            "ano": 2025
+          },
+          "coluna": "urbano_km2",
+          "estatistica": "valor unico",
+          "formato": "km2_1",
+          "selo": "observado"
+        },
+        {
+          "nome": "reas_cateme_2025",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "cateme",
+            "ano": 2025,
+            "variavel": "area_km2_reassentamento"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_2",
+          "selo": "observado"
+        },
+        {
+          "nome": "reas_mwaladzi_2025",
+          "csv": "stats_by_year_by_unit.csv",
+          "filtro": {
+            "familia": "forma_urbana",
+            "unidade_geografica": "mwaladzi",
+            "ano": 2025,
+            "variavel": "area_km2_reassentamento"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "km2_2",
+          "selo": "observado"
+        },
+        {
+          "nome": "comissao_2025",
+          "csv": "acuracia_por_ano.csv",
+          "filtro": {
+            "ano": 2025
+          },
+          "coluna": "acuracia_usuario_construido",
+          "estatistica": "valor unico",
+          "transformacao": "complemento_pct",
+          "formato": "pct1",
+          "selo": "observado"
+        }
+      ],
+      "refs": [
+        {
+          "citacao_curta": "Kirshner & Power, 2015",
+          "achado_pt": "Tete é descrita como cidade de boom sob urbanismo extrativo, com efeitos concentrados em habitação, serviços e custo de vida, e não na base produtiva local.",
+          "achado_en": "Tete is described as a boom city under extractive urbanism, with effects concentrated in housing, services and cost of living, not in local productive base."
+        },
+        {
+          "citacao_curta": "Bebbington et al., 2008",
+          "achado_pt": "A relação entre mineração e desenvolvimento local é ambígua e disputada: o investimento pode reter pouco valor no território onde a mina opera.",
+          "achado_en": "The relationship between mining and local development is ambiguous and contested: investment can retain little value in the territory where the mine operates."
+        }
+      ],
+      "camadas_mapa": [
+        "varzea",
+        "urbano",
+        "industrial",
+        "reassentamento",
+        "adensamento_2020_2025"
+      ],
+      "titulo_en": "City light rises; the fall in the rest of the study-area rectangle is not attributable to the mine",
+      "paragrafos_en": [
+        "Vale announces the sale of Moatize mine and the Nacala Corridor to Vulcan, of the Jindal group, in {ano_anuncio_venda}, and concludes operations in {ano_conclusao_venda}. Between {ano_luz_base} and {ano_luz_queda}, cumulative night-light over the study-area rectangle falls {luz_ret_var_base_queda_abs}. The fall is not in the city: in Tete city light varies {luz_cidade_var_base_queda}; in the rest of the study-area rectangle — mine, Moatize town and corridor — it varies {luz_resto_var_base_queda}.",
+        "The data does not allow attribution of this fall to the mine. The mining footprint accounts for part of it, and the largest single contribution comes from area no layer classifies; a revision of the light product itself in those years is also not ruled out. By 2025, city light grows {luz_cidade_var_base_25} from the {ano_luz_base} level — less than the study-area rectangles of comparison capitals without a mine —, while that of the rest of the study-area rectangle varies {luz_resto_var_base_25}.",
+        "In the 2025 image, the mining footprint reaches {ind_2025}, larger in area than the organic urban footprint of {urb_2025}. Cateme's footprint falls below 2015's level to {reas_cateme_2025}, and Mwaladzi's returns to near 2015 levels with {reas_mwaladzi_2025}. Between 2020 and 2025, a modelled — not observed — layer combines built-up area, light and Google Open Buildings footprints to locate where already-occupied areas intensify: chiefly in the ring immediately outside the 2020 footprint, more in Tete than Moatize. It shows where, not how much; does not detect emptying; and the building record is from a single year before 2025. In 2025, {comissao_2025} of what the map classifies as built-up is not built-up."
+      ]
+    },
+    {
+      "id": "prospectivo",
+      "ano_mapa": 2025,
+      "ano_fantasma": 2000,
+      "periodo": "2025–2040",
+      "titulo_pt": "Três cenários modelados, nenhum de contração",
+      "paragrafos_pt": [
+        "Os cenários partem da população de 2025 da Cidade de Tete, {pop_tete_2025}, que já é projeção do INE, não contagem. Projetar sobre ela reencena a premissa do INE: a circularidade está declarada, não corrigida. Cada cenário desloca para cima ou para baixo a taxa implícita do INE entre {ano_censo_2017} e 2025, {cagr_tete_17_25} ao ano, e a combina com migração líquida negativa, nula ou positiva. Todos os números deste capítulo são modelados.",
+        "Com migração nula, a Cidade de Tete chegaria ao fim do período com {cen_decl_fim} habitantes no declínio, {cen_cont_fim} na continuidade sob novos operadores e {cen_div_fim} na diversificação — energia, logística, agroindústria. Considerando todas as combinações de cenário e migração, a faixa vai de {cen_min_fim} a {cen_max_fim}: a amplitude mede a sensibilidade do modelo, não uma incerteza estimada. Nenhum cenário produz população decrescente — mesmo o declínio com migração negativa cresce {cen_taxa_min} ao ano —, porque todos partem da taxa do INE.",
+        "A área agrícola que cada cenário consumiria não é determinável com esta série: a classificação de cultivo de sequeiro foi reprovada na validação, e a de cultivo irrigado ficou abaixo do limiar fixado antes dos dados. O estudo calcula apenas quanto da várzea do Zambeze ficaria dentro de um envelope geométrico de expansão em cada cenário, sem dizer onde a cidade cresceria. O próximo ponto observado é o censo de {ano_censo_2027}, o primeiro digital do INE."
+      ],
+      "marcos_ids": [
+        "censo_2027_previsto"
+      ],
+      "marcadores": [
+        {
+          "nome": "pop_tete_2025",
+          "csv": "demografia_serie_1997_2025.csv",
+          "filtro": {
+            "unidade_geografica": "Cidade de Tete",
+            "ano": 2025,
+            "variavel": "populacao_total_residente"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "inteiro",
+          "selo": "modelado"
+        },
+        {
+          "nome": "ano_censo_2017",
+          "marco": "censo_2017",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        },
+        {
+          "nome": "cagr_tete_17_25",
+          "csv": "demografia_serie_1997_2025.csv",
+          "filtro": {
+            "unidade_geografica": "Cidade de Tete",
+            "ano": 2025,
+            "variavel": "cagr_2017_2025"
+          },
+          "coluna": "valor",
+          "estatistica": "valor unico",
+          "formato": "pct1",
+          "selo": "modelado",
+          "nota": "premissa do produtor (projecao do INE), nao medida"
+        },
+        {
+          "nome": "cen_decl_fim",
+          "csv": "causal/cenarios_2035_2040.csv",
+          "filtro": {
+            "unidade": "Cidade de Tete",
+            "cenario": "declinio",
+            "migracao_liquida_pp": 0,
+            "horizonte": 2040
+          },
+          "coluna": "populacao",
+          "estatistica": "valor unico",
+          "formato": "inteiro",
+          "selo": "modelado"
+        },
+        {
+          "nome": "cen_cont_fim",
+          "csv": "causal/cenarios_2035_2040.csv",
+          "filtro": {
+            "unidade": "Cidade de Tete",
+            "cenario": "continuidade",
+            "migracao_liquida_pp": 0,
+            "horizonte": 2040
+          },
+          "coluna": "populacao",
+          "estatistica": "valor unico",
+          "formato": "inteiro",
+          "selo": "modelado"
+        },
+        {
+          "nome": "cen_div_fim",
+          "csv": "causal/cenarios_2035_2040.csv",
+          "filtro": {
+            "unidade": "Cidade de Tete",
+            "cenario": "diversificacao",
+            "migracao_liquida_pp": 0,
+            "horizonte": 2040
+          },
+          "coluna": "populacao",
+          "estatistica": "valor unico",
+          "formato": "inteiro",
+          "selo": "modelado"
+        },
+        {
+          "nome": "cen_min_fim",
+          "csv": "causal/cenarios_2035_2040.csv",
+          "filtro": {
+            "unidade": "Cidade de Tete",
+            "horizonte": 2040
+          },
+          "coluna": "populacao",
+          "estatistica": "minimo",
+          "formato": "inteiro",
+          "selo": "modelado",
+          "nota": "nove trajetorias; minimo = declinio com migracao negativa"
+        },
+        {
+          "nome": "cen_max_fim",
+          "csv": "causal/cenarios_2035_2040.csv",
+          "filtro": {
+            "unidade": "Cidade de Tete",
+            "horizonte": 2040
+          },
+          "coluna": "populacao",
+          "estatistica": "maximo",
+          "formato": "inteiro",
+          "selo": "modelado",
+          "nota": "nove trajetorias; maximo = diversificacao com migracao positiva"
+        },
+        {
+          "nome": "cen_taxa_min",
+          "csv": "causal/cenarios_2035_2040.csv",
+          "filtro": {
+            "unidade": "Cidade de Tete",
+            "cenario": "declinio",
+            "migracao_liquida_pp": -1,
+            "horizonte": 2040
+          },
+          "coluna": "taxa_anual_pct",
+          "estatistica": "valor unico",
+          "formato": "pct1",
+          "selo": "modelado"
+        },
+        {
+          "nome": "ano_censo_2027",
+          "marco": "censo_2027_previsto",
+          "campo": "inicio",
+          "estatistica": "marco",
+          "formato": "ano"
+        }
+      ],
+      "refs": [
+        {
+          "citacao_curta": "Bren d'Amour et al., 2017",
+          "achado_pt": "A expansão urbana projetada tende a ocupar terras agrícolas de produtividade acima da média, com as perdas concentradas na África e na Ásia.",
+          "achado_en": "Projected urban expansion tends to occupy above-average-productivity agricultural land, with losses concentrated in Africa and Asia."
+        },
+        {
+          "citacao_curta": "Sheldon, 1999",
+          "achado_pt": "Nas cidades moçambicanas, mulheres cultivam machambas urbanas e periurbanas como fonte de alimento e de renda do domicílio.",
+          "achado_en": "In Mozambican cities, women cultivate urban and periurban machambas (farm plots) as sources of household food and income."
+        }
+      ],
+      "camadas_mapa": [
+        "urbano",
+        "industrial",
+        "varzea"
+      ],
+      "titulo_en": "Three modelled scenarios, none with contraction",
+      "paragrafos_en": [
+        "The scenarios start from 2025 population for Tete city, {pop_tete_2025}, which is already an INE projection, not a count. Projecting onto it re-enacts INE's premise: circularity is declared, not corrected. Each scenario shifts up or down INE's implicit rate between {ano_censo_2017} and 2025, {cagr_tete_17_25} per year, and combines it with negative, zero or positive net migration. All numbers in this chapter are modelled.",
+        "With zero net migration, Tete city would end the period with {cen_decl_fim} residents under decline, {cen_cont_fim} under continuity with new operators, and {cen_div_fim} under diversification — energy, logistics, agro-industry. Considering all scenario and migration combinations, the band ranges from {cen_min_fim} to {cen_max_fim}: amplitude measures model sensitivity, not estimated uncertainty. No scenario yields declining population — even decline with negative migration grows {cen_taxa_min} per year —, because all start from INE's rate.",
+        "The agricultural area each scenario would consume is not determinable from this series: rainfed cropping classification failed validation, and irrigated cropping fell below the pre-data threshold. The study calculates only how much of the Zambezi floodplain would fall within a geometric expansion envelope in each scenario, without saying where the city would grow. The next observed point is the {ano_censo_2027} census, INE's first digital one."
+      ]
+    }
+  ]
+}

@@ -1,10 +1,33 @@
-import { createContext, useContext, useState, useMemo } from "react";
+import { useContext, useState, useMemo } from "react";
+import { StoreContext } from "./contextos.js";
 import { ANOS_ANCORA_IMAGEM } from "./data.js";
 
-const StoreContext = createContext(null);
+// Ano exibido quando a URL não traz `?ano=` válido.
+export const ANO_PADRAO = 2025;
+
+/**
+ * `?ano=` válido (âncora de imagem) → número; ausente → null; inválido → ANO_PADRAO.
+ * Nunca devolve um ano fora de ANOS_ANCORA_IMAGEM.
+ */
+export function anoDeParametro(bruto) {
+  if (bruto == null) return null;
+  const n = Number(bruto);
+  return ANOS_ANCORA_IMAGEM.includes(n) ? n : ANO_PADRAO;
+}
+
+// Valor inicial lido do hash (`#/mancha?ano=2010`) ANTES do primeiro render: sem isto o
+// store nasce em 2025 e o efeito store→URL de MapaPage reescreve a URL antes de ela ser
+// lida — era a corrida que fazia o recarregamento de `?ano=2010` virar `?ano=2025`.
+function anoInicialDaUrl() {
+  if (typeof window === "undefined") return ANO_PADRAO;
+  const hash = window.location.hash || "";
+  const q = hash.indexOf("?");
+  if (q < 0) return ANO_PADRAO;
+  return anoDeParametro(new URLSearchParams(hash.slice(q + 1)).get("ano")) ?? ANO_PADRAO;
+}
 
 export function StoreProvider({ children }) {
-  const [ano, setAno] = useState(2025);
+  const [ano, setAno] = useState(anoInicialDaUrl);
   const [unidade, setUnidade] = useState("Cidade de Tete");
   // Estado inicial das camadas do mapa (decisão do usuário, 2026-09-09): o app abre com
   // TODAS ligadas, exceto `cultivo_sequeiro`.
@@ -32,7 +55,10 @@ export function StoreProvider({ children }) {
     osm_aerodromo: true,
     adensamento_2020_2025: true,
   });
-  const [referencia, setReferencia] = useState("nenhuma");
+  // Estado de reprodução do slider temporal (SliderTemporal.jsx) — vive no store, não
+  // no componente, para que a Página de Mapa e o modo Narrativa possam ler/pausar a
+  // mesma reprodução (§6).
+  const [tocando, setTocando] = useState(false);
 
   const value = useMemo(
     () => ({
@@ -43,10 +69,10 @@ export function StoreProvider({ children }) {
       setUnidade,
       camadasAtivas,
       setCamadasAtivas,
-      referencia,
-      setReferencia,
+      tocando,
+      setTocando,
     }),
-    [ano, unidade, camadasAtivas, referencia]
+    [ano, unidade, camadasAtivas, tocando]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

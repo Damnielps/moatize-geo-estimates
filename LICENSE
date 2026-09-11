@@ -1,16 +1,6 @@
-Este repositório tem duas licenças, conforme §11.1 do prompt-mestre:
-
-- **Código** (`pipeline/`, `scripts/`, `app/`, `Makefile`, `Dockerfile`): MIT, abaixo.
-- **Dados derivados** (`data/processed/`): Creative Commons Attribution 4.0 International
-  (CC-BY-4.0) — https://creativecommons.org/licenses/by/4.0/legalcode
-  Os dados de origem mantêm as licenças dos seus produtores, listadas em
-  `data/LICENSES.md`. Nenhum dado de nível B ou C é redistribuído aqui (§4.0).
-
----
-
 MIT License
 
-Copyright (c) 2026 <TITULAR DOS DIREITOS — preencher antes de publicar>
+Copyright (c) 2026 Daniel Pessini Sobreira
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,3 +19,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Esta licença (MIT) cobre exclusivamente o **código-fonte** deste repositório
+(`pipeline/`, `scripts/`, `app/`, `Makefile`, `Dockerfile`). Os dados agregados
+publicados em `data/processed/`, as figuras, as tabelas, o artigo e o conteúdo
+textual do painel estão sob licenças diferentes — ver `LICENSE-DADOS.md`.

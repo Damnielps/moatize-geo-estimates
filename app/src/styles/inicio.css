@@ -1,0 +1,121 @@
+/* Página inicial (Fase 4b, B3) — desenho portado de urban-canaa/web/src/styles/inicio.css.
+   Só tokens de ../ardosia.css. A área rolável do app é `.ard-rolagem` (index.css), abaixo
+   do cabeçalho: o `position: sticky` do mapa é relativo a ela, e a altura útil é a da
+   janela menos o cabeçalho (--inicio-cab). */
+
+.inicio { --inicio-cab: 56px; position: relative; max-width: 1360px; margin: 0 auto; padding: var(--ard-sp-4) var(--ard-sp-2) var(--ard-sp-6); }
+
+/* ---------------------------------------------------------------- hero */
+.inicio__hero { padding-bottom: var(--ard-sp-2); max-width: 980px; }
+.inicio__hero .ard-kicker { max-width: none; }
+.inicio__hero h1 { font-size: 46px; line-height: 1.1; letter-spacing: -0.015em; margin: 0 0 var(--ard-sp-3); max-width: 28ch; color: var(--ard-text); }
+.inicio__lead { font: 400 19px/1.6 var(--ard-serif); color: var(--ard-grafite-cl); max-width: 72ch; margin: 0; }
+
+.inicio__secao { margin: var(--ard-sp-5) 0 0; }
+.inicio__secao h2 { margin: 0 0 var(--ard-sp-3); }
+
+/* ---------------------------------------------------------------- KPIs */
+.kpis--inicio { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpis--inicio .kpi { padding: var(--ard-sp-3); }
+.kpis--inicio .ard-kpi-label { font: 600 12px/1.35 var(--ard-sans); color: var(--ard-text-2); }
+.kpis--inicio .ard-kpi-value { font-size: 30px; line-height: 1.15; }
+.kpis--inicio .kpi__delta { font-size: 13px; }
+.kpis--inicio .kpi__nota { font-size: 12px; color: var(--ard-text-2); }
+.kpi__selo { margin-right: 4px; }
+@media (max-width: 1100px) { .kpis--inicio { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .kpis--inicio { grid-template-columns: 1fr; }
+  .inicio__hero h1 { font-size: 34px; }
+  .inicio__lead { font-size: 17px; }
+}
+
+/* ---------------------------------------------------------------- narrativa:
+   texto rolando à esquerda, mapa fixo à direita */
+.narrativa { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--ard-sp-5); align-items: start; margin-top: var(--ard-sp-5); }
+.narrativa__passos { padding: 8vh 0 30vh; min-width: 0; }
+.narrativa__passo {
+  min-height: 78vh; padding: var(--ard-sp-3) 0 var(--ard-sp-3) 20px;
+  border-left: 2px solid var(--ard-border); transition: border-color 200ms;
+}
+/* Passo ativo marcado pela borda terracota; os demais não são esmaecidos (contraste AA). */
+.narrativa__passo.ativo { border-left-color: var(--ard-acento); }
+.narrativa__passo h3 { margin: 0 0 var(--ard-sp-2); }
+.narrativa__texto p { margin: 0 0 var(--ard-sp-2); font-size: 17px; }
+
+.narrativa__rotulo { font: 600 10px/1 var(--ard-sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ard-text-2); margin: 0 0 6px; }
+.narrativa__marcos { margin-top: var(--ard-sp-3); }
+.narrativa__marcos ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.narrativa__marcos li { font: 400 14px/1.45 var(--ard-sans); color: var(--ard-text-2); }
+.narrativa__marco-ano { font-variant-numeric: tabular-nums lining-nums; font-weight: 600; }
+.narrativa__marco-tipo { font: 400 11px/1 var(--ard-mono); color: var(--ard-text-2); background: var(--ard-primaria-nevoa); padding: 2px 5px; border-radius: 3px; }
+.narrativa__nivel { margin-left: 2px; vertical-align: 1px; }
+
+.narrativa__refs { margin-top: var(--ard-sp-3); }
+.narrativa__citacao { margin: var(--ard-sp-1) 0; font: italic 400 15px/1.55 var(--ard-serif); }
+.narrativa__citacao cite { font: normal 400 12px/1.4 var(--ard-sans); color: var(--ard-text-2); }
+.narrativa__link { display: inline-block; margin-top: var(--ard-sp-2); font: 600 14px var(--ard-sans); }
+
+.narrativa__fixo { position: sticky; top: var(--ard-sp-3); }
+.narrativa__mapa {
+  position: relative; height: calc(100vh - var(--inicio-cab) - 72px); min-height: 380px;
+  border: 1px solid var(--ard-border); border-radius: var(--ard-radius); overflow: hidden; background: var(--ard-primaria-nevoa);
+}
+.narrativa__canvas { position: absolute; inset: 0; }
+.narrativa__canvas .maplibregl-canvas { cursor: default; }
+.narrativa__selo {
+  position: absolute; left: 12px; top: 12px; z-index: 2; max-width: 60%;
+  background: var(--ard-surface); border: 1px solid var(--ard-border); border-radius: var(--ard-radius);
+  padding: 8px 12px; display: flex; flex-direction: column; gap: 6px;
+}
+.narrativa__ano { font: 400 32px/1 var(--ard-serif); color: var(--ard-primaria); font-variant-numeric: tabular-nums lining-nums; }
+.narrativa__legenda { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font: 400 12px/1.3 var(--ard-sans); color: var(--ard-text-2); }
+.narrativa__legenda li { display: flex; align-items: center; gap: 6px; }
+.narrativa__legenda-contexto { color: var(--ard-text-2); font-style: italic; }
+.narrativa__amostra { display: inline-block; width: 12px; height: 10px; flex: none; border-radius: 2px; }
+.narrativa__amostra--via { background: transparent; border-top: 2px solid; height: 0; width: 14px; border-radius: 0; }
+.narrativa__amostra--ferrovia { background: transparent; border-top: 2px dashed; height: 0; width: 14px; border-radius: 0; }
+.narrativa__amostra--linha { background: transparent; border-top: 2px dashed var(--ard-tinta); height: 0; width: 14px; border-radius: 0; }
+.narrativa__credito { margin: 6px 0 0; font: 400 12px/1.45 var(--ard-sans); color: var(--ard-text-2); max-width: none; }
+
+/* Movimento reduzido: um capítulo por vez, com navegação por botões. */
+.narrativa--reduzida .narrativa__passos { padding: 0; }
+.narrativa--reduzida .narrativa__passo { min-height: 0; }
+.narrativa__nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--ard-sp-2); }
+.narrativa__nav button, .narrativa__botoes button { font: 600 12px var(--ard-sans); padding: 6px 10px; }
+.narrativa__nav button[aria-current="step"] { background: var(--ard-primaria); color: var(--ard-papel); border-color: var(--ard-primaria); }
+.narrativa__botoes { display: flex; gap: var(--ard-sp-1); margin-top: var(--ard-sp-3); }
+
+/* Marcador não resolvido: falha visível, nunca número de reserva. */
+.marcador-erro { color: var(--ard-critico-fg); background: var(--ard-critico-bg); font: 600 12px var(--ard-mono); padding: 0 4px; border-radius: 3px; }
+.marcador-traco { color: var(--ard-critico-fg); border-bottom: 1px dotted var(--ard-critico); cursor: help; }
+
+/* ---------------------------------------------------------------- cartões Explore */
+.cartoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ard-sp-3); }
+@media (max-width: 1100px) { .cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .cartoes { grid-template-columns: 1fr; } }
+.cartao { display: flex; flex-direction: column; gap: 6px; text-decoration: none; padding: var(--ard-sp-3); }
+.cartao:hover { border-color: var(--ard-primaria); }
+.cartao__titulo { font: 400 20px/1.25 var(--ard-serif); color: var(--ard-primaria); }
+.cartao__desc { font: 400 14px/1.45 var(--ard-sans); color: var(--ard-text-2); }
+
+/* ---------------------------------------------------------------- ≤ 900 px:
+   mapa no topo, fixo, e o texto rola por baixo */
+@media (max-width: 900px) {
+  .inicio { padding: var(--ard-sp-3) 0 var(--ard-sp-5); }
+  .narrativa { grid-template-columns: 1fr; gap: 0; }
+  .narrativa__fixo { order: -1; top: 0; z-index: 5; background: var(--ard-bg); padding: var(--ard-sp-1) 0; }
+  .narrativa__credito { display: none; }
+  .narrativa__mapa { height: 40vh; min-height: 240px; }
+  .narrativa__selo { left: 8px; top: 8px; padding: 6px 8px; }
+  .narrativa__ano { font-size: 24px; }
+  .narrativa__selo { max-width: calc(100% - 16px); flex-direction: row; align-items: flex-start; gap: 10px; }
+  .narrativa__legenda { font-size: 10.5px; flex-direction: row; flex-wrap: wrap; gap: 2px 10px; }
+  .narrativa__passos { padding: 2vh 0 20vh; }
+  .narrativa__passo { min-height: 62vh; background: var(--ard-bg); }
+}
+
+@media (prefers-reduced-motion: reduce) { .narrativa__passo { transition: none; } }
+
+.narrativa__carregando { font: 400 12px/1.3 var(--ard-sans); color: var(--ard-text-2); font-style: italic; }
+@media (prefers-reduced-motion: no-preference) { .narrativa__carregando { animation: narrativa-pulso 1.4s ease-in-out infinite; } }
+@keyframes narrativa-pulso { 50% { opacity: 0.45; } }

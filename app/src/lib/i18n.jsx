@@ -1,14 +1,13 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { useContext, useState, useCallback } from "react";
+import { I18nContext } from "./contextos.js";
 
 // Bilinguismo PT (padrão) / EN — CLAUDE.md §6.7. Dicionário estático, sem serviço de
 // tradução externo (nenhuma chave de API).
 export const DICIONARIO = {
   pt: {
     titulo_app: "Tete–Moatize · urbanização e mineração 1997–2025",
-    nav_mapa: "Mapa",
     nav_populacao: "População",
     nav_graficos: "Gráficos",
-    nav_narrativa: "Narrativa",
     nav_artigo: "Artigo",
     nav_metodologia: "Metodologia",
     ano: "Ano",
@@ -26,6 +25,7 @@ export const DICIONARIO = {
     camada_osm_lugares: "Topônimos (OSM)",
     camada_osm_aerodromo: "Aeródromo de Tete — TET/FQTT (OSM)",
     camada_adensamento_2020_2025: "Adensamento 2020→2025 (modelado, concordância de 3 sinais)",
+    camada_adensamento_2020_2025_indisponivel: "disponível só em 2025 (contraste 2020→2025, modelado)",
     aviso_adensamento_selo:
       "Camada MODELADA (ADR 0016): síntese de concordância entre classificação própria, tendência de luz noturna (proxy de atividade, NÃO de população) e resíduo de edificações (Open Buildings, janela real 2020→~2023, não 2020→2025). A classe “adensando” não pode ser somada a “expansão nova” — são respostas distintas.",
     aviso_adensamento_sensibilidade_prefixo: "Sensibilidade a ±1 decil dos cortes: razão",
@@ -36,11 +36,64 @@ export const DICIONARIO = {
       "Atenção: entre 37% e 71% do que este mapa chama de “urbano” não é construído — é a comissão medida ano a ano (37,5% em 2025, 71,4% em 2010), ver ADR 0009 e a reexecução do ADR 0014. A camada nunca pode diminuir entre anos por construção (catraca R2, ADR 0013).",
     aviso_sequeiro:
       "Vegetação de fenologia sazonal acentuada, NÃO confirmada como cultivo (acurácia do usuário medida = 0,000; ADR 0012).",
-    modo_comparacao: "Comparar com referência (swipe)",
-    referencia: "Produto de referência",
     nenhuma: "Nenhuma",
     churn_titulo: "Instabilidade entre este ano e o anterior",
+
+    // --- Mapa e pegadas (Fase 4b, B2): slider temporal, badge de churn, comparador ---
+    nav_mancha: "Mancha e pegadas",
+    nav_provincia: "Província e cidades",
+    mapa_pagina_titulo: "Mancha e pegadas",
+    mapa_modo_rotulo: "Modo de exibição",
+    mapa_modo_ano: "Mapa do ano",
+    mapa_modo_comparar: "Comparar dois anos",
+    slider_ano_anterior: "Ano-âncora anterior",
+    slider_proximo_ano: "Próximo ano-âncora",
+    slider_reproduzir: "Reproduzir",
+    slider_pausar: "Pausar",
+    slider_movimento_reduzido: "Reprodução automática desativada — o sistema pede menos movimento (prefers-reduced-motion). Use ‹ e › para avançar manualmente.",
+    slider_aria_label: "Ano-âncora exibido no mapa",
+    slider_fora_do_intervalo: "fora da escala exibida, ver seta",
+    slider_nivel_secundario: "secundário",
+    slider_nivel_c: "nível C — proibido para número publicado (§4.0)",
+    marco_tipo_censo: "censo",
+    marco_tipo_concessao: "concessão",
+    marco_tipo_licenca: "licença",
+    marco_tipo_obras: "obras",
+    marco_tipo_reassentamento: "reassentamento",
+    marco_tipo_operacao: "operação",
+    marco_tipo_preco: "preço do carvão",
+    marco_tipo_logistica: "logística",
+    marco_tipo_saida: "saída/venda",
+    comparar_ano_a: "Ano A (esquerda)",
+    comparar_ano_b: "Ano B (direita)",
+    comparar_sair: "Sair da comparação",
+    comparar_divisor: "Divisor da comparação",
+    churn_primeiro_ano_ancora: "2000 — primeiro ano-âncora, sem par anterior",
+    churn_sem_dado: "Sem churn registrado no manifesto para este par de anos",
+    churn_titulo_curto: "Instabilidade de classificação entre este ano-âncora e o anterior (classe construído)",
+    churn_rotulo_curto: "Churn",
+    churn_jaccard_rotulo: "Jaccard",
+    churn_experimental_nota:
+      "EXPERIMENTAL (ADR 0011/0013) — rótulo bruto do classificador, antes de R1/R2 e das pegadas; não substitui nenhum artefato publicado. A troca de ano no mapa é um corte discreto entre classificações independentes, nunca uma trajetória contínua.",
+    rodape_atribuicao_prefixo: "Sistema Ardósia · dados de",
+    rodape_atribuicao_sufixo:
+      "· sem backend, sem chave de API · classificação própria (Landsat/Sentinel-2), WSF Evolution (DLR), GHSL (JRC), COD-AB/COD-PS (HDX). Nenhuma leitura causal deste app é sustentada sem o veredito da Fase 3 ao lado.",
     baixar_dados: "Baixar dados (CSV/GeoJSON) com citação",
+    // --- Downloads de contexto econômico e marcos (Fase 4b, B5) ---
+    download_preco_carvao_rotulo: "Preço do carvão — série anual (mercado mundial)",
+    download_preco_carvao_citacao:
+      "World Bank. Commodity Markets Observatory — CMO Historical Data Annual: Coal, Australian and Coal, South African (USD/mt, nominal). Licença CC BY 4.0 (ver LICENSE-DADOS.md).",
+    download_contas_regionais_rotulo: "Contas regionais de Tete (PIB, inflação)",
+    download_contas_regionais_marca: "nível C — contexto, não núcleo",
+    download_contas_regionais_citacao:
+      "INE Moçambique, Folheto Provincial Tete 2021, quadro \"PIB e Inflação\" (lido via snapshot Wayback Machine; licença não localizada em ine.gov.mz — nível C, §4.0 de CLAUDE.md). Contexto: não sustenta nenhum número do núcleo publicado deste estudo.",
+    download_producao_moatize_rotulo: "Produção de carvão em Moatize (Vale) — série anual",
+    download_producao_moatize_marca: "sem valores publicados ainda",
+    download_producao_moatize_citacao:
+      "Vale S.A., Form 20-F (SEC EDGAR, CIK 0000917851), 2008–2022 — fonte de nível A, ainda não acessada (pipeline/00_fetch/fetch_vale_20f.py aguarda configuração de SEC_USER_AGENT). Todas as linhas deste arquivo estão marcadas \"não disponível\": nenhum valor foi inventado (§4.0, §0).",
+    download_marcos_rotulo: "Marcos da linha do tempo do ciclo do carvão",
+    download_marcos_citacao:
+      "Vale S.A., Rio Tinto plc, Human Rights Watch, SEC EDGAR, INE — documentos institucionais e regulatórios diversos. Referência bibliográfica de cada marco em data/licenses_parts/marcos.md; documentos-fonte não redistribuídos (ver LICENSE-DADOS.md).",
     fonte: "Fonte",
     metodo: "Método",
     selo: "Selo",
@@ -100,13 +153,85 @@ export const DICIONARIO = {
     pop_moatize_vila_ausente_texto:
       "A vila-sede de Moatize (posto administrativo, nível ADM3) ainda não tem série própria neste CSV. O COD-PS (fonte A usada aqui) só publica população a nível ADM2 (distrito); a coleta complementar por WorldPop está em curso e pode não ter concluído nesta rodada. Esta linha permanece até o CSV trazer a unidade — não é omitida em silêncio.",
     pop_nivel_curto: "nível",
+
+    // --- Componentes de ui.jsx e Como citar (Fase 4b, B1) ---
+    ver_tabela: "Ver tabela",
+    ver_grafico: "Ver gráfico",
+    como_citar_titulo: "Como citar",
+    como_citar_copiar: "Copiar referência",
+    como_citar_copiado: "Copiado",
+    como_citar_falhou: "Não foi possível copiar — selecione o texto manualmente.",
+    como_citar_doi: "DOI",
+    rodape_versao: "Versão",
+    rodape_licenca: "código MIT · dados CC BY 4.0",
+    rodape_repositorio: "Repositório",
+
+    // --- Página inicial (Fase 4b, B3): hero, KPIs, narrativa guiada, cartões Explore.
+    // Nenhum número aqui: os valores vêm de narrativa.json via lib/marcadores.js.
+    nav_inicio: "Início",
+    inicio_numeros_kicker: "A história em {n} números",
+    inicio_selo_observado: "observado",
+    inicio_selo_interpolado: "interpolado",
+    inicio_selo_modelado: "modelado",
+    inicio_sparkline_sr: "Minigráfico da série de {ini} a {fim}; os valores estão nas abas de dados.",
+    inicio_narrativa_aria: "Narrativa: o ciclo do carvão em Tete e Moatize, capítulo a capítulo",
+    inicio_capitulos_aria: "Capítulos da narrativa",
+    inicio_anterior: "anterior",
+    inicio_proximo: "próximo",
+    inicio_marcos_rotulo: "Marcos do período",
+    inicio_marco_ausente: "marco não encontrado em marcos.json",
+    inicio_nivel_b: "nível B — só validação (§4.0)",
+    inicio_na_literatura: "Na literatura",
+    inicio_explorar_ano: "Explorar {ano} no mapa →",
+    inicio_mapa_rotulo: "Mapa de Tete e Moatize em {ano}: {titulo}",
+    inicio_mapa_credito:
+      "Vetores da classificação própria (Landsat/Sentinel-2) do ano do capítulo, sem imagem de satélite; troca de ano é corte entre classificações independentes, nunca interpolação (ADR 0013). Cores das classes: legenda ESA WorldCover, com adaptações declaradas (ADR 0018). Rodovias, ferrovia, aeródromo e topônimos: © OpenStreetMap (ODbL).",
+    inicio_legenda_urbano: "mancha urbana orgânica",
+    inicio_legenda_industrial: "pegada da mineração",
+    inicio_legenda_reassentamento: "pegada de reassentamento",
+    inicio_legenda_adensamento_2020_2025: "adensamento 2020→2025 (modelado)",
+    inicio_legenda_varzea: "várzea",
+    inicio_legenda_fantasma: "contorno urbano de {ano}",
+    inicio_legenda_agua: "água (contexto)",
+    inicio_mapa_carregando: "carregando camadas…",
+    inicio_legenda_vias: "rodovias (contexto, OSM)",
+    inicio_legenda_ferrovia: "ferrovia do Sena (contexto, OSM)",
+    inicio_legenda_aerodromo: "aeródromo de Tete (contexto, OSM)",
+    // Atribuição dos mapas (MapaTemporal, MapaNarrativa, Comparador) e legenda de cores (ADR 0018).
+    mapa_atribuicao:
+      "Tete–Moatize · classificação própria (Landsat/Sentinel-2) · data/processed/ · rodovias, ferrovia, aeródromo e topônimos: © OpenStreetMap contributors (ODbL)",
+    mapa_temporal_aria: "Mapa temporal de Tete e Moatize",
+    legenda_cores_worldcover: "Cores: legenda ESA WorldCover (FAO LCCS); adaptações declaradas",
+    legenda_cores_adr: "ADR 0018 no repositório",
+    legenda_adaptacao: "adaptação",
+    legenda_oficial_tooltip: "Cor oficial da classe WorldCover {classe}.",
+    legenda_adaptacao_tooltip: "Adaptação da classe WorldCover {classe}, não é cor oficial. {nota}",
+    inicio_marcador_nao_declarado: "marcador não declarado no bloco",
+    inicio_marcador_indisponivel: "valor indisponível: o dado de origem não pôde ser lido",
+    inicio_explore_kicker: "Explore",
+    inicio_explore_titulo: "Seções do painel",
+    inicio_cartao_mancha_titulo: "Mancha e pegadas",
+    inicio_cartao_mancha_desc:
+      "Mapa por ano-âncora com as três camadas separadas — cidade, reassentamento e mineração —, comparação entre anos e estatísticas por núcleo.",
+    inicio_cartao_provincia_titulo: "Província e cidades",
+    inicio_cartao_provincia_desc:
+      "Cidade de Tete, Moatize, a província e o país: população por censo, preço e produção de carvão, luz noturna e contas regionais.",
+    inicio_cartao_populacao_titulo: "População",
+    inicio_cartao_populacao_desc:
+      "Séries censitárias por unidade, com selo de método e nível de fonte em cada ponto; projeções do INE marcadas como modeladas.",
+    inicio_cartao_graficos_titulo: "Gráficos",
+    inicio_cartao_graficos_desc:
+      "Área urbana e luz noturna em índice, rosa e tipologia de expansão, comparação com as cidades-controle e o que o veredito causal não sustenta.",
+    inicio_cartao_artigo_titulo: "Artigo",
+    inicio_cartao_artigo_desc: "O manuscrito completo, com métodos, resultados, limitações e referências verificadas.",
+    inicio_cartao_metodologia_titulo: "Metodologia",
+    inicio_cartao_metodologia_desc:
+      "Método por etapa, ambiente e versões gerados do lockfile, decisões metodológicas (ADR) e auditoria de dados.",
   },
   en: {
     titulo_app: "Tete–Moatize · urbanization and mining 1997–2025",
-    nav_mapa: "Map",
     nav_populacao: "Population",
     nav_graficos: "Charts",
-    nav_narrativa: "Narrative",
     nav_artigo: "Article",
     nav_metodologia: "Methodology",
     ano: "Year",
@@ -124,6 +249,7 @@ export const DICIONARIO = {
     camada_osm_lugares: "Place names (OSM)",
     camada_osm_aerodromo: "Tete aerodrome — TET/FQTT (OSM)",
     camada_adensamento_2020_2025: "Densification 2020→2025 (modeled, 3-signal agreement)",
+    camada_adensamento_2020_2025_indisponivel: "available only in 2025 (2020→2025 contrast, modeled)",
     aviso_adensamento_selo:
       "MODELED layer (ADR 0016): synthesis of agreement between own classification, night-light trend (proxy of activity, NOT population), and building-footprint residual (Open Buildings, real window 2020→~2023, not 2020→2025). The “densifying” class cannot be added to “new expansion” — they are distinct answers.",
     aviso_adensamento_sensibilidade_prefixo: "Sensitivity to ±1 decile of cutoffs: ratio",
@@ -134,11 +260,64 @@ export const DICIONARIO = {
       "Warning: between 37% and 71% of what this map calls “urban” is not built-up — the commission error measured year by year (37.5% in 2025, 71.4% in 2010); see ADR 0009 and the re-run in ADR 0014. The layer can never decrease between years by construction (R2 ratchet, ADR 0013).",
     aviso_sequeiro:
       "Vegetation with strong seasonal phenology, NOT confirmed as cropland (measured user's accuracy = 0.000; ADR 0012).",
-    modo_comparacao: "Compare with reference (swipe)",
-    referencia: "Reference product",
     nenhuma: "None",
     churn_titulo: "Instability between this year and the previous one",
+
+    // --- Map and footprints (Phase 4b, B2): time slider, churn badge, comparator ---
+    nav_mancha: "Built-up area and footprints",
+    nav_provincia: "Province and towns",
+    mapa_pagina_titulo: "Built-up area and footprints",
+    mapa_modo_rotulo: "Display mode",
+    mapa_modo_ano: "Single-year map",
+    mapa_modo_comparar: "Compare two years",
+    slider_ano_anterior: "Previous anchor year",
+    slider_proximo_ano: "Next anchor year",
+    slider_reproduzir: "Play",
+    slider_pausar: "Pause",
+    slider_movimento_reduzido: "Autoplay disabled — the system requests reduced motion (prefers-reduced-motion). Use ‹ and › to step manually.",
+    slider_aria_label: "Anchor year shown on the map",
+    slider_fora_do_intervalo: "outside the displayed scale, see arrow",
+    slider_nivel_secundario: "secondary",
+    slider_nivel_c: "level C — forbidden for a published number (§4.0)",
+    marco_tipo_censo: "census",
+    marco_tipo_concessao: "concession",
+    marco_tipo_licenca: "license",
+    marco_tipo_obras: "construction",
+    marco_tipo_reassentamento: "resettlement",
+    marco_tipo_operacao: "operation",
+    marco_tipo_preco: "coal price",
+    marco_tipo_logistica: "logistics",
+    marco_tipo_saida: "exit/sale",
+    comparar_ano_a: "Year A (left)",
+    comparar_ano_b: "Year B (right)",
+    comparar_sair: "Exit comparison",
+    comparar_divisor: "Comparison divider",
+    churn_primeiro_ano_ancora: "2000 — first anchor year, no previous pair",
+    churn_sem_dado: "No churn recorded in the manifest for this year pair",
+    churn_titulo_curto: "Classification instability between this anchor year and the previous one (built-up class)",
+    churn_rotulo_curto: "Churn",
+    churn_jaccard_rotulo: "Jaccard",
+    churn_experimental_nota:
+      "EXPERIMENTAL (ADR 0011/0013) — raw classifier label, before R1/R2 and the footprints; does not replace any published artifact. The year switch on the map is a discrete cut between independent classifications, never a continuous trajectory.",
+    rodape_atribuicao_prefixo: "Sistema Ardósia (Ardósia design system) · data from",
+    rodape_atribuicao_sufixo:
+      "· no backend, no API key · own classification (Landsat/Sentinel-2), WSF Evolution (DLR), GHSL (JRC), COD-AB/COD-PS (HDX). No causal reading in this app is supported without the Phase 3 verdict alongside it.",
     baixar_dados: "Download data (CSV/GeoJSON) with citation",
+    // --- Economic-context and milestone downloads (Phase 4b, B5) ---
+    download_preco_carvao_rotulo: "Coal price — annual series (world market)",
+    download_preco_carvao_citacao:
+      "World Bank. Commodity Markets Observatory — CMO Historical Data Annual: Coal, Australian and Coal, South African (USD/mt, nominal). CC BY 4.0 license (see LICENSE-DADOS.md).",
+    download_contas_regionais_rotulo: "Tete regional accounts (GDP, inflation)",
+    download_contas_regionais_marca: "level C — context, not core",
+    download_contas_regionais_citacao:
+      "INE Mozambique, Tete Provincial Bulletin 2021, \"GDP and Inflation\" table (read via Wayback Machine snapshot; no license found on ine.gov.mz — level C, CLAUDE.md §4.0). Context only: does not support any core published number of this study.",
+    download_producao_moatize_rotulo: "Coal production at Moatize (Vale) — annual series",
+    download_producao_moatize_marca: "no published values yet",
+    download_producao_moatize_citacao:
+      "Vale S.A., Form 20-F (SEC EDGAR, CIK 0000917851), 2008–2022 — level A source, not yet accessed (pipeline/00_fetch/fetch_vale_20f.py awaits SEC_USER_AGENT configuration). Every row in this file is marked \"not available\": no value was invented (§4.0, §0).",
+    download_marcos_rotulo: "Coal-cycle timeline milestones",
+    download_marcos_citacao:
+      "Vale S.A., Rio Tinto plc, Human Rights Watch, SEC EDGAR, INE — various institutional and regulatory documents. Bibliographic reference for each milestone in data/licenses_parts/marcos.md; source documents are not redistributed (see LICENSE-DADOS.md).",
     fonte: "Source",
     metodo: "Method",
     selo: "Stamp",
@@ -198,10 +377,83 @@ export const DICIONARIO = {
     pop_moatize_vila_ausente_texto:
       "The Moatize town seat (administrative post, ADM3 level) does not yet have its own series in this CSV. COD-PS (the level-A source used here) only publishes population at ADM2 (district) level; the complementary WorldPop collection is in progress and may not have finished this round. This row stays until the CSV brings the unit — it is never silently omitted.",
     pop_nivel_curto: "level",
+
+    // --- ui.jsx components and "How to cite" (Phase 4b, B1) ---
+    ver_tabela: "View table",
+    ver_grafico: "View chart",
+    como_citar_titulo: "How to cite",
+    como_citar_copiar: "Copy reference",
+    como_citar_copiado: "Copied",
+    como_citar_falhou: "Could not copy — select the text manually.",
+    como_citar_doi: "DOI",
+    rodape_versao: "Version",
+    rodape_licenca: "MIT code · CC BY 4.0 data",
+    rodape_repositorio: "Repository",
+
+    // --- Home page (Phase 4b, B3). No numbers here: values come from narrativa.json.
+    nav_inicio: "Home",
+    inicio_numeros_kicker: "The story in {n} numbers",
+    inicio_selo_observado: "observed",
+    inicio_selo_interpolado: "interpolated",
+    inicio_selo_modelado: "modelled",
+    inicio_sparkline_sr: "Sparkline of the series from {ini} to {fim}; the values are in the data tabs.",
+    inicio_narrativa_aria: "Narrative: the coal cycle in Tete and Moatize, chapter by chapter",
+    inicio_capitulos_aria: "Narrative chapters",
+    inicio_anterior: "previous",
+    inicio_proximo: "next",
+    inicio_marcos_rotulo: "Milestones of the period",
+    inicio_marco_ausente: "milestone not found in marcos.json",
+    inicio_nivel_b: "level B — validation only (§4.0)",
+    inicio_na_literatura: "In the literature",
+    inicio_explorar_ano: "Explore {ano} on the map →",
+    inicio_mapa_rotulo: "Map of Tete and Moatize in {ano}: {titulo}",
+    inicio_mapa_credito:
+      "Vectors from the own classification (Landsat/Sentinel-2) for the chapter's year, no satellite image; switching years is a cut between independent classifications, never interpolation (ADR 0013). Class colours: ESA WorldCover legend, with declared adaptations (ADR 0018). Roads, railway, airfield and place names: © OpenStreetMap (ODbL).",
+    inicio_legenda_urbano: "organic urban footprint",
+    inicio_legenda_industrial: "mining footprint",
+    inicio_legenda_reassentamento: "resettlement footprint",
+    inicio_legenda_adensamento_2020_2025: "densification 2020→2025 (modelled)",
+    inicio_legenda_varzea: "floodplain",
+    inicio_legenda_fantasma: "urban outline in {ano}",
+    inicio_legenda_agua: "water (context)",
+    inicio_mapa_carregando: "loading layers…",
+    inicio_legenda_vias: "roads (context, OSM)",
+    inicio_legenda_ferrovia: "Sena railway (context, OSM)",
+    inicio_legenda_aerodromo: "Tete airfield (context, OSM)",
+    mapa_atribuicao:
+      "Tete–Moatize · own classification (Landsat/Sentinel-2) · data/processed/ · roads, railway, airfield and place names: © OpenStreetMap contributors (ODbL)",
+    mapa_temporal_aria: "Time map of Tete and Moatize",
+    legenda_cores_worldcover: "Colours: ESA WorldCover legend (FAO LCCS); adaptations declared",
+    legenda_cores_adr: "ADR 0018 in the repository",
+    legenda_adaptacao: "adaptation",
+    legenda_oficial_tooltip: "Official colour of WorldCover class {classe}.",
+    // A `nota` do YAML só existe em PT (config/paleta_uso_solo.yaml não tem `nota_en`): em EN a
+    // dica declara a adaptação e aponta a justificativa, sem misturar PT na interface EN.
+    legenda_adaptacao_tooltip:
+      "Adaptation of WorldCover class {classe}, not an official colour. Rationale in ADR 0018.",
+    inicio_marcador_nao_declarado: "marker not declared in the block",
+    inicio_marcador_indisponivel: "value unavailable: the source data could not be read",
+    inicio_explore_kicker: "Explore",
+    inicio_explore_titulo: "Dashboard sections",
+    inicio_cartao_mancha_titulo: "Built-up area and footprints",
+    inicio_cartao_mancha_desc:
+      "Map by anchor year with the three layers kept apart — city, resettlement and mining —, year comparison and statistics by core.",
+    inicio_cartao_provincia_titulo: "Province and towns",
+    inicio_cartao_provincia_desc:
+      "Tete city, Moatize, the province and the country: population by census, coal price and output, night-light and regional accounts.",
+    inicio_cartao_populacao_titulo: "Population",
+    inicio_cartao_populacao_desc:
+      "Census series by unit, with method stamp and source level on every point; INE projections marked as modelled.",
+    inicio_cartao_graficos_titulo: "Charts",
+    inicio_cartao_graficos_desc:
+      "Urban area and night-light as an index, expansion rose and typology, comparison with the control cities and what the causal verdict does not support.",
+    inicio_cartao_artigo_titulo: "Article",
+    inicio_cartao_artigo_desc: "The full manuscript, with methods, results, limitations and verified references.",
+    inicio_cartao_metodologia_titulo: "Methodology",
+    inicio_cartao_metodologia_desc:
+      "Method by stage, environment and versions generated from the lockfile, methodological decisions (ADR) and data audit.",
   },
 };
-
-const I18nContext = createContext(null);
 
 export function I18nProvider({ children }) {
   const [lang, setLang] = useState(() => localStorage.getItem("lang") || "pt");

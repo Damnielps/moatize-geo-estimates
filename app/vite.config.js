@@ -1,15 +1,16 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { SITE_URL as SITE_URL_PUBLICACAO } from './src/lib/publicacao.js'
 
-// SEO: a URL final (GitHub Pages) ainda não foi decidida -- não existe remote git
-// configurado neste repositório. index.html usa o placeholder literal "__SITE_URL__"
-// (canonical, OG/Twitter, JSON-LD); este plugin o substitui pelo valor de SITE_URL no
-// build. Em dev, ou se a variável não estiver definida, cai para um domínio inválido de
-// propósito (RFC 2606) para nunca publicar por engano uma URL real ou inventada.
+// SEO: index.html usa o placeholder literal "__SITE_URL__" (canonical, OG/Twitter,
+// JSON-LD); este plugin o substitui pelo valor de SITE_URL no build. A variável de
+// ambiente SITE_URL (definida no CI a partir de vars.SITE_URL) tem prioridade; sem ela,
+// cai para a constante de app/src/lib/publicacao.js (mesma usada em "Como citar"),
+// única fonte de verdade -- nunca um domínio inventado aqui.
 function siteUrlPlugin() {
   // '||', não '??': no CI, uma variável de repositório (vars.SITE_URL) não configurada
   // chega como string vazia, não undefined -- '??' não cairia no padrão nesse caso.
-  const siteUrl = (process.env.SITE_URL || 'https://EXEMPLO.invalid').replace(/\/$/, '')
+  const siteUrl = (process.env.SITE_URL || SITE_URL_PUBLICACAO).replace(/\/$/, '')
   return {
     name: 'substituir-site-url',
     transformIndexHtml(html) {

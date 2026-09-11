@@ -5,14 +5,12 @@ type: dataset
 authors:
   - family-names: "Pessini Sobreira"
     given-names: "Daniel"
-    # ORCID: adicionar aqui se o titular tiver um (não localizado neste repositório —
-    # nunca inventar um identificador).
-year: 2026
-version: "2026-09-09"
+    orcid: "https://orcid.org/0000-0002-6632-3991"
+    # Nota: ORCID confirmado pelo titular antes do push para repositório público
+version: "1.0.0"
 url: "https://Damnielps.github.io/moatize-geo-estimates"
 repository-code: "https://github.com/Damnielps/moatize-geo-estimates"
-license: "MIT AND CC-BY-4.0"
-license-url: "https://creativecommons.org/licenses/by/4.0/legalcode"
+license: ["MIT", "CC-BY-4.0"]
 keywords:
   - urbanização
   - mineração
@@ -30,8 +28,25 @@ abstract: >-
   trajetória demográfica, a forma urbana, a base econômica e a agricultura urbana e
   periurbana de Tete e Moatize (província de Tete, Moçambique) entre 1997 e 2025, a
   partir de classificação própria de imagens Landsat/Sentinel-2 e de fontes públicas de
-  nível A (WSF Evolution/DLR, GHSL/JRC, HDX COD-AB/COD-PS, NPP-VIIRS-like). Inclui
-  reconstrução demográfica e domiciliar, métricas de forma urbana, análise causal
+  nível A (WSF Evolution/DLR, GHSL/JRC, HDX COD-AB/COD-PS, NPP-VIIRS-like Chen/Yu 2021).
+  Inclui reconstrução demográfica e domiciliar, métricas de forma urbana, análise causal
   (séries interrompidas, DiD, controle sintético) e cenários pós-2025. Não inclui
   microdados de acesso controlado — apenas fontes de nível A sustentam números
   publicados (política em CLAUDE.md §4.0).
+preferred-citation:
+  type: data
+  title: "Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025"
+  authors:
+    - family-names: "Pessini Sobreira"
+      given-names: "Daniel"
+      orcid: "https://orcid.org/0000-0002-6632-3991"
+  year: 2026
+  license: "CC-BY-4.0"
+  license-url: "https://creativecommons.org/licenses/by/4.0/legalcode"
+  publisher:
+    name: "Zenodo"
+  url: "https://Damnielps.github.io/moatize-geo-estimates"
+  notes: >-
+    Dados dos Censos Demográficos (INE Moçambique), GHSL (JRC), WSF Evolution (DLR),
+    HDX COD-AB/COD-PS, classificação própria de imagens Landsat/Sentinel-2,
+    publicados sob CC BY 4.0. Código (pipeline, front-end, scripts) sob MIT.

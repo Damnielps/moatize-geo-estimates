@@ -47,15 +47,53 @@ const CITACAO_GERAL =
 
 export default function PainelDownloads() {
   const { t } = useI18n();
+  // Itens acrescentados na Fase 4b (B5): preço do carvão, contas regionais (nível C,
+  // marcadas como contexto — nunca núcleo), produção de Moatize (ainda sem valores
+  // publicados: o CSV existe com todas as linhas "não disponível", nada foi inventado)
+  // e os marcos da linha do tempo. Rótulo/marca/citação vêm de i18n.jsx (PT/EN);
+  // os arquivos ARQUIVOS acima continuam só em PT (dívida pré-existente, fora do
+  // escopo desta tarefa).
+  const ARQUIVOS_CONTEXTO = [
+    {
+      caminho: "economia/preco_carvao_anual.csv",
+      rotulo: t("download_preco_carvao_rotulo"),
+      citacao: t("download_preco_carvao_citacao"),
+    },
+    {
+      caminho: "economia/contas_regionais_tete.csv",
+      rotulo: t("download_contas_regionais_rotulo"),
+      marca: t("download_contas_regionais_marca"),
+      citacao: t("download_contas_regionais_citacao"),
+    },
+    {
+      caminho: "economia/producao_moatize_anual.csv",
+      rotulo: t("download_producao_moatize_rotulo"),
+      marca: t("download_producao_moatize_marca"),
+      citacao: t("download_producao_moatize_citacao"),
+    },
+    {
+      caminho: "app/marcos.json",
+      rotulo: t("download_marcos_rotulo"),
+      citacao: t("download_marcos_citacao"),
+    },
+  ];
   return (
     <section className="ard-card" aria-label={t("baixar_dados")}>
       <p className="ard-kicker">{t("baixar_dados")}</p>
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-        {ARQUIVOS.map((a) => (
+        {[...ARQUIVOS, ...ARQUIVOS_CONTEXTO].map((a) => (
           <li key={a.caminho}>
             <a href={urlDownload(a.caminho)} download style={{ fontSize: 13 }}>
               {a.rotulo}
             </a>
+            {a.marca ? (
+              <span
+                className="legenda-nota"
+                style={{ display: "inline", marginLeft: 6, fontSize: 11 }}
+              >
+                ({a.marca})
+              </span>
+            ) : null}
             <p style={{ fontSize: 11, color: "var(--ard-text-3)", margin: "2px 0 0" }}>{a.citacao}</p>
           </li>
         ))}

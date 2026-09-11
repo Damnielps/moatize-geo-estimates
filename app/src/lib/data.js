@@ -18,13 +18,24 @@ export async function carregarCsv(caminho) {
   return data;
 }
 
-export async function carregarJson(caminho) {
+// Cache da PROMESSA, não do resultado: duas chamadas simultâneas ao mesmo caminho (dois
+// efeitos do StrictMode, os dois lados do Comparador, ou o mesmo ano pedido de novo
+// enquanto a primeira resposta ainda está a caminho) compartilham UMA requisição, em vez
+// de disparar duas e aplicar a que chegar por último. Falha sai do cache (nova tentativa
+// possível); não é engolida.
+export function carregarJson(caminho) {
   if (cacheJson.has(caminho)) return cacheJson.get(caminho);
-  const resp = await fetch(`${BASE}/${caminho}`);
-  if (!resp.ok) throw new Error(`falha ao carregar ${caminho}: ${resp.status}`);
-  const json = await resp.json();
-  cacheJson.set(caminho, json);
-  return json;
+  const promessa = fetch(`${BASE}/${caminho}`)
+    .then((resp) => {
+      if (!resp.ok) throw new Error(`falha ao carregar ${caminho}: ${resp.status}`);
+      return resp.json();
+    })
+    .catch((e) => {
+      cacheJson.delete(caminho);
+      throw e;
+    });
+  cacheJson.set(caminho, promessa);
+  return promessa;
 }
 
 export async function carregarGeojson(camada, ano) {

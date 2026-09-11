@@ -1,0 +1,228 @@
+{
+  "anos_ancora": [
+    2000,
+    2005,
+    2010,
+    2015,
+    2020,
+    2025
+  ],
+  "arquivos_saida": [
+    "paper/figuras/mancha_urbana_2000_2025.gif"
+  ],
+  "camadas_ativas": [
+    "urbano",
+    "industrial",
+    "reassentamento",
+    "cultivo_irrigado (cultivo irrigado / vazante)",
+    "agua",
+    "varzea (estática)",
+    "osm_vias (rodovias, N7 e demais)",
+    "osm_ferrovia (linha do Sena)",
+    "osm_lugares (topônimos)",
+    "osm_aerodromo (Tete — TET/FQTT)"
+  ],
+  "camadas_excluidas": [
+    "cultivo_sequeiro / vegetação sazonal (não confirmada como cultivo)",
+    "adensamento_2020_2025 (modelado, concordância de 3 sinais, ADR 0016)"
+  ],
+  "churn_construido_por_par_ano": {
+    "2000-2005__construido": {
+      "churn": 0.4749,
+      "classe": "construido",
+      "jaccard": 0.5251,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2000-2005",
+      "razao_area_t1_sobre_t": 1.4113
+    },
+    "2005-2010__construido": {
+      "churn": 0.4734,
+      "classe": "construido",
+      "jaccard": 0.5266,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2005-2010",
+      "razao_area_t1_sobre_t": 1.3964
+    },
+    "2010-2015__construido": {
+      "churn": 0.5443,
+      "classe": "construido",
+      "jaccard": 0.4557,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2010-2015",
+      "razao_area_t1_sobre_t": 1.5608
+    },
+    "2015-2020__construido": {
+      "churn": 0.4152,
+      "classe": "construido",
+      "jaccard": 0.5848,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2015-2020",
+      "razao_area_t1_sobre_t": 0.7741
+    },
+    "2020-2025__construido": {
+      "churn": 0.31,
+      "classe": "construido",
+      "jaccard": 0.69,
+      "nota": "Rótulo bruto do RF, antes de R1/R2 e das pegadas (ADR 0011). EXPERIMENTAL — não substitui nenhum artefato publicado. Ver docs/ADR/0013.",
+      "par_anos": "2020-2025",
+      "razao_area_t1_sobre_t": 0.9891
+    }
+  },
+  "commit_git": "8f7e919e279bb907a2db00399d57891ff31f523e",
+  "crs_original_dos_dados": "EPSG:4326 (mesmo CRS de exibição do app, §11.2.1; sem reprojeção métrica)",
+  "duracao_ms_por_quadro": 900,
+  "enquadramento": {
+    "bbox_aoi_4326": {
+      "crs": "EPSG:4326",
+      "xmax": 34.1,
+      "xmin": 33.5,
+      "ymax": -16.0,
+      "ymin": -16.35
+    },
+    "correcao_aspecto": "1/cos(latitude_media) — equirretangular, mesmo efeito visual do MapLibre do app nesta escala"
+  },
+  "figura": "GIF animado — progressão da mancha urbana e pegadas associadas, Tete–Moatize, 2000-2025",
+  "fonte_sans_usada": "DejaVu Sans (TTF embutido no matplotlib, por caminho)",
+  "fonte_serif_usada": "DejaVu Serif Bold (TTF embutido no matplotlib, por caminho)",
+  "hashes_sha256_insumos": {
+    "agua_2000": "0cea1f20a63fa4370f2ae0c67d29d355286225386e8c7ab35b53f48ea1f9f61a",
+    "agua_2005": "c896e2a55012074d660fbdf55774b14429c20b6c0d25dc0644f4ebbd2d54b727",
+    "agua_2010": "4cf1b5c119113b882aa9dfe3aad3f578c3b077fe42aa25c9f5bb7c0bd8a5777a",
+    "agua_2015": "d4418df879e5d3894d4c8a3b123b9090b3b4affb97fe2f1e1e24abcbdf744279",
+    "agua_2020": "8777f73f0c49ed3c1d199abc7c3318c55fdd9d45a2b3753f302f31ad1369c6d8",
+    "agua_2025": "e5818108de7cca393d65a36270442a6c41d8ff92e183836975a1104fc6026d42",
+    "cultivo_irrigado_2000": "435e93d61ee6fe5bb140af7c84cb595f91b1adc0bb3aa4d13eafcc5c4abc5f49",
+    "cultivo_irrigado_2005": "2ec0c02f083f9683fb4be3d2b83a82a5c57b8be2025a6fa22c7355522256f3a8",
+    "cultivo_irrigado_2010": "70504959efb0482f26a7ff5e5a873ef089698169968fced8f1af4ffd88271f68",
+    "cultivo_irrigado_2015": "0b803f545cd9505857a7ac0d3ae3874bd4cba540ceec568c49a8f46bcb9804ba",
+    "cultivo_irrigado_2020": "e211a7818b8c556c8910d715fde8de49e3001f429861a502c4ab19b2c820fe3f",
+    "cultivo_irrigado_2025": "a9cacce254c3217c7a4baeef85d5a0ea0c8f5a19778d9c35e43a71fca86e0a06",
+    "industrial_2000": "ed778c73ea51338d6576fb5992b189f2b94d9f3d5e199f46c1af520d6b0b3e6c",
+    "industrial_2005": "ed778c73ea51338d6576fb5992b189f2b94d9f3d5e199f46c1af520d6b0b3e6c",
+    "industrial_2010": "406920cff3ab96f6eb7358ed20949551c6687688102fe6d9f92b2450e6d18fb7",
+    "industrial_2015": "4c701f8f8fb90e64933aecff981d95f62090f91a8d10ef482054667b42c6124b",
+    "industrial_2020": "513357542dc6b9f2f39cceca7fe990f6921328b08ca04b75253645f41d611191",
+    "industrial_2025": "8765855f4a9fd039ccb0b1b1cfc7fe14a3ce531061f35f566ae4b7c511dda011",
+    "manifest": "5a83c10536ef0353667e91022de118253478d2deb01e9815208171d3a12bd367",
+    "osm_aerodromo": "4f31d60bb066151ed17140a9c6eace87288d81f18ff06a5aaa3b0b196d50f257",
+    "osm_ferrovia": "ce43096bc7575096a9ee56dd0eb015b0ca9676ae2bf6a85b00746d68b4e463de",
+    "osm_lugares": "f45216291807e64ee3a3a6ea01c0c387dacde8c5c1bd13e93450d4bb831d9ba7",
+    "osm_vias": "a1c051f8e86e576cb67281e04e0c6e58cba3741aed1d9f724244a75cbc473af8",
+    "paleta_uso_solo_yaml": "e356bda257a6e272fd843b347424d3501308e6cdda699c143d615f9ca9abc49b",
+    "reassentamento_2000": "ed778c73ea51338d6576fb5992b189f2b94d9f3d5e199f46c1af520d6b0b3e6c",
+    "reassentamento_2005": "ed778c73ea51338d6576fb5992b189f2b94d9f3d5e199f46c1af520d6b0b3e6c",
+    "reassentamento_2010": "60bb765178c0a5259cedc5fda5f3a826c2464aab0f0fc3074cd10de1e4cf8636",
+    "reassentamento_2015": "f589316ae0b735261c90a9912bb339a767093c3f5f3875e0e8b73569b2e8ff78",
+    "reassentamento_2020": "a2621a49e2ec35be6e364afb1d79db598556ff6e2267034c758fedf2e65fbcad",
+    "reassentamento_2025": "5eb4a357bebf1832eea562e4469ac6552cdf413434fcbe963c5a6ec6ad01ddde",
+    "urbano_2000": "a65243b1bb974685f73eae519c29f3a4c0e640b28e951b359e5b173c1125992d",
+    "urbano_2005": "3ea3a909646f9f4c838bcea0b66469a2b67538dbb681fce3b204876804049ba8",
+    "urbano_2010": "42b1dc6b980956bdd101a3782410d32a640d2eaf54165e20fc5fbcb5d592a822",
+    "urbano_2015": "25e42e05184b64ac8d1ea5cb7ceb7ad73f416cc623730012c7237bf1ef0bb92e",
+    "urbano_2020": "2e146cba7faecf2b7d8d4d2d7e556fa67a105c3890b527e5d76f76d9f265e7f7",
+    "urbano_2025": "f81b031e8a01ed1703cc56a2b71d1de6e18309129ff536debbfe99564baa94d0",
+    "varzea": "1250923a9a36d8f0059728a0104041d6284921e1c3e841fb53955355bf415b58"
+  },
+  "insumos_estaticos": [
+    "data/processed/app/imagery/varzea.geojson",
+    "data/processed/app/imagery/osm_vias.geojson",
+    "data/processed/app/imagery/osm_ferrovia.geojson",
+    "data/processed/app/imagery/osm_lugares.geojson",
+    "data/processed/app/imagery/osm_aerodromo.geojson"
+  ],
+  "insumos_faltantes": [],
+  "insumos_por_ano_ancora": [
+    "data/processed/app/imagery/agua_<ano>.geojson",
+    "data/processed/app/imagery/urbano_<ano>.geojson",
+    "data/processed/app/imagery/industrial_<ano>.geojson",
+    "data/processed/app/imagery/reassentamento_<ano>.geojson",
+    "data/processed/app/imagery/cultivo_irrigado_<ano>.geojson"
+  ],
+  "metodo": "pipeline/04_figures/gif_mancha.py",
+  "n_quadros": 6,
+  "paleta_cores": {
+    "adr": "docs/ADR/0018-paleta-uso-do-solo-worldcover.md",
+    "fonte": "config/paleta_uso_solo.yaml",
+    "nota": "Cores das classes de uso do solo e do contexto OSM lidas do YAML — mesma fonte do app (pipeline/05_app/gerar_paleta.py); legenda ESA WorldCover/FAO LCCS, adaptações declaradas na paleta e marcadas com * na legenda do GIF.",
+    "sha256": "e356bda257a6e272fd843b347424d3501308e6cdda699c143d615f9ca9abc49b"
+  },
+  "reprodutibilidade": {
+    "ambiente": {
+      "fontes_ttf": {
+        "sans": {
+          "arquivo": "matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
+          "sha256": "3fdf69cabf06049ea70a00b5919340e2ce1e6d02b0cc3c4b44fb6801bd1e0d22"
+        },
+        "serif_negrito": {
+          "arquivo": "matplotlib/mpl-data/fonts/ttf/DejaVuSerif-Bold.ttf",
+          "sha256": "c3753f2ed6bc673f15846dc45addbeb3b9c872f32fb18fd53a21f1bef1ed7676"
+        }
+      },
+      "freetype": "2.14.3",
+      "freetype_build": "local",
+      "gdal_via_pyogrio": "3.12.4",
+      "geopandas": "1.1.4",
+      "matplotlib": "3.11.1",
+      "numpy": "2.5.3",
+      "pillow": "12.3.0",
+      "plataforma_de_geracao": "Darwin arm64",
+      "pyogrio": "0.13.0",
+      "python": "3.12.13",
+      "sha256_paleta_fixa": "4ec7d73a9c6bc7a8837590edbd60ef3976270742fd0ad47dce0b63b7e4312ccf",
+      "shapely": "2.1.2"
+    },
+    "calibracao_da_tolerancia": {
+      "eps_1e-06": {
+        "byte_a_byte": false,
+        "fracao": 0.081,
+        "mae_rgb": 0.61,
+        "nota": "≈ 0,08 px (≈ 3,7 m) de deslocamento real — REPROVADO pela tolerância"
+      },
+      "eps_1e-09": {
+        "byte_a_byte": false,
+        "fracao": 0.00025,
+        "mae_rgb": 0.0011
+      },
+      "eps_1e-12": {
+        "byte_a_byte": false,
+        "fracao": 5.8e-07,
+        "mae_rgb": 1.6e-06
+      },
+      "eps_1e-15": {
+        "byte_a_byte": true,
+        "fracao": 0.0,
+        "mae_rgb": 0.0
+      },
+      "metodo": "AOI × (1 + eps); pior quadro; mesma máquina"
+    },
+    "fontes_de_variacao_eliminadas": [
+      "fonte do sistema: só TTF DejaVu embutidos no wheel do matplotlib, por caminho; verificar_fontes() aborta se algum texto tiver outra origem",
+      "FreeType do sistema: o wheel do matplotlib embute o próprio (freetype_build = 'local'); versão fixada por uv.lock",
+      "matplotlibrc do usuário: rcdefaults() antes do estilo",
+      "backend: FigureCanvasAgg explícito, sem pyplot nem PNG intermediário",
+      "paleta adaptativa: paleta fixa derivada de constantes, sem dithering"
+    ],
+    "fontes_de_variacao_residuais": [
+      "aritmética de ponto flutuante das transformações (FMA/contração do compilador, arm64 × x86_64) pode mudar o arredondamento subpixel do Agg em pixels de borda",
+      "parse numérico dos GeoJSON pelo GDAL embutido no pyogrio (mesma versão por uv.lock; strtod corretamente arredondado — variação não esperada)"
+    ],
+    "garantia_entre_plataformas": "tolerância, não byte a byte: não houve execução em Linux nesta sessão (sem Docker na máquina de geração). O teste pipeline/tests/test_gif_mancha.py regenera o GIF e compara: aceita sha256 idêntico; senão exige mesmo n_quadros, tamanho, duração, todos os pixels na paleta fixa e, por quadro, os limites de 'tolerancia'.",
+    "garantia_mesma_plataforma": "byte a byte: mesma plataforma + mesmo uv.lock ⇒ mesmo sha256_gif (verificado por duas execuções na plataforma de geração, e por uma terceira com MPLCONFIGDIR vazio — cache de fontes reconstruído — e um matplotlibrc hostil: font.family monospace, text.hinting no_hinting, antialiasing desligado)",
+    "tolerancia": {
+      "diferenca_media_abs_rgb_max_por_quadro_0a255": 0.05,
+      "fracao_max_pixels_com_indice_diferente_por_quadro": 0.002
+    }
+  },
+  "ressalvas": [
+    "Corte discreto de fonte de dado por ano-âncora, sem interpolação de geometria entre anos (ADR 0013) — a 'transição' no GIF é troca de camada, não movimento real.",
+    "Acurácia da camada 'urbano' varia por ano — ver docs/ADR/0009 e docs/ADR/0014 e o aviso equivalente exibido no próprio app.",
+    "Este GIF é material de apresentação/comunicação; não é figura de resultado do artigo e não substitui as figuras geradas por pipeline/04_figures com proveniência hash-rastreada.",
+    "O indicador de churn 'construído' por par de anos, exibido em texto miúdo, vem do rótulo bruto do classificador antes de R1/R2 (ADR 0013) — EXPERIMENTAL, não é o número publicado de área construída."
+  ],
+  "selo": "observado (classificação própria) para urbano/industrial/reassentamento/cultivo_irrigado/agua; observado (OSM) para vias/ferrovia/topônimos/aeródromo; estático para várzea; ver 'churn_construido_por_par_ano' para selo experimental do indicador de churn (ADR 0013)",
+  "sha256_gif": "ea59ca3cb85177e154faa34f87a53b7c42e6770d45702dbe01a178bdcddee5f0",
+  "tamanho_px": [
+    1500,
+    1140
+  ]
+}

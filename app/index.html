@@ -30,17 +30,33 @@
       "description": "Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025: mapa temporal, reconstrução demográfica, análise causal e agricultura urbana e periurbana."
     }
     </script>
+    <!--
+      Sem "identifier" de DOI por enquanto: o Zenodo ainda não emitiu a primeira release
+      arquivada (ver docs/CHECKLIST_PUBLICACAO.md, item de licenças/DOI). Quando isso
+      acontecer, preencher aqui com { "@type": "PropertyValue", "propertyID": "DOI",
+      "value": "10.5281/zenodo.XXXXXXX" } e também src/lib/publicacao.js (DOI).
+    -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Dataset",
-      "name": "Urbanização induzida pela mineração em Tete e Moatize, 1997–2025",
-      "description": "Camadas classificadas (urbano, industrial-minerário, reassentamento, agricultura de sequeiro e irrigada), reconstrução demográfica e domiciliar, métricas de forma urbana e análise causal (séries interrompidas, DiD, controle sintético) para os núcleos urbanos de Tete e Moatize, Moçambique, em anos-âncora de 1997 a 2025, a partir de classificação própria de imagens Landsat/Sentinel-2 e de fontes públicas (WSF Evolution/DLR, GHSL/JRC, HDX COD-AB/COD-PS, NPP-VIIRS-like).",
-      "creator": { "@type": "Person", "name": "Daniel Pessini Sobreira" },
+      "name": "Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025",
+      "description": "Camadas classificadas de área construída, pegada industrial-minerária, reassentamento e agricultura urbana e periurbana, reconstrução demográfica e domiciliar, métricas de forma urbana e análise causal para os núcleos urbanos de Tete e Moatize (Moçambique), a partir de classificação própria de imagens de satélite e de fontes públicas de nível A, com pipeline e metodologia reprodutíveis e auditáveis.",
+      "creator": {
+        "@type": "Person",
+        "name": "Daniel Pessini Sobreira",
+        "sameAs": "https://orcid.org/0000-0002-6632-3991"
+      },
       "license": "https://creativecommons.org/licenses/by/4.0/",
+      "isAccessibleForFree": true,
       "temporalCoverage": "1997-01-01/2025-12-31",
       "spatialCoverage": { "@type": "Place", "name": "Tete e Moatize, Província de Tete, Moçambique" },
       "keywords": ["urbanização", "mineração", "carvão", "Moatize", "Tete", "Moçambique", "reassentamento", "agricultura urbana", "sensoriamento remoto"],
+      "distribution": {
+        "@type": "DataDownload",
+        "encodingFormat": "text/csv, application/geo+json, application/json",
+        "contentUrl": "https://github.com/Damnielps/moatize-geo-estimates"
+      },
       "url": "__SITE_URL__/"
     }
     </script>
@@ -67,10 +83,10 @@
         </p>
         <nav aria-label="Seções do app">
           <ul>
-            <li><a href="/">Mapa temporal (2000–2025)</a></li>
+            <li><a href="/">Início: narrativa guiada</a></li>
+            <li><a href="/#/mancha">Mapa temporal (2000–2025)</a></li>
             <li><a href="/#/populacao">População e domicílios</a></li>
             <li><a href="/#/graficos">Gráficos e séries</a></li>
-            <li><a href="/#/narrativa">Narrativa guiada</a></li>
             <li><a href="/#/artigo">Artigo</a></li>
             <li><a href="/#/metodologia">Metodologia</a></li>
           </ul>

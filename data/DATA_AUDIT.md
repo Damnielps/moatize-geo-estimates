@@ -401,9 +401,9 @@ quanto ocupam, como evoluíram, articulação com a malha urbana"):
   1.365) registrada, não resolvida.
 
 **Síntese**: pergunta 3 é **parcial, degradada a quase puramente geográfico**
-em nível A (localização aproximada + evolução do construído num buffer), sem
-área oficial nem dimensão populacional/domiciliar em A. **Não afetada pelos
-fatos novos desta revisão.**
+em nível A (localização aproximada + evolução do construído num buffer),
+sem área oficial nem dimensão populacional/domiciliar em A. **Não afetada
+pelos fatos novos desta revisão.**
 
 > **Nota da revisão de 2026-09-08 (§0'):** o componente "como evoluíram" deixou
 > de ser puramente indireto para o subitem consolidação/abandono: `docs/ADR/0014`
@@ -455,8 +455,9 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 | Demográfica | DHS — relatórios finais / STATcompiler | acesso aberto sem registro para consulta agregada; ODbL no Spatial Data Repository |
 | Econômico | DMSP-OLS, VIIRS DNB (EOG) | domínio público **quanto ao conteúdo; ver §0'' — acesso direto ao VIIRS DNB rebaixado a B, DMSP-OLS excluído (C) por bloqueio de acesso em 2026-09-08** |
 | Econômico | Harmonized DMSP-VIIRS — **corrigido em §0''**: o produto efetivamente coletado é **NPP-VIIRS-like (Chen, Z., Yu, B. et al. 2021), Harvard Dataverse, DOI 10.7910/DVN/YGIVCD, CC0 1.0**, não "Li et al. 2020" (produto distinto, figshare) | CC0 1.0; **descontinuidade não resolvida entre 2020 e 2022 (radiância máx. 70,4→49,9 na AOI de Tete) — ver §0'' | única série de luz de nível A restante após a exclusão dos itens acima |
-| Econômico | World Bank Pink Sheet | domínio público |
-| Econômico | Global Coal Mine Tracker (GEM) | CC-BY 4.0; acesso por formulário, sem aprovação |
+| Econômico | World Bank Pink Sheet / CMO Historical Data Annual | CC BY 4.0 — **corrigido em `data/licenses_parts/economia_precos.md` (2026-09-11); ver seção "Fase 4b" abaixo para a pendência de propagação ao consolidado `data/LICENSES.md`** |
+| Econômico | SEC EDGAR (Vale 20-F, Rio Tinto 6-K) | domínio público — política de disseminação da própria SEC (sec.gov/about/privacy-information); **ver seção "Fase 4b" abaixo, regra de emissor** |
+| Econômico | Global Coal Mine Tracker (GEM) | dataset bruto = **B** (cadastro obrigatório); GEM Wiki (páginas descritivas) = **B** (CC BY-NC-SA 4.0, cláusula NC) |
 | Agricultura | GLAD Global Cropland, ESA WorldCover, CGLS-LC100, ESRI/IO 10m LULC | CC-BY 4.0 / licença Copernicus; **agora usadas como referência que reprova `cultivo_sequeiro` — ver §0'/ADR 0012** |
 | Agricultura | Copernicus DEM GLO-30 (via bucket AWS, não OpenTopography) | licença Copernicus |
 | Agricultura | HydroRIVERS v1.0 | licença própria HydroSHEDS (uso livre com atribuição; não CC0) |
@@ -469,12 +470,13 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 |---|---|
 | IPUMS International (amostras 10%) | uso restrito a pesquisa/ensino, proíbe redistribuição do bruto |
 | DHS — microdados 1997/2003/2011/2015 | requer aprovação de projeto, não redistribuível |
-| Human Rights Watch (2013) | CC BY-NC-ND 3.0 — proíbe obra derivada |
+| Human Rights Watch (2013) | CC BY-NC-ND 3.0 — proíbe obra derivada; **inclusive quando usada só como fonte de data de evento — ver correção a `config/marcos.yaml`, seção "Fase 4b" abaixo** |
 | Dynamic World (Google/WRI) | único acesso real é GEE; sem STAC público (404 no Planetary Computer) |
 | Planet NICFI | não comercial, proíbe redistribuição do bruto; **e, em 2026, programa descontinuado sem sucessor** — inacessível na prática |
 | OpenTopography (com chave de API pessoal) | não é acesso anônimo; via primária A é o bucket Copernicus DEM na AWS |
 | **UNSD Demographic Yearbook 2007, Tabela 8** (novo nesta revisão) | confirma Cidade de Tete 1997 = 101.984 exatamente; licença ONU proíbe redistribuição e obra derivada sem autorização escrita — válido só como validação, não como fonte publicável |
 | **VIIRS VNL V2 (EOG, `eogdata.mines.edu`) — novo em §0''** | rebaixada de A: todo download testado exige login OAuth (`eogauth.mines.edu`); não é acesso anônimo nem cadastro trivial |
+| Global Coal Mine Tracker (dataset bruto, GEM) / GEM Wiki | cadastro obrigatório / CC BY-NC-SA 4.0 (cláusula NonCommercial) — ver `data/licenses_parts/economia_producao.md` |
 
 ### Nível C (excluído; nunca no núcleo)
 
@@ -494,6 +496,8 @@ para o mesmo ano e por HDX 2025 (A, modelado) como segundo ponto.
 | EIA/RAP — Riversdale/Rio Tinto (Benga) | não localizado |
 | EIA/RAP — Jindal (Tete) | não disponível (406) / não localizado |
 | **DMSP-OLS estável (NOAA/NCEI) — novo em §0''** | URL de CLAUDE.md §4.4 responde HTTP 404; página sucessora (EOG) exige login OAuth; nenhuma licença localizável no domínio que efetivamente serve o dado hoje |
+| Vulcan International/Vulcan Mozambique — página "Performance" (produção Moatize) | "© ... All rights reserved" no disclaimer do site; sem licença de reuso localizável — **precedente que governa a regra de emissor da Fase 4b, ver abaixo** |
+| Vale S.A. / Rio Tinto plc — comunicados de imprensa e relatórios institucionais em vale.com/riotinto.com (fora de filing regulatório) | mesmo motivo do item Vulcan — "© Vale \| All rights reserved" no rodapé de vale.com; **corrigido nesta auditoria em `config/marcos.yaml`, ver seção "Fase 4b" abaixo** |
 
 ### Via não esgotada (nem A/B/C — indisponibilidade externa, distinta de "não existe")
 
@@ -628,3 +632,240 @@ nenhuma fonte de nível A permite hoje verificar essa descontinuidade de forma
 independente (§0'').
 
 **Veredito global: CONJUNTO A INSUFICIENTE.**
+
+---
+
+## Fase 4b — Contas Regionais do INE (2026-09-11)
+
+Tarefa A2c (camada T2): localizar e classificar as Contas Regionais / PIB provincial
+do INE para a Província de Tete, como **contexto** para o painel (não núcleo A).
+Detalhe em `data/licenses_parts/economia_ine_contas.md`,
+`data/provenance_parts/economia_ine_contas.md` e
+`data/processed/economia/contas_regionais_tete.AUSENTE.md`.
+
+**O que foi tentado.** Acesso direto a `ine.gov.mz`/`www.ine.gov.mz` (site vivo,
+incluindo os PDFs candidatos "Indicadores em Flash Província de Tete", "Folheto
+Estatístico Provincial Tete 2025", "Folheto Distrital Moatize 2023" e a página
+`estatisticas-economicas`): **todas as tentativas falharam por erro de certificado
+TLS** (`unable to verify the first certificate`), consistente com a instabilidade do
+domínio já registrada para a família demográfica em 2026-09-07. Acesso ao Wayback
+Machine (`web.archive.org`) para os mesmos PDFs: **recusado pela ferramenta desta
+sessão**, sem confirmação de existência de snapshot. `mozdata.ine.gov.mz`: acessível,
+sem conteúdo estruturado extraível. Reprocessadores institucionais candidatos: World
+Bank Open Data não tem produto de PIB subnacional para Moçambique; UNU-WIDER
+Mozambique Data Hub existe mas não foi inspecionado item a item (conteúdo não
+confirmado); Banco de Moçambique publica só PIB nacional nos títulos localizados.
+
+**Classificação.** **C** — nem o conteúdo primário nem uma página de licença do
+INE puderam ser lidos nesta rodada (condição mais restritiva que o precedente de
+2007/2017, em que ao menos o conteúdo foi lido via Wayback antes de cair em C por
+falta de licença). Nenhum reprocessador de nível A ou B com os números foi
+confirmado.
+
+**Veredito.** Nenhum número de PIB/VAB provincial de Tete foi lido em documento
+primário. `data/processed/economia/contas_regionais_tete.csv` **não foi criado**,
+conforme a regra da tarefa. O app e o artigo **não podem** apresentar "PIB da
+Província de Tete" como número do núcleo A nem como validação B — a família está
+inteiramente ausente de evidência, não apenas rebaixada de nível. Isso **não altera**
+nenhum veredito de suficiência já registrado nas seções 0/0'/0''/3/4 acima: nenhuma
+pergunta de §1 depende exclusivamente de Contas Regionais (P5/P6/H3/H4 já se apoiam em
+luzes noturnas, classificação orbital e relatórios de produção dos operadores). A
+ausência é registrada como **contexto ausente**, não como novo motivo de
+insuficiência do conjunto A. Recomenda-se repetir a busca quando `ine.gov.mz`
+apresentar certificado TLS válido, e/ou delegar a um agente com ferramenta de acesso
+ao Wayback Machine funcional.
+
+**Retentativa com shell (2026-09-11).** Com `curl` disponível (agente com acesso a
+shell, diferente da rodada anterior limitada a `WebFetch`), a API CDX do Wayback
+Machine foi consultada com sucesso para `ine.gov.mz` filtrando por `tete`/`pib`/`contas`.
+Dois documentos primários foram lidos via snapshot: (1) a página "Contas Nacionais"
+sob a árvore Tete do Censo 2007, que **confirma** que essa seção é um template
+nacional (os links internos não levam a PIB provincial — nenhum número lido); e (2)
+o **Folheto Provincial, Província de Tete, 2021** (PDF, snapshot 2025-11-16), que
+contém um quadro "PIB e Inflação" com taxa de crescimento do PIB real, PIB per capita
+em US$, PIB provincial em % do PIB nacional (todos 2020) e inflação média/acumulada
+(2021), Província × Nacional. Este é **um único ano de indicadores agregados**, não
+uma série de Contas Regionais por ramo de atividade — o objeto original da tarefa A2c
+continua não localizado, e a página (1) é evidência de que o INE pode não publicar tal
+série desagregada por província. Espelhado em
+`data/raw/ine_contas_folheto_provincial_tete_2021.pdf` (com `.sha256` e `.meta.json`,
+licença não localizada, nível **C**, inalterado). Números publicados em
+`data/processed/economia/contas_regionais_tete.csv`, todos marcados `nivel_fonte=C` e
+com nota "contexto, não núcleo (§4.0)". `contas_regionais_tete.AUSENTE.md` foi removido
+por deixar de refletir o estado atual. **Este achado não altera o veredito global
+"CONJUNTO A INSUFICIENTE"** nem nenhum veredito de suficiência de P5/P6/H3/H4: o número
+de PIB provincial é publicável apenas como contexto de nível C, nunca como número do
+núcleo A do app ou do artigo.
+
+---
+
+## Fase 4b — Marcos, relatórios de emissor e licenças de publicação (2026-09-11)
+
+Auditoria de camada T2 sobre três entregas de coletor-dados (marcos, produção
+Vale/Vulcan/GEM) e sobre as licenças de publicação do repositório
+(`LICENSE`, `LICENSE-DADOS.md`, `CITATION.cff`, `.zenodo.json`).
+
+### PARTE 1 — `config/marcos.yaml` — **CORRIGIR (correções pequenas já aplicadas nesta auditoria)**
+
+Achado central: quatro marcos tinham `nivel: A` atribuído ao *conteúdo* de um
+documento primário do emissor sem que a *licença* desse documento tivesse sido
+localizada — violando a própria regra que o cabeçalho do YAML enuncia ("sem
+licença localizável ⇒ C") e o precedente já registrado neste repositório para a
+Vulcan (`data/licenses_parts/economia_producao.md`: página do emissor com
+"All rights reserved" e sem licença de reuso ⇒ **C**, mesmo sendo site oficial
+do produtor). Verificado nesta auditoria (WebFetch em vale.com e hrw.org):
+vale.com exibe no rodapé "© Vale | All rights reserved"; hrw.org/permissions
+declara que o conteúdo de hrw.org está sob **CC BY-NC-ND 3.0** (não comercial,
+sem obras derivadas).
+
+**Correções já aplicadas em `config/marcos.yaml` nesta sessão** (nível/nota,
+dado histórico inalterado):
+- `concessao_vale`: A → **C** (fonte = comunicados vale.com, sem licença de
+  reuso localizada).
+- `obras_vale`: A → **C** (mesmo motivo).
+- `venda_moatize_vulcan`: A → **C** (mesmo motivo).
+- `reassentamento_cateme_25setembro`: A → **B** (fonte HRW é CC BY-NC-ND 3.0 —
+  restringe uso comercial e proíbe obra derivada, nível B por §4.0, não A).
+- `operacao_vale` e `operacao_benga`: **mantidos A**, mas a nota agora deixa
+  explícito que o nível A é sustentado exclusivamente pelo filing SEC (20-F /
+  6-K), não pelo comunicado de imprensa citado ao lado — a política de
+  disseminação da SEC (ver Parte 2) é o que justifica A, não o site do
+  emissor.
+
+**Pendências que NÃO foram corrigidas nesta sessão (listar, não editado):**
+- `censo_2027_previsto` permanece `nivel: A` citando a página institucional do
+  INE sem licença explícita localizada, pelo mesmo padrão de raciocínio
+  ("produtor, acesso aberto, sem paywall ⇒ A") que motivou rebaixar os quatro
+  marcos da Vale a C/B. Tentativa de reverificar o rodapé de `ine.gov.mz` nesta
+  sessão falhou por erro de certificado TLS. **Recomendação**: reverificar
+  dedicadamente; se `ine.gov.mz` também carregar aviso de "todos os direitos
+  reservados" sem licença de reuso, rebaixar para C por consistência.
+- `censo_2007` e `censo_2017`: mantidos C, mas foi adicionada nota de pendência
+  perguntando se a **data de referência** do censo (não a contagem) pode ser
+  citada via HDX COD-PS (nível A, já precedente deste repositório para as
+  contagens). **Decisão desta auditoria**: SIM, em princípio — o precedente já
+  estabelecido em §0 deste documento (HDX/OCHA como reprocessador de nível A
+  independente do documento INE) se estende à data de referência **se e
+  somente se** a própria documentação/metadado do HDX COD-PS declarar essa
+  data; isso não foi verificado nesta sessão (falha de acesso). Não editado
+  em `marcos.yaml` além da nota de pendência — requer verificação factual
+  antes de promover o nível.
+- `queda_precos_carvao_2015_2016`: nota adicionada explicando que a licença
+  correta do World Bank Data Catalog é CC BY 4.0 (não "Domínio público"),
+  conforme corrigido em `data/licenses_parts/economia_precos.md`
+  (2026-09-11) — mas essa correção ainda não foi propagada ao consolidado
+  `data/LICENSES.md` (ver Parte 3).
+
+### PARTE 2 — Regra de política para relatórios de emissor — **decisão registrada**
+
+Verificado por WebFetch: `sec.gov/about/privacy-information` declara
+"Information presented on sec.gov is considered public information and may be
+copied or further distributed by users of the web site without the SEC's
+permission... Please consider appropriate citation to the SEC as the source"
+(sem usar selo/logo da SEC). `vale.com` e `vulcaninternational.com` declaram
+"All rights reserved" / "the copyright for any material created by the
+author is reserved... not permitted without the author's agreement" — sem
+licença de reuso.
+
+**Regra do projeto (vinculante a partir desta sessão):**
+
+(a) **Filings depositados em regulador com política de disseminação aberta
+declarada** (confirmado para SEC EDGAR: 20-F, 6-K) = **nível A**. A base legal
+não é "está no site do emissor" (§4.4 lido isoladamente), é a política do
+**regulador**, que aqui expressamente autoriza cópia e redistribuição sem
+permissão. Esta é a leitura que prevalece sobre a redação mais ampla de §4.4
+("A quando no site do emissor ou repositório regulatório") — o repositório
+regulatório é o que garante A, não o site do emissor.
+
+(b) **Documentos no site do próprio emissor sem selo de regulador** (comunicados
+de imprensa, relatórios de sustentabilidade, páginas de "Performance/
+Production") sob aviso de "All rights reserved" e sem licença de reuso
+localizável = **nível C**, mesmo sendo o site oficial do produtor, mesmo sendo
+factualmente confiável, mesmo sem paywall. §4.0 regra 1 ("sem licença
+localizável ⇒ C") é textual e não condicional — não abre exceção para
+"conteúdo institucional aberto". Números factuais extraídos desses documentos
+(ex.: toneladas de produção anual) **não podem** sustentar número publicado no
+núcleo A nem entrar em tabela de resultados — mesmo tratamento já aplicado
+corretamente pelo coletor ao caso Vulcan (8,5 Mt 2021 excluído por nível C) e
+agora estendido, por consistência, aos comunicados da Vale usados em
+`marcos.yaml` (Parte 1).
+
+**Consequência para a próxima coleta de produção** (20-F e relatórios de
+produção da Vale em vale.com; relatórios anuais da Rio Tinto 2011–2013 para
+Benga): buscar os números de produção/embarque **dentro do 20-F/6-K da SEC**
+(nível A) sempre que disponível, não nos comunicados de imprensa ou relatórios
+em PDF hospedados diretamente em vale.com/riotinto.com (nível C, salvo se
+esses mesmos PDFs forem cópias espelhadas de um filing regulatório, caso em
+que a base legal continua sendo a política do regulador, não a página que os
+hospeda). Para a Rio Tinto (dual-listada ASX/LSE, além de arquivar 6-K na SEC
+como estrangeira privada), verificar se ASX/LSE têm política de disseminação
+aberta equivalente à da SEC antes de tratar relatórios anuais da Rio Tinto
+como A por essa via alternativa — não verificado nesta sessão.
+
+### PARTE 3 — Licenças de publicação — **CORRIGIR (lista; nenhum arquivo de licença editado nesta sessão)**
+
+1. **Maus et al. (camada `industrial`)** — CC-BY-SA-4.0 consistente entre
+   `LICENSE-DADOS.md` (linha da tabela de exceções) e `data/LICENSES.md`
+   (linha 165, CC-BY-SA-4.0, DOI 10.1594/PANGAEA.942325). **APROVADO.**
+2. **World Bank CMO — licença** — **CORRIGIR.** `data/licenses_parts/economia_precos.md`
+   (verificado 2026-09-11) corrige a licença para **CC BY 4.0** com URL
+   `https://www.worldbank.org/ext/en/legal/terms-conditions/datasets`, mas
+   `data/LICENSES.md` (linha 264, consolidado em 2026-09-09, portanto anterior
+   à correção) ainda lista "Domínio público" com a URL antiga
+   (`thedocs.worldbank.org/.../18675f1d.../related/`). `LICENSE-DADOS.md`
+   (linha 36) hedgeia como "Domínio público / CC BY 4.0", não resolvendo a
+   ambiguidade. **Ação pendente**: reexecutar
+   `scripts/consolidar_registros.py` para regenerar `data/LICENSES.md` a
+   partir de `data/licenses_parts/` (que já inclui a correção, além das
+   famílias `marcos.md` e `economia_producao.md`, ausentes do consolidado
+   atual), e atualizar a linha correspondente de `LICENSE-DADOS.md` para "CC
+   BY 4.0" com a URL de termos corrigida.
+3. **`CITATION.cff` — `license: CC-BY-4.0` no nível raiz vs. `LICENSE` (MIT)** —
+   **CORRIGIR (ambiguidade real, não apenas formal).** O arquivo raiz `LICENSE`
+   declara MIT para todo o código (`pipeline/`, `scripts/`, `app/`, `Makefile`,
+   `Dockerfile`). `CITATION.cff` declara `type: dataset` e `license:
+   "CC-BY-4.0"` tanto no campo raiz quanto em `preferred-citation`, sem
+   nenhuma referência à licença MIT do código nem uma entrada de citação
+   separada para o software. Uma ferramenta ou pessoa que leia apenas
+   `CITATION.cff` (prática padrão do ecossistema Citation File Format, que
+   normalmente descreve o repositório citável como um todo) pode concluir que
+   todo o conteúdo do repositório, inclusive o código, está sob CC-BY-4.0 —
+   contradizendo `LICENSE`. **Ação pendente**: não editado nesta sessão (fora
+   do escopo de correção autorizada, que se limita a `config/marcos.yaml`).
+   Recomenda-se ao próximo ciclo: (i) adicionar uma nota explícita em
+   `CITATION.cff` distinguindo "código sob MIT (ver LICENSE); dados/artigo sob
+   CC-BY-4.0 (ver LICENSE-DADOS.md)" — o campo `preferred-citation.notes` já
+   faz isso parcialmente ("Código... sob MIT"), mas o campo raiz `license`
+   (fora de `preferred-citation`) continua ambíguo por não ter esse
+   contraponto; ou (ii) mudar `type` para `software` com uma citação separada
+   para os dados.
+4. **DOIs/URLs de `.zenodo.json`** — verificados contra `data/LICENSES.md`:
+   DOI Chen/Yu (`10.7910/DVN/YGIVCD`), Maus PANGAEA (`10.1594/PANGAEA.942325`),
+   GHSL, WSF Evolution, HDX COD-AB/COD-PS aparecem no consolidado. **APROVADO.**
+5. **Dados de nível B/C declarados como redistribuídos** — nenhuma ocorrência
+   encontrada em `LICENSE-DADOS.md` (seção explícita "Dados de nível B e C não
+   redistribuídos" declara corretamente que nem B nem C são versionados/
+   redistribuídos) nem em `.zenodo.json` (nota final reafirma "não contém
+   dados de nível B"). **APROVADO.**
+
+### Veredito por parte
+
+- **PARTE 1 (marcos):** CORRIGIR — quatro correções de nível já aplicadas
+  nesta sessão em `config/marcos.yaml` (concessao_vale, obras_vale,
+  venda_moatize_vulcan: A→C; reassentamento_cateme_25setembro: A→B); duas
+  pendências não editadas ficam registradas em nota no próprio YAML
+  (censo_2027_previsto, mesma inconsistência de raciocínio; censo_2007/2017,
+  decisão sobre citar HDX para a data de referência ainda não verificada
+  factualmente).
+- **PARTE 2 (relatórios de emissor):** decisão de regra emitida e vinculante
+  — SEC EDGAR (e reguladores com política de disseminação aberta equivalente,
+  a verificar caso a caso) = A; site do emissor sem selo de regulador e sem
+  licença própria = C, mesmo sendo "all rights reserved" institucional aberto
+  ao público, sem exceção para Vale/Rio Tinto/ICVL.
+- **PARTE 3 (licenças de publicação):** CORRIGIR — (i) regenerar
+  `data/LICENSES.md` via `scripts/consolidar_registros.py` para incorporar a
+  correção do World Bank CMO e as novas famílias `marcos.md`/
+  `economia_producao.md`; (ii) atualizar `LICENSE-DADOS.md` linha do World
+  Bank para "CC BY 4.0" sem ambiguidade; (iii) resolver a ambiguidade
+  código-MIT vs. dataset-CC-BY-4.0 em `CITATION.cff`. Nenhum desses três
+  arquivos foi editado nesta sessão (fora do escopo de edição autorizada).

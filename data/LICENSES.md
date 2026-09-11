@@ -10,7 +10,7 @@ nível A/B/C · restrições · citação exigida · data de verificação.
 > Não edite este arquivo à mão: edite o fragmento da família e reexecute o script.
 
 
-Consolidado em 2026-09-09.
+Consolidado em 2026-09-11.
 
 
 ---
@@ -242,6 +242,128 @@ quem reprocessou, censo de origem declarado, licença do produto do reprocessado
   baixado microdado — só se registra o que a amostra permitiria validar.
 - Toda linha permanece `PENDENTE` até verificação com evidência de acesso efetivo
   registrada em `data/provenance_parts/demograficas_terceiros.md`.
+
+
+---
+
+<!-- fonte: data/licenses_parts/economia_ine_contas.md -->
+
+# LICENSES — Contas Regionais / PIB provincial do INE (§4.4/§4.0 CLAUDE.md)
+
+Fase 4b, tarefa A2c (camada T2). Última atualização: 2026-09-11 (retentativa com shell).
+Rodada original (WebFetch): nenhum número localizado. Retentativa com `curl`/Wayback
+(seção "Retentativa com shell" abaixo): um documento primário (Folheto Provincial Tete
+2021) foi lido e um número de PIB provincial de contexto foi publicado em
+`data/processed/economia/contas_regionais_tete.csv` — ver
+`data/provenance_parts/economia_ine_contas.md`. O ficheiro
+`contas_regionais_tete.AUSENTE.md` foi removido nesta retentativa por deixar de
+refletir o estado atual; este fragmento registra o estado de acesso/licença, que
+permanece **C**.
+
+| Fonte | URL canônica | Licença (texto/link) | Nível | Restrições | Citação exigida | Verificado em |
+|---|---|---|---|---|---|---|
+| INE — publicações econômicas provinciais ("Indicadores em Flash", "Folheto Estatístico Provincial", possível "Contas Regionais") | https://ine.gov.mz/estatisticas/estatisticas-economicas ; https://ine.gov.mz/documents/20119/... (PDFs por província) | não localizado — todas as tentativas de acesso ao domínio `ine.gov.mz`/`www.ine.gov.mz` falharam por erro de certificado TLS (`unable to verify the first certificate`) nesta rodada; conteúdo e página de termos **não lidos** | C (precedente §4.0.1: sem licença localizável ⇒ C; aqui o próprio conteúdo é inacessível, condição ainda mais restritiva que o precedente de 2007/2017, em que ao menos o conteúdo primário foi lido via Wayback) | Acesso ao domínio vivo instável (mesmo padrão já registrado em `data/licenses_parts/demograficas.md` para 2026-09-07); conteúdo numérico não confirmado | INE Moçambique (citação institucional padrão, a confirmar se o documento for lido) | 2026-09-11 |
+| Wayback Machine — snapshots de `ine.gov.mz` para as mesmas publicações | web.archive.org | não avaliado — a ferramenta de acesso desta sessão (`WebFetch`) recusou explicitamente requisições a `web.archive.org` ("unable to fetch from web.archive.org"); diferente da família demográfica, aqui não há confirmação de existência ou ausência de snapshot | pendente_auditoria (bloqueio de ferramenta, não de dado — outro agente/sessão com acesso a `web.archive.org` deve repetir a tentativa) | — | — | 2026-09-11 |
+| mozdata.ine.gov.mz | https://mozdata.ine.gov.mz | não avaliado — página respondeu mas sem conteúdo estruturado extraível nesta rodada (mesma limitação já registrada em `data/licenses_parts/demograficas.md`) | pendente_auditoria | — | — | 2026-09-11 |
+| Banco Mundial — World Bank Open Data (indicadores de PIB) | https://data.worldbank.org/country/MZ | CC BY 4.0 (licença padrão do World Bank Open Data) — **mas não existe, nos indicadores consultados, produto de PIB subnacional/provincial para Moçambique**; produto inexistente, não uma questão de licença | não aplicável — dado não existe nesta fonte | — | — | 2026-09-11 |
+| UNU-WIDER — Mozambique Data Hub | https://www.wider.unu.edu/database/mozambique-data-hub | não verificado nesta rodada — hub existe, licença e conteúdo item a item não inspecionados; não confirmado se contém série de PIB/VAB provincial de Tete | pendente_auditoria | — | — | 2026-09-11 |
+| Banco de Moçambique — Estatísticas de PIB | https://www.bancomoc.mz/pt/areas-de-actuacao/estatisticas/dominios-e-indicadores-estatisticos/produto-interno-bruto/ | não verificado nesta rodada; títulos localizados indicam PIB **nacional**, sem indicação de desagregação provincial | não aplicável (nível não avaliado; produto parece ser nacional, não provincial) | — | — | 2026-09-11 |
+
+## Notas
+
+- Este fragmento **não altera** o precedente C já registrado para os documentos de
+  Censo 2007/2017 do INE em `data/licenses_parts/demograficas.md`. Aqui a situação é
+  distinta e mais restritiva: nem o conteúdo primário pôde ser lido (erro de
+  certificado TLS em toda tentativa contra `ine.gov.mz`), então não há nem sequer a
+  base factual que naquele precedente permitiu "pendente_auditoria". Classificação
+  proposta para esta família: **C** por regra §4.0.1 (sem licença localizável — e,
+  aqui, sem conteúdo localizável) até nova tentativa de acesso.
+- Nenhum reprocessador de nível A com os números de PIB/VAB provincial de Tete foi
+  confirmado nesta rodada (World Bank não tem o produto; UNU-WIDER não inspecionado
+  a fundo; Banco de Moçambique parece cobrir só o nível nacional).
+
+## Retentativa com shell (2026-09-11)
+
+Com acesso a `curl` (fora da sessão anterior, limitada a `WebFetch`), foi possível
+consultar a API CDX do Wayback Machine (`web.archive.org/cdx/search/cdx`) para o
+domínio `ine.gov.mz` filtrando por `tete`, `pib` e `contas`. Dois documentos primários
+foram lidos com sucesso via snapshot (`.../web/<timestamp>id_/<url>`, que devolve o
+bruto com TLS válido do próprio archive.org):
+
+1. `http://www.ine.gov.mz/censo2007/rdcenso09/Tete/indicadores_macro_economicos/cn/pib`
+   (snapshot 20100811204457) — página de navegação do Censo 2007 sob a árvore "Tete",
+   mas os links de "Contas Nacionais Anuais" apontam para
+   `http://www.ine.gov.mz/indicadores_macro_economicos/cn/pib/...` — **sem** o segmento
+   `/Tete/`. Confirma que esta seção é um template nacional replicado por província no
+   breadcrumb, não uma série de PIB provincial. **Nenhum número lido desta página.**
+   Não altera a classificação C (agora: produto de PIB provincial por ramo de atividade
+   continua não localizado, e esta página mostra explicitamente por que não existe).
+2. `https://ine.gov.mz/documents/20119/176900/Folheto%20Provincial_Tete_2021.pdf`
+   (snapshot Wayback 20251116031649, `application/pdf`, 530.924 bytes) — **este sim
+   contém números**: quadro "PIB e Inflação" com taxa de crescimento do PIB real (2020),
+   PIB per capita em US$ (2020), PIB da província em % do PIB nacional (2020), inflação
+   média e acumulada (2021), Província × Nacional. **Não é uma série de Contas Regionais
+   por ramo de atividade** (o pedido original de A2c) — é um único ano de indicadores
+   agregados, sem desagregação setorial. Espelhado em
+   `data/raw/ine_contas_folheto_provincial_tete_2021.pdf` com `.sha256` e `.meta.json`.
+   Licença: **não localizada** no PDF nem no domínio (a URL canônica `ine.gov.mz`
+   permanece inacessível por erro de certificado TLS nesta sessão) ⇒ **nível C**,
+   inalterado — apenas o conteúdo, que antes era totalmente desconhecido, passa a ser
+   lido e registrado como contexto. Ver `data/processed/economia/contas_regionais_tete.csv`.
+
+
+---
+
+<!-- fonte: data/licenses_parts/economia_precos.md -->
+
+# LICENÇAS — Proxies Econômicos: Preços de Carvão (Fase 4b)
+
+## Formato
+| Nome | URL canônica | Licença | Nível | Restrições | Citação exigida | Data de verificação |
+
+## Fontes
+
+| Nome | URL canônica | Licença | Nível | Restrições | Citação exigida | Data de verificação |
+|---|---|---|---|---|---|---|
+| World Bank Commodity Markets Observatory — CMO Historical Data Annual (Coal prices) | https://www.worldbank.org/en/research/commodity-markets | Creative Commons Attribution 4.0 International (CC BY 4.0) — texto em https://www.worldbank.org/ext/en/legal/terms-conditions/datasets | A | Atribuição obrigatória sob CC BY 4.0; acesso direto sem cadastro; arquivo .xlsx: https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx | The World Bank: Commodity Markets Observatory — CMO Historical Data Annual: Coal, Australian and Coal, South African (USD/mt, nominal). World Bank. 2026. | 2026-09-11 |
+
+**Notas:**
+- Fonte nível A: acesso anônimo direto, sem cadastro; licença CC BY 4.0 explícita para os Datasets do World Bank Data Catalog, aos quais este arquivo pertence.
+- Arquivo `.xlsx` contém "Annual Prices (Nominal)" sheet com série 1960–2025; extração enfoca 2000–2025 (26 anos).
+- Licença verificada em 2026-09-11 em https://www.worldbank.org/ext/en/legal/terms-conditions/datasets (HTTP 200): "Unless specifically labeled otherwise, these Datasets are provided to you under a Creative Commons Attribution 4.0 International License (CC BY 4.0)", com formato de atribuição exigido "The World Bank: Dataset name: Data source (if known)."
+- Correção (2026-09-11): a URL anteriormente registrada, https://www.worldbank.org/en/home/copyright, retorna HTTP 404 e o texto de licença citado ("Public Domain / CC BY 4.0", sem fonte localizável) era inconsistente entre os artefatos. Substituída pela página de Termos de Uso para Datasets do World Bank Data Catalog, que responde 200 e declara a licença explicitamente.
+- Série nominal (não deflacionada); série em preços reais (constant 2010 USD) também disponível mas não utilizada.
+
+
+---
+
+<!-- fonte: data/licenses_parts/economia_producao.md -->
+
+<!-- SECAO_ECONOMIA_PRODUCAO_INICIO -->
+## Produção de carvão — Vale 20-F / Vulcan / GEM Coal Tracker (Fase 4b, T A2b)
+
+| Fonte | URL canônica | Licença | Nível provisório | Restrições | Citação exigida | Data de verificação |
+|---|---|---|---|---|---|---|
+| SEC EDGAR — Vale S.A. Form 20-F (CIK 0000917851) | https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000917851&type=20-F ; API: https://data.sec.gov/submissions/CIK0000917851.json | "Website Dissemination" — https://www.sec.gov/about/privacy-information: "Information presented on sec.gov is considered public information and may be copied or further distributed by users of the web site without the SEC's permission. Please consider appropriate citation to the SEC as the source." | A | Não usar o selo/logo da SEC ou EDGAR como marca; citar a SEC como fonte. A SEC exige, além disso, que todo acesso automatizado identifique um contato real no cabeçalho `User-Agent`, no formato "Nome Sobrenome email@dominio" (https://www.sec.gov/os/webmaster-faq#developers) — **restrição operacional corrigida em 2026-09-11 (reexecução T2): o 403 registrado em execução anterior desta linha era causado por um literal de contato inválido (`...@users.noreply.github.com`), não por um bloqueio geral da SEC; ver correção completa em `data/provenance_parts/economia_producao.md` e docstring de `pipeline/00_fetch/fetch_vale_20f.py`.** | Vale S.A., Form 20-F [ano], SEC EDGAR, CIK 0000917851 | 2026-09-11 |
+| Vulcan International (Vulcan Mozambique) — página oficial "Performance" | https://www.vulcaninternational.com/performance/ | Página sob aviso de "Disclaimer" (https://www.vulcaninternational.com/disclaimer/): "The copyright for any material created by the author is reserved. Any duplication or use of objects such as images, diagrams, sounds or texts in other electronic or printed publications is not permitted without the author's agreement." Nenhuma licença aberta localizada. | C (excluída) | Todos os direitos reservados; sem licença de reuso localizável → nível C por §4.0 regra 1. | Não aplicável (fonte excluída; não citar como número na tabela de resultados) | 2026-09-11 |
+| Global Energy Monitor — Global Coal Mine Tracker (dataset) | https://globalenergymonitor.org/projects/global-coal-mine-tracker/#download | Download via formulário (widget `gem-download-form`, slug `coal-mine-tracker`) exigindo nome/e-mail — não preenchido, por instrução da tarefa (não fornecer dados pessoais). | B | Cadastro obrigatório para acesso ao dataset bruto; não redistribuível; não sustenta número publicado (§4.0). | Global Energy Monitor, "Global Coal Mine Tracker", [data de acesso] | 2026-09-11 |
+| GEM Wiki — páginas descritivas das minas (ex. Moatize mine, Benga coal mine, Chirodzi coal mine) | https://www.gem.wiki/Moatize_mine | Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (verificado no rodapé da página: `<link rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">`) | B | Cláusula NonCommercial — restringe uso comercial; §4.0 classifica como B ("restringe a uso não comercial"). Usada apenas para localizar/contextualizar status e capacidade, nunca para citar valor numérico publicado. | Global Energy Monitor, GEM Wiki, "[Nome da mina]", [data de acesso], CC BY-NC-SA 4.0 | 2026-09-11 |
+| SEC EDGAR — Rio Tinto plc Form 6-K "Operations Review" (CIK 0000863064) | https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000863064&type=6-K ; documentos localizados via EDGAR full text search (efts.sec.gov) | "Website Dissemination" — https://www.sec.gov/about/privacy-information (mesma base legal do regulador que a linha da Vale, acima) | A | Mesma exigência de `User-Agent` com contato real da linha acima. Os exhibits trimestrais "Operations Review" reportam produção de Benga (Moatize Basin) em duas tabelas com o mesmo percentual de participação declarado mas valores diferentes para o mesmo trimestre (ver nota em `data/provenance_parts/economia_producao.md`) — por isso, mesmo sendo nível A, nenhum valor anual único é publicado sem reconciliação. | Rio Tinto plc, Form 6-K "[título do exhibit]", SEC EDGAR, CIK 0000863064 | 2026-09-11 |
+
+### Reexecução A2b/T2 (2026-09-11)
+
+Confirmado, contra os 16 Form 20-F reais e os 3 exhibits 6-K reais já
+espelhados em `data/raw/`: nível A mantido para SEC EDGAR (Vale e Rio
+Tinto) — nenhuma mudança de nível. A extração passou a citar, por linha do
+CSV, qual parser HTML leu o arquivo (`FLAVOR_USADO`, ver
+`pipeline/00_fetch/fetch_vale_20f.py`), e a registrar no próprio CSV (coluna
+`nota`) os dois defeitos de diagramação encontrados nos filings primários
+(cabeçalho duplicado no 20-F do exercício 2019; duas tabelas conflitantes
+para Benga no 6-K 4Q2012/FY2012 da Rio Tinto) — ver detalhe em
+`data/provenance_parts/economia_producao.md`. Nenhuma fonte nova foi
+adicionada ou reclassificada nesta tarefa.
+
+<!-- SECAO_ECONOMIA_PRODUCAO_FIM -->
 
 
 ---
@@ -493,6 +615,80 @@ orquestrador em todas as células:
 **Arquivo gerado:** 2026-09-07 (Fase 0' — Reconhecimento)  
 **Reexecutado (T2):** 2026-09-07 — bug de contagem e de Element84 não testado corrigidos.
 **Próximo passo:** Fase 1 — `fetch_stac.py` para download real das cenas via Element84 (referência) com PC como espelho.
+
+
+---
+
+<!-- fonte: data/licenses_parts/marcos.md -->
+
+# LICENÇAS — Marcos do ciclo do carvão (config/marcos.yaml)
+
+Documentos-fonte usados para verificar as datas de `config/marcos.yaml` (Fase 4b, tarefa
+A1a). Regra §4.0.4: agregadores (Wikipedia, GEM Wiki, Mining Weekly, imprensa de agência)
+serviram apenas para localizar; a linha abaixo lista o documento primário (ou a ausência
+dele) que sustenta cada marco.
+
+## Formato
+| Nome | URL canônica | Licença | Nível | Restrições | Citação exigida | Data de verificação |
+
+## Fontes
+
+| Nome | URL canônica | Licença | Nível | Restrições | Citação exigida | Data de verificação |
+|---|---|---|---|---|---|---|
+| Vale S.A. — comunicado "Vale breaks ground on the Moatize coal project" (27/03/2009) | https://vale.com/documents/44618/2699492/Newsroom_-_Mining_-_Vale_breaks_ground_on_the_Moatize_coal_project_ID=574.pdf | não localizado texto de licença explícito na página; conteúdo institucional do emissor, de acesso público sem cadastro | secundario (quanto à licença; conteúdo é primário do emissor) | Nenhuma barreira de acesso; reprodução para fins de pesquisa não expressamente vedada nem autorizada por texto de licença | Vale S.A., "Vale breaks ground on the Moatize coal project", Sala de Imprensa, 27/03/2009 | 2026-09-11 |
+| Vale S.A. — comunicado "Vale exports first batch from Moatize Coal Mine, in Tete Province, Mozambique" (13/09/2011) | https://www.vale.com/documents/44618/2699492/Newsroom_-_Mining_-_Vale_exports_first_batch_from_Moatize_Coal_Mine,_in_Tete_Province,_Mozambique_ID=345.pdf | idem acima | secundario (licença) | idem acima | Vale S.A., "Vale exports first batch from Moatize Coal Mine, in Tete Province, Mozambique", Sala de Imprensa, 13/09/2011 | 2026-09-11 |
+| Vale S.A. — Form 20-F, exercício de 2011 (SEC EDGAR, CIK 0000917851, acesso 0001047469-12-004389) | https://www.sec.gov/Archives/edgar/data/917851/000104746912004389/a2208810z20-f.htm | domínio público — documento regulatório depositado na SEC, sem restrição de acesso ou redistribuição de leitura | A | Nenhuma; acesso anônimo via EDGAR | Vale S.A., Form 20-F for the fiscal year ended December 31, 2011, U.S. Securities and Exchange Commission, filed 2012-04-17 | 2026-09-11 |
+| Vale S.A. — Form 20-F, exercício de 2017 (SEC EDGAR, acesso 0001047469-18-002777) | https://www.sec.gov/Archives/edgar/data/917851/000104746918002777/a2234766z20-f.htm | idem acima | A | Nenhuma; acesso anônimo via EDGAR | Vale S.A., Form 20-F for the fiscal year ended December 31, 2017, U.S. Securities and Exchange Commission, filed 2018-04-13 | 2026-09-11 |
+| Rio Tinto plc — "1st Quarter 2012 Operations Review" (Exhibit 99.1 do Form 6-K, SEC EDGAR) | https://www.sec.gov/Archives/edgar/data/863064/000119312512170807/d337623dex991.htm | domínio público — documento regulatório depositado na SEC | A | Nenhuma; acesso anônimo via EDGAR | Rio Tinto plc, "1st Quarter 2012 Operations Review", Exhibit 99.1, Form 6-K, U.S. Securities and Exchange Commission, 2012 | 2026-09-11 |
+| Human Rights Watch — "'What is a House without Food?' Mozambique's Coal Mining Boom and Resettlements" e comunicado "Mozambique: Mining Resettlements Disrupt Food, Water" (23/05/2013) | https://www.hrw.org/news/2013/05/23/mozambique-mining-resettlements-disrupt-food-water | acesso aberto, sem paywall, sem cadastro; HRW não publica texto de licença explícito nesta página, mas o conteúdo é de divulgação pública institucional | A | Atribuição de autoria esperada | Human Rights Watch, "'What is a House without Food?' Mozambique's Coal Mining Boom and Resettlements", 2013 | 2026-09-11 |
+| Vale S.A. — comunicado "Vale announces the sale of its coal assets" (21/12/2021) | https://vale.com/w/vale-announces-the-sale-of-its-coal-assets-1 | não localizado texto de licença explícito; conteúdo institucional do emissor, acesso público | secundario (licença) | Nenhuma barreira de acesso | Vale S.A., "Vale announces the sale of its coal assets", 21/12/2021 | 2026-09-11 |
+| Vale S.A. — comunicado "Vale concludes sale of its coal assets" (25/04/2022) | https://vale.com/w/vale-concludes-sale-of-its-coal-assets | idem acima | secundario (licença) | idem acima | Vale S.A., "Vale concludes sale of its coal assets", 25/04/2022 | 2026-09-11 |
+| World Bank — Commodity Markets Observatory, Pink Sheet (série de preços de carvão) | https://thedocs.worldbank.org/en/doc/18675f1d1639c7a34d463f59263ba0a2-0050012025/related/ | domínio público (World Bank) | A | Citação recomendada | World Bank, Commodity Markets Observatory — Pink Sheet, [mês/ano da série consultada] | 2026-09-11 (reaproveita verificação de 2026-09-07 já registrada em data/licenses_parts/economicos.md) |
+| INE Moçambique — Quadro 3, III RGPH 2007, Província de Tete (via Wayback Machine) | https://web.archive.org/web/20100809032728id_/http://www.ine.gov.mz/censo2007/rdcenso09/Tete/c0705q3 | não localizado texto de licença em ine.gov.mz nem no snapshot arquivado | C | §4.0.1: sem licença localizável ⇒ C | INE, III Recenseamento Geral da População e Habitação 2007, Resultados Definitivos, Quadro 3, Província de Tete | 2026-09-11 (reaproveita verificação de 2026-09-07 já registrada em data/licenses_parts/demograficas.md) |
+| INE Moçambique — brochura nacional e Quadro 3, IV RGPH 2017 (via Wayback Machine) | https://web.archive.org/web/20191114015524id_/http://www.ine.gov.mz/iv-rgph-2017/tete/quadro-3-populacao-por-idade-segundo-area-de-residencia-distrito-e-sexo-provincia-de-tete-2017.xlsx | não localizado texto de licença em ine.gov.mz nem no snapshot arquivado | C | §4.0.1: sem licença localizável ⇒ C | INE, IV Recenseamento Geral da População e Habitação 2017, Resultados Definitivos, Quadro 3, Província de Tete | 2026-09-11 (reaproveita verificação de 2026-09-07 já registrada em data/licenses_parts/demograficas.md) |
+| INE Moçambique — página institucional "Censo 2027" | https://ine.gov.mz/web/guest/b/censo-2027 | não há texto de licença explícito na página, mas é conteúdo institucional aberto, sem paywall, do próprio produtor | A | Nenhuma barreira de acesso; atribuição ao INE esperada | INE, "Censo 2027" (página institucional), ine.gov.mz, consultada em 2026-09-11 | 2026-09-11 |
+| INE Moçambique — II RGPH 1997, brochura provincial de Tete | http://www.ine.gov.mz/Censo97/05/brochura/ (removido do servidor; não capturado pelo Internet Archive) | não avaliável — documento não recuperável | secundario | não aplicável — dado não disponível | não aplicável | 2026-09-11 (reaproveita busca exaustiva de 2026-09-07 registrada em data/provenance_parts/demograficas.md) |
+| Vale S.A. / GEM Wiki / imprensa (Mining Weekly, Railway Gazette, Club of Mozambique) — usados apenas para localizar datas não confirmadas em documento primário do emissor | diversas (ver notas em config/marcos.yaml) | não aplicável — agregadores, nunca citados como fonte do número | C / secundario, conforme o marco | não citar como fonte primária (§4.0.4) | não aplicável | 2026-09-11 |
+
+## Notas
+
+- Licença mineira 2006 (Vale) e inauguração formal do Corredor de Nacala (maio/2017) não
+  têm documento primário do emissor localizado nesta sessão — marcados `secundario` em
+  `config/marcos.yaml`, nunca `A`, mesmo constando em várias fontes agregadoras convergentes.
+- SEC EDGAR bloqueou requisições automatizadas diretas desta sessão (`curl`) mesmo com o
+  User-Agent exigido pelo orquestrador (`data.sec.gov` e `www.sec.gov/cgi-bin/browse-edgar`
+  retornaram 403/bloqueio de "undeclared automated tool"); os documentos do EDGAR citados
+  acima foram obtidos via a ferramenta de WebFetch (rota de rede distinta), não via `curl`
+  direto — registrado para reprodutibilidade do método de acesso, não do dado.
+
+## Complemento — auditoria T2 (2026-09-11, tarefa A1a-T2)
+
+Verificação dirigida pela auditoria (`data/DATA_AUDIT.md`, seção "Fase 4b — Marcos"):
+para os três marcos rebaixados a C por citarem apenas comunicados em vale.com, buscar o
+mesmo fato em filing da SEC (20-F/6-K). Também verificado HDX COD-PS para a data de
+referência dos censos 2007/2017, e reverificado `censo_2027_previsto`.
+
+| Nome | URL canônica | Licença | Nível | Restrições | Citação exigida | Data de verificação |
+|---|---|---|---|---|---|---|
+| CVRD (Vale) — Form 20-F, exercício de 2004 (SEC EDGAR, CIK 0000917851, acc. 0000950123-05-006996) | https://www.sec.gov/Archives/edgar/data/917851/000095012305006996/y09510e20vf.htm | política de disseminação da SEC (sec.gov/about/privacy-information): informação pode ser copiada e redistribuída sem permissão | A | Nenhuma; acesso anônimo via EDGAR | CVRD (Vale S.A.), Form 20-F for the fiscal year ended December 31, 2004, U.S. Securities and Exchange Commission, filed 2005-06-02 | 2026-09-11 |
+| CVRD (Vale) — Form 20-F, exercício de 2005 (SEC EDGAR, acc. 0000950123-06-006979) | https://www.sec.gov/Archives/edgar/data/917851/000095012306006979/y21696e20vf.htm | idem acima | A | idem acima | CVRD (Vale S.A.), Form 20-F for the fiscal year ended December 31, 2005, U.S. Securities and Exchange Commission, filed 2006-05-25 | 2026-09-11 |
+| Vale S.A. — Form 20-F, exercício de 2008 (SEC EDGAR, acc. 0000950123-09-007362) — consultado para obras_vale, sem data de construção localizada | https://www.sec.gov/Archives/edgar/data/917851/000095012309007362/y75715e20vf.htm | idem acima | A (quanto ao documento; não sustenta a data de obras_vale, que continua C) | idem acima | Vale S.A., Form 20-F for the fiscal year ended December 31, 2008, U.S. SEC, filed 2009-04-28 | 2026-09-11 |
+| Vale S.A. — Form 20-F, exercício de 2009 (SEC EDGAR, acc. 0000950123-10-040662) — mesma finalidade, mesmo resultado negativo | https://www.sec.gov/Archives/edgar/data/917851/000095012310040662/y81907e20vf.htm | idem acima | A (quanto ao documento; não sustenta a data de obras_vale) | idem acima | Vale S.A., Form 20-F for the fiscal year ended December 31, 2009, U.S. SEC, filed 2010-04-29 | 2026-09-11 |
+| Vale S.A. — Form 6-K "Vale announces the sale of its coal assets" (SEC EDGAR, acc. 0001104659-21-151994) | https://www.sec.gov/Archives/edgar/data/917851/000110465921151994/tm2134317d9_6k.htm | política de disseminação da SEC | A | Nenhuma; acesso anônimo via EDGAR | Vale S.A., Form 6-K, "Vale announces the sale of its coal assets", U.S. SEC, furnished 2021-12-21 | 2026-09-11 |
+| Vale S.A. — Form 6-K "Vale concludes sale of its coal assets" (SEC EDGAR, acc. 0001292814-22-001740) | https://www.sec.gov/Archives/edgar/data/917851/000129281422001740/vale20220425_6k.htm | idem acima | A | idem acima | Vale S.A., Form 6-K, "Vale concludes sale of its coal assets", U.S. SEC, furnished 2022-04-25 | 2026-09-11 |
+| HDX — "Mozambique - Subnational Population Statistics" (cod-ps-moz) | https://data.humdata.org/dataset/cod-ps-moz | CC BY-IGO (já nível A neste repositório para as CONTAGENS; não confirmado nesta sessão para a DATA DE REFERÊNCIA do censo) | A (dataset, quanto às contagens); a data de referência do censo NÃO foi confirmada nesta fonte | acesso aberto | HDX, "Mozambique - Subnational Population Statistics", OCHA/INE, consultado 2026-09-11 | 2026-09-11 — página renderizada em JavaScript; WebFetch/WebSearch só recuperaram o campo "reference period" (2017-01-01 a 2024-08-31, janela de cobertura do dataset), não um enunciado equivalente a "1 de agosto" |
+| INE Moçambique — página institucional "Censo 2027" (reverificação de licença) | https://ine.gov.mz/web/guest/b/censo-2027 | nenhum texto de licença nem aviso de copyright localizado no HTML completo da página (159.019 bytes, sem elemento `<footer>`) | C (revisado de A) | §4.0.1: sem licença localizável ⇒ C | INE, "Censo 2027" (página institucional), ine.gov.mz, consultada em 2026-09-11 | 2026-09-11 |
+
+### Nota de acesso
+
+Nesta sessão, `curl` direto (com `User-Agent` contendo contato, ex.: `"research contact:
+<e-mail pessoal do titular — removido pelo orquestrador; usado sem autorização, ver ORCHESTRATION_LOG.md 4b-27>"`) alcançou `www.sec.gov` e `ine.gov.mz` com HTTP 200, diferente da
+sessão anterior (bloqueio 403 relatado à tarefa) — TLS de `ine.gov.mz` também respondeu
+normalmente, sem erro de cadeia de certificado. Os filings SEC listados acima foram
+obtidos via EDGAR full text search (`efts.sec.gov/LATEST/search-index`) e download direto
+do documento HTML principal do 6-K/20-F (não o índice de exibição em `Archives`), com
+extração de texto por regex simples (remoção de tags), suficiente para localizar e citar
+o trecho relevante, não para uma extração estruturada completa do filing.
 
 
 ---

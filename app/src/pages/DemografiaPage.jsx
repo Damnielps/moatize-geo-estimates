@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
+  LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
   BarChart, Bar,
 } from "recharts";
 import { carregarCsv } from "../lib/data.js";
 import { useI18n, interpolarComPartes } from "../lib/i18n.jsx";
+import { formatarNumero } from "../lib/formato.js";
 import ProvenanciaNumero from "../components/ProvenanciaNumero.jsx";
+import { piorSelo, juntarSelos, piorNivel, pontoPorNivel } from "../lib/selos.js";
+import { Figura } from "../components/ui.jsx";
 
 const CORES = ["#24404F", "#9C5B41", "#3D5A4C", "#7E9BAA", "#A98A3F", "#6E3B45"];
 
@@ -14,32 +17,9 @@ const ORDEM_UNIDADES = ["Cidade de Tete", "Distrito de Moatize", "Província de 
 
 const ANOS_TABELA = [1997, 2007, 2017, 2025];
 
-function fmtNum(casas = 0) {
-  return (v) => (typeof v === "number" ? v.toLocaleString("pt-MZ", { maximumFractionDigits: casas }) : "—");
-}
-
-// Ordem de "pior selo" — §10: observado é a leitura mais firme, modelado a menos.
-// Um gráfico que combina pontas de selos diferentes (razão, índice multi-unidade)
-// herda o PIOR dos dois, nunca o melhor nem uma etiqueta inventada como "derivado".
-const ORDEM_SELO = { observado: 0, interpolado: 1, modelado: 2 };
-function piorSelo(a, b) {
-  if (!a) return b ?? null;
-  if (!b) return a ?? null;
-  return (ORDEM_SELO[a] ?? 99) >= (ORDEM_SELO[b] ?? 99) ? a : b;
-}
-// Selo de um cartão inteiro = união (ordenada, sem repetição) dos selos das linhas do
-// CSV efetivamente plotadas nele — nunca escrito à mão no JSX.
-function juntarSelos(selos) {
-  const unicos = [...new Set(selos.filter(Boolean))];
-  unicos.sort((a, b) => (ORDEM_SELO[a] ?? 99) - (ORDEM_SELO[b] ?? 99));
-  return unicos.join(" / ") || null;
-}
-
-const ORDEM_NIVEL = { A: 0, B: 1, C: 2 };
-function piorNivel(a, b) {
-  if (!a) return b ?? null;
-  if (!b) return a ?? null;
-  return (ORDEM_NIVEL[a] ?? 99) >= (ORDEM_NIVEL[b] ?? 99) ? a : b;
+// Formatação pelo idioma da interface (lib/formato.js): PT "305 722,5", EN "305,722.5".
+function fmtNumLang(lang, casas = 0) {
+  return (v) => (typeof v === "number" ? formatarNumero(v, lang, { max: casas }) : "—");
 }
 
 // Busca uma coluna "desvio_pct_<variante>" por PREFIXO, não por igualdade de nome.
@@ -61,45 +41,9 @@ function acharDesvioPorPrefixo(row, variante) {
   return Number(row[chave]);
 }
 
-function GraficoCard({ titulo, fonte, metodo, selo, children }) {
-  return (
-    <div className="ard-card grafico-card">
-      <h3>{titulo}</h3>
-      <ResponsiveContainer width="100%" height={320}>
-        {children}
-      </ResponsiveContainer>
-      <p className="grafico-fonte">
-        <strong>Fonte:</strong> {fonte} · <strong>Método:</strong> {metodo}
-        {selo ? <> · <strong>Selo:</strong> {selo}</> : null}
-      </p>
-    </div>
-  );
-}
-
-// Marcador vazado para pontos de nível de fonte B ou C (aviso obrigatório: nível no
-// tooltip, marcador diferente na tela). `payload` traz o ponto inteiro construído em
-// `indiceSeries`, incluindo `nivel_<unidade>` para esta série específica.
-function pontoPorNivel(chaveNivel, cor) {
-  return function DotPorNivel(props) {
-    const { cx, cy, payload } = props;
-    const nivel = payload?.[chaveNivel];
-    if (cx == null || cy == null || !payload || payload[chaveNivel.replace("nivel_", "")] == null) return null;
-    const vazado = nivel === "B" || nivel === "C" || nivel === "ausente";
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={4}
-        fill={vazado ? "#fff" : cor}
-        stroke={cor}
-        strokeWidth={2}
-      />
-    );
-  };
-}
-
 export default function DemografiaPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const fmtNum = (casas) => fmtNumLang(lang, casas);
   const [linhas, setLinhas] = useState([]);
   const [carregado, setCarregado] = useState(false);
   const [vilaSensibilidade, setVilaSensibilidade] = useState([]);
@@ -151,8 +95,8 @@ export default function DemografiaPage() {
     const desvioSemPeso = acharDesvioPorPrefixo(rowValidacao, "diagnostico_sem_peso_construido");
 
     const fmtInt = fmtNum(0);
-    const fmtPct = (v) => `${v >= 0 ? "+" : ""}${v.toLocaleString("pt-MZ", { maximumFractionDigits: 2 })}%`;
-    const fmtPctSemSinal = (v) => `${v.toLocaleString("pt-MZ", { maximumFractionDigits: 0 })}%`;
+    const fmtPct = (v) => `${v >= 0 ? "+" : ""}${formatarNumero(v, lang, { max: 2 })}%`;
+    const fmtPctSemSinal = (v) => `${formatarNumero(v, lang, { max: 0 })}%`;
 
     const fonteCsv = "data/processed/populacao_vila_moatize_sensibilidade.csv";
     const propsBase = { fonte: fonteCsv, selo: rowPisoTeto.selo, nivelFonte: rowPisoTeto.nivel_fonte, ano: 2017 };
@@ -177,7 +121,7 @@ export default function DemografiaPage() {
         ),
       },
     };
-  }, [vilaSensibilidade]);
+  }, [vilaSensibilidade, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- Índice de crescimento — base = primeiro ano disponível de cada unidade ---
   const indiceSeries = useMemo(() => {
@@ -308,7 +252,7 @@ export default function DemografiaPage() {
         </ul>
       </section>
 
-      <GraficoCard
+      <Figura
         titulo={t("pop_indice_titulo")}
         fonte="data/processed/demografia_serie_1997_2025.csv, variáveis indice_base_YYYY"
         metodo="Cada unidade indexada ao seu próprio primeiro ano disponível = 100. Pontos de nível B/C: marcador vazado (nível no tooltip do gráfico do navegador; veja a tabela abaixo para proveniência completa por ProvenanciaNumero). Unidades com menos de dois pontos na série não entram neste gráfico — um índice de um único ponto vale 100 por construção e não informa ritmo (ver aviso da Vila de Moatize)."
@@ -333,9 +277,9 @@ export default function DemografiaPage() {
             />
           ))}
         </LineChart>
-      </GraficoCard>
+      </Figura>
 
-      <GraficoCard
+      <Figura
         titulo={t("pop_cagr_titulo")}
         fonte="data/processed/demografia_serie_1997_2025.csv, variáveis cagr_1997_2007/cagr_2007_2017/cagr_2017_2025"
         metodo="CAGR geométrico entre os dois anos do intervalo, lido diretamente do CSV (nunca recalculado no front-end). Nível de fonte da barra = pior nível entre as duas pontas do intervalo (ver CSV)."
@@ -361,9 +305,9 @@ export default function DemografiaPage() {
             />
           ))}
         </BarChart>
-      </GraficoCard>
+      </Figura>
 
-      <GraficoCard
+      <Figura
         titulo={t("pop_ritmo_titulo")}
         fonte="derivado de data/processed/demografia_serie_1997_2025.csv (cagr_* de cada unidade ÷ cagr_* de Moçambique, mesmo intervalo)"
         metodo={t("pop_ritmo_metodo") + " Selo e nível de fonte da barra = pior selo / pior nível entre as duas pontas da razão (a unidade e Moçambique, §10) — nunca 'derivado', que não é selo válido."}
@@ -389,7 +333,7 @@ export default function DemografiaPage() {
             />
           ))}
         </BarChart>
-      </GraficoCard>
+      </Figura>
 
       <section className="ard-card" aria-label={t("pop_tabela_titulo")}>
         <h3>{t("pop_tabela_titulo")}</h3>

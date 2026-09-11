@@ -42,6 +42,11 @@ dependencies = [
   # depende de certifi.where(). Como dependência transitiva, sumiria numa reresolução.
   "certifi>=2024.2",
   "tqdm>=4.66",
+  "openpyxl>=3.1",
+  "lxml>=5",
+  "pypdf>=4",
+  "html5lib>=1.1",
+  "beautifulsoup4>=4.12",
 ]
 
 [project.optional-dependencies]

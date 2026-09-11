@@ -1,0 +1,14 @@
+{
+  "url": "https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx",
+  "download_date": "2026-09-11",
+  "size_bytes": 3175855,
+  "license": "Creative Commons Attribution 4.0 International (CC BY 4.0). See https://www.worldbank.org/ext/en/legal/terms-conditions/datasets",
+  "license_url": "https://www.worldbank.org/ext/en/legal/terms-conditions/datasets",
+  "level": "A",
+  "source_page": "https://www.worldbank.org/en/research/commodity-markets",
+  "content_description": "World Bank Commodity Markets Observatory — CMO Historical Data Annual. Coal prices (Australia and South Africa) in USD/mt, annual data.",
+  "years_covered": "2000–2025",
+  "geographic_level": "global (commodity prices)",
+  "format": "XLSX",
+  "notes": "Direct download from World Bank public repository; no authentication required. Column names verified on first read."
+}

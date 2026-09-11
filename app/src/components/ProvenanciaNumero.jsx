@@ -49,33 +49,33 @@ export default function ProvenanciaNumero({
             <strong>{lang === "pt" ? "Sem proveniência declarada." : "No declared provenance."}</strong>
           ) : (
             <>
-              <div>
+              <span className="prov-linha">
                 <strong>{t("fonte")}:</strong> {fonte}
-              </div>
+              </span>
               {metodo ? (
-                <div>
+                <span className="prov-linha">
                   <strong>{t("metodo")}:</strong> {metodo}
-                </div>
+                </span>
               ) : null}
               {ano != null ? (
-                <div>
+                <span className="prov-linha">
                   <strong>{t("ano_dado")}:</strong> {ano}
-                </div>
+                </span>
               ) : null}
               {selo ? (
-                <div>
+                <span className="prov-linha">
                   <strong>{t("selo")}:</strong>{" "}
                   <span className={`ard-pill ard-pill--${selo === "observado" ? "conforme" : selo === "modelado" ? "atencao" : "semdado"}`}>
                     {SELO_LABEL[selo]?.[lang] ?? selo}
                   </span>
-                </div>
+                </span>
               ) : null}
               {nivelFonte ? (
-                <div>
+                <span className="prov-linha">
                   <strong>{t("nivel")}:</strong> nível {nivelFonte}
-                </div>
+                </span>
               ) : null}
-              {nota ? <div className="prov-nota">{nota}</div> : null}
+              {nota ? <span className="prov-linha prov-nota">{nota}</span> : null}
             </>
           )}
         </span>

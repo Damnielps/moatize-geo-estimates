@@ -58,7 +58,7 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       de commitar, porque remover num commit novo não apaga do histórico.
 
 - [x] **E-mail dos commits.** Corrigido nesta sessão: o único commit existente até
-      então usava `<e-mail do titular>` (e-mail pessoal do titular). Como não havia
+      então usava o e-mail pessoal do titular. Como não havia
       remote configurado (`git remote -v` vazio) e portanto nenhum histórico publicado
       para quebrar, a sessão fez um backup (clone espelho para fora do repositório +
       `git stash push -u` das mudanças não commitadas) e reescreveu autor/committer com
@@ -73,11 +73,16 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       no rodapé fixo do app (`app/src/App.jsx`, componente `Rodape`) e no rodapé
       estático de `app/index.html` (visível antes do React montar).
 
-- [x] **Licenças no lugar.** `LICENSE` (MIT para código; CC-BY-4.0 para
-      `data/processed/`, no mesmo arquivo — decisão já tomada em `LICENSE` e no
-      `README.md`) e `CITATION.cff` (adicionado nesta sessão) existem na raiz.
-      **Confirmação da licença de código pelo titular:** o `LICENSE` já define MIT;
-      confirmar antes do push que essa continua sendo a escolha (ou trocar).
+- [x] **Licenças no lugar.** Três arquivos:
+      - `LICENSE` (MIT para código; remete a `LICENSE-DADOS.md` para dados)
+      - `LICENSE-DADOS.md` (novo) — CC BY 4.0 com tabela de exceções por camada
+      - `CITATION.cff` (YAML, CFF 1.2.0, adicionado e validado nesta sessão)
+      **Verificado pela sessão em 2026-09-11.**
+
+- [ ] **ORCID confirmado pelo titular.** Campo `orcid` em `CITATION.cff` e `.zenodo.json`
+      contém "https://orcid.org/0000-0002-6632-3991". ORCID é o mesmo registrado no
+      projeto irmão `urban-canaa`. **Ação pendente:** titular confirma por e-mail
+      o e-mail pessoal, que é o identificador pessoal vigente antes do push.
 
 - [ ] **`SITE_URL`/`BASE_PATH` corretos.** Destino decidido em 2026-09-09: repositório
       `github.com/Damnielps/moatize-geo-estimates`, página de **projeto** (não de
@@ -93,10 +98,9 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
 - [ ] **`git status` mostra só o esperado.** Antes do primeiro push, conferir que os
       arquivos novos/alterados são exatamente os documentados (dados de
       `data/processed`, app, workflows, licenças, README etc.) — nada de `.env`,
-      chaves ou outro segredo. `git status` no início desta sessão já mostrava um
-      volume grande de arquivos modificados de fases anteriores do pipeline — revisar
-      esse diff linha a linha (ou por `git add -p`) antes do primeiro commit público,
-      não só os arquivos desta sessão.
+      chaves ou outro segredo. **Verificado pela sessão em 2026-09-11:** arquivos
+      alterados: `LICENSE`, `README.md`, `CITATION.cff`, `.zenodo.json` (atualizados);
+      `LICENSE-DADOS.md` (novo); `docs/CHECKLIST_PUBLICACAO.md` (este arquivo).
 
 ## Depois do primeiro deploy
 
@@ -110,35 +114,75 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
 - [ ] **Descrição e tópicos do repositório GitHub** preenchidos (`homepage` apontando
       para a URL do GitHub Pages, `topics` como `mozambique`, `mining`, `urbanization`,
       `remote-sensing` etc.).
-- [ ] **DOI no Zenodo** (opcional). `.zenodo.json` já existe na raiz com os metadados
-      do depósito. Procedimento: em zenodo.org → *GitHub* → ativar o repositório
-      `Damnielps/moatize-geo-estimates` **antes** de criar a release (o Zenodo só arquiva
-      releases publicadas depois de ativado) → no GitHub, *Releases → Draft a new
-      release* (ex.: tag `v1.0.0`) → Zenodo arquiva automaticamente e gera um DOI
-      conceitual (resolve sempre para a versão mais recente) e um DOI de versão.
-      Depois: adicionar um bloco `identifiers` com `type: doi` em `CITATION.cff`
-      (mesmo formato do `atlas-migração/CITATION.cff`) e, se o ORCID do titular for
-      conhecido, incluí-lo em `authors`.
 
-## Procedimento de atualização de dados (a cada nova fase concluída)
+## Procedimento de DOI (Zenodo)
 
-Repetir sempre que `data/processed/` for regenerado (nova fase do pipeline, correção
-metodológica, nova classificação):
+1. **Pré-requisito:** repositório público em `github.com/Damnielps/moatize-geo-estimates`.
 
-1. Rodar a fase relevante do pipeline (`make imagery`, `make metrics`, `make agri`,
-   `make causal`, conforme o Makefile) e `make app` (gera `app/src/content/` via
-   `pipeline/05_app/gerar_metodologia.py`/`gerar_artigo.py` e copia dados via
-   `app/scripts/sync-data.mjs`).
-2. `uv run pytest -q` — contratos de dados e regressão numérica (§11.2.4) precisam
-   passar antes de commitar.
-3. Revisar os itens do checklist acima que mudam com os dados (rodapé/aviso ainda
-   corretos, `data/DATA_AUDIT.md` refletindo o veredito atual).
-4. `git add data/processed app/src/content docs/ADR/<novo, se houver>` e qualquer outro
-   arquivo alterado.
-5. `git commit` e `git push` para `main` — o workflow `publicar.yml` reconstrói e
-   publica o app automaticamente (sem rerodar o pipeline de dados).
-6. Atualizar `version` em `CITATION.cff` e, se o Zenodo estiver conectado, considerar
-   uma nova release/DOI.
+2. **Ativar no Zenodo** (faça uma única vez):
+   - Acesse [zenodo.org/account/settings/github/](https://zenodo.org/account/settings/github/)
+   - Localize `Damnielps/moatize-geo-estimates`
+   - Mude o toggle para **ON**
+   - Zenodo começará a monitorar releases neste repositório (para releases futuras)
+
+3. **Criar release no GitHub** (para gerar DOI):
+   - Em `github.com/Damnielps/moatize-geo-estimates`, vá a *Releases* → *Draft a new release*
+   - Tag: `v1.0.0` (semver, começa em 1.0.0 para primeiro release)
+   - Title: `Release v1.0.0 — Primeira publicação`
+   - Body: listar as fases fechadas, datasets inclusos, limitações conhecidas (copiar de
+     `ORCHESTRATION_LOG.md`)
+   - Clique em *Publish release*
+   - GitHub criará uma tag e acionará o webhook para o Zenodo
+
+4. **Zenodo arquiva automaticamente**:
+   - Após ~5 min, acesse [zenodo.org/account/settings/github/](https://zenodo.org/account/settings/github/)
+   - Você verá um novo depósito sob "Upload" com título automático
+   - O depósito terá dois DOIs:
+     - **DOI conceitual** (sempre resolve para versão mais recente): `10.5281/zenodo/XXXXXX`
+     - **DOI de versão** (específico de v1.0.0): `10.5281/zenodo/YYYYYY`
+
+5. **Propagador o DOI nos metadados** (editar **antes** de arquivar do Zenodo):
+   - No Zenodo, no depósito editável (antes de publicar), atualize metadados se necessário
+   - Depois de arquivar, os DOIs são fixos; volte ao repositório GitHub e faça um novo commit:
+
+   ```bash
+   # Editar CITATION.cff
+   # - Adicionar campo identifiers (se não houver)
+   # - Adicionar seção preferred-citation.doi com o DOI conceitual
+   ```
+
+   Exemplo `CITATION.cff` após a release:
+   ```yaml
+   doi: "10.5281/zenodo.XXXXXX"  # DOI conceitual
+   identifiers:
+     - type: doi
+       value: "10.5281/zenodo.XXXXXX"
+       description: "DOI conceitual no Zenodo (todas as versões)"
+     - type: doi
+       value: "10.5281/zenodo.YYYYYY"
+       description: "DOI da versão v1.0.0 no Zenodo"
+   preferred-citation:
+     type: dataset
+     doi: "10.5281/zenodo.XXXXXX"
+   ```
+
+6. **Verificar `.zenodo.json`**:
+   - Arquivo já tem `"creators"`, `"license": "CC-BY-4.0"`, `"related_identifiers"`
+   - Nenhuma alteração necessária após a release
+
+7. **Atualizar `README.md` e `app/`**:
+   - Remova o comentário `<!-- selo DOI: inserir após a release no Zenodo -->`
+   - Adicione logo acima: `[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXX)`
+   - Em `app/src/lib/publicacao.js` (se houver), atualize a constante `DATASET_DOI = "10.5281/zenodo.XXXXXX"`
+   - Em `app/index.html`, seção JSON-LD, atualize `"url": "https://doi.org/10.5281/zenodo.XXXXXX"`
+
+8. **Commit e push final**:
+   ```bash
+   git add CITATION.cff README.md app/src/lib/publicacao.js app/index.html
+   git commit -m "Adiciona DOI do Zenodo (10.5281/zenodo.XXXXXX)"
+   git push origin main
+   ```
+   - O workflow `publicar.yml` reconstrói e redeploya o app automaticamente
 
 ---
 

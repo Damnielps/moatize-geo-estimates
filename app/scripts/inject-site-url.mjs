@@ -4,12 +4,15 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { SITE_URL as SITE_URL_PUBLICACAO } from "../src/lib/publicacao.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
 // '||', não '??': no CI, uma variável de repositório não configurada chega como string
-// vazia, não undefined.
-const SITE_URL = (process.env.SITE_URL || "https://EXEMPLO.invalid").replace(/\/$/, "");
+// vazia, não undefined. Sem a variável de ambiente, cai para a mesma constante de
+// app/src/lib/publicacao.js usada por vite.config.js e por "Como citar" -- única fonte
+// de verdade, nunca um domínio inventado aqui.
+const SITE_URL = (process.env.SITE_URL || SITE_URL_PUBLICACAO).replace(/\/$/, "");
 
 const ARQUIVOS = ["robots.txt", "sitemap.xml"];
 

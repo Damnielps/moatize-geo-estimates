@@ -15,6 +15,7 @@ Fonte de verdade da execução: `cost_ledger.csv` (hook `SubagentStop`), consoli
 | 5 — Artigo | 150 | 120 | 700 | 150 | 1120 |
 | 6 — Revisão adversarial | 0 | 40 | 60 | 250 | 350 |
 | 7 — Fechamento | 60 | 20 | 20 | 0 | 100 |
+| 4b — Painel, contexto provincial e publicação (aberta 2026-09-11) | 150 | 700 | 250 | 100 | 1200 |
 | **Total** | **980** | **4450** | **2200** | **630** | **8260** |
 
 ## Regras de orçamento (§0-A.5 do prompt-mestre)
@@ -221,3 +222,31 @@ vinda da memória do orquestrador, e produziu a folha de fatos gerada e o contra
 **Lição de orçamento:** uma fase que constrói defesa contra uma classe de erro parece
 estourar sozinha, mas está pagando pela fase seguinte. Medir fases isoladamente esconde
 isso.
+
+### Fase 4b — fechamento de custo (2026-09-11)
+
+Teto aprovado no plano: T1 150K · T2 700K · T3 250K · T4 100K · **total 1.200K**.
+Consumo somado dos `subagent_tokens` que cada invocação reportou ao terminar (o hook
+`SubagentStop` continua sem modelo e sem tokens; a soma é do orquestrador, invocação a invocação,
+e inclui a releitura de contexto a cada turno — mesma medida das fases anteriores):
+
+| Camada | Invocações | Consumido | Teto | Uso |
+|---|---|---|---|---|
+| T1 haiku | 4 | ~262K | 150K | **175 %** |
+| T2 sonnet (inclui 7 portões `qa-validador`) | 22 | ~2.212K | 700K | **316 %** |
+| T3 opus | 10 | ~1.460K | 250K | **584 %** |
+| T4 fable | 0 | 0 | 100K | 0 % |
+| **Fase 4b** | 36 | **~3.934K** | 1.200K | **~328 %** |
+
+**Teto estourado sem parada a 100 % — falha do orquestrador, registrada aqui em vez de absorvida
+(regra 3).** A soma não foi feita em tempo real; só no fechamento. Pela regra 1, a revisão
+adversarial em T4 (último passo do plano) **não foi disparada**: fica para decisão do usuário.
+
+**Onde o teto errou.** (i) O plano estimou porte de UI; o custo real foi verificação visual e
+reexecução: seis tarefas de app reprovaram na primeira passagem, e cinco correções foram em opus.
+(ii) Cinco pedidos do usuário chegaram durante a fase (várzea, rodovias/ferrovia/aeroporto, cores
+WorldCover, eixo repetido, botões). (iii) Três agentes pararam no limite de turnos e foram
+retomados. (iv) A coleta no EDGAR custou ~308K sem publicar número, porque a SEC recusa o contato
+no-reply do GitHub (pendência do titular). O que funcionou: portões baratos pegaram defeitos
+reais (proveniência em tabela, título que atribuía à mina, fonte do macOS), e verificação direta do
+orquestrador substituiu portões inteiros em tarefas simples (A1b, A2a, B1, A2b).

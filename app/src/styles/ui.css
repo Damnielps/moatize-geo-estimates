@@ -1,0 +1,77 @@
+/* Componentes de app/src/components/ui.jsx (Figura, Tabela, Kpi, Sparkline, Termo,
+   Secao, Segmentado, Esqueleto, Erro) — portado de urban-canaa/web/src/styles/app.css.
+   Tokens só de ../ardosia.css; nenhum hex novo solto aqui. */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ---------------------------------------------------------------- secao */
+.secao { margin: 0 0 var(--ard-sp-5); }
+.secao h2 { margin: 0 0 var(--ard-sp-2); }
+.secao__intro { max-width: var(--ard-measure); color: var(--ard-text-2); }
+.secao__intro p { margin: 0 0 var(--ard-sp-2); }
+
+/* ---------------------------------------------------------------- figura */
+.figura { margin: 0 0 var(--ard-sp-4); min-width: 0; }
+.figura__cab { margin-bottom: var(--ard-sp-1); }
+.figura__titulo { font: 400 17px/1.3 var(--ard-serif); margin: 0; color: var(--ard-text); }
+.figura__sub { font: 400 13px/1.45 var(--ard-sans); color: var(--ard-text-2); margin: 4px 0 0; max-width: none; }
+.figura__controles { display: flex; flex-wrap: wrap; gap: 8px var(--ard-sp-3); margin-top: var(--ard-sp-2); }
+.figura__corpo { min-height: 60px; }
+.figura__rodape {
+  display: flex; justify-content: space-between; align-items: baseline; gap: var(--ard-sp-3);
+  margin-top: var(--ard-sp-1); padding-top: var(--ard-sp-1); border-top: 1px solid var(--ard-filete-cl);
+  font: 400 12px/1.4 var(--ard-sans); color: var(--ard-text-3);
+}
+.rotulo-fonte { font-weight: 600; }
+.figura__notas { font: 400 12px/1.45 var(--ard-sans); color: var(--ard-text-2); margin-top: 6px; }
+.figura__notas p { margin: 4px 0; max-width: none; }
+.botao-texto {
+  font: 600 12px/1 var(--ard-sans); padding: 6px 8px; border: 1px solid var(--ard-border);
+  border-radius: var(--ard-radius); background: transparent; color: var(--ard-primaria); flex: none;
+}
+
+/* ---------------------------------------------------------------- tabela */
+.tabela-wrap { overflow-x: auto; max-height: 520px; }
+.tabela-wrap table { font-size: 13px; }
+.tabela-wrap th { position: sticky; top: 0; background: var(--ard-surface); padding: 6px 8px; }
+.tabela-wrap td { padding: 5px 8px; }
+
+/* ---------------------------------------------------------------- KPI */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--ard-sp-3); }
+.kpi { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi .ard-kpi-value { font-size: 26px; }
+.kpi__unidade { font: 400 13px var(--ard-sans); color: var(--ard-text-3); }
+.kpi__delta { font: 400 12px/1.4 var(--ard-sans); color: var(--ard-text-2); margin: 2px 0 0; font-variant-numeric: tabular-nums; }
+.kpi__nota { font: 400 11px/1.4 var(--ard-sans); color: var(--ard-text-3); margin: 4px 0 0; }
+.sparkline { display: block; margin-top: 6px; }
+
+/* ---------------------------------------------------------------- controles */
+.segmentado { display: inline-flex; align-items: center; gap: 0; flex-wrap: wrap; }
+.segmentado__rotulo { font: 600 10px/1 var(--ard-sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ard-text-3); margin-right: 8px; }
+.segmentado__op {
+  font: 400 13px/1 var(--ard-sans); padding: 7px 10px; border-radius: 0; margin-left: -1px;
+  border: 1px solid var(--ard-border); background: transparent; color: var(--ard-text-2); cursor: pointer;
+}
+.segmentado__op:first-of-type { border-radius: var(--ard-radius) 0 0 var(--ard-radius); margin-left: 0; }
+.segmentado__op:last-of-type { border-radius: 0 var(--ard-radius) var(--ard-radius) 0; }
+.segmentado__op.ativo { background: var(--ard-primaria); color: var(--ard-papel); border-color: var(--ard-primaria); position: relative; }
+.segmentado__op:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ---------------------------------------------------------------- glossário, estados */
+.termo { position: relative; display: inline; }
+.termo__botao {
+  font: inherit; color: inherit; padding: 0; border: 0; border-radius: 0; background: none; cursor: help;
+  text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-color: var(--ard-acento);
+}
+.termo__def {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 30; width: min(320px, 80vw);
+  background: var(--ard-surface); border: 1px solid var(--ard-border); border-radius: var(--ard-radius);
+  padding: 10px 12px; font: 400 13px/1.45 var(--ard-sans); color: var(--ard-text); font-style: normal;
+}
+.esqueleto { background: var(--ard-filete-cl); border-radius: var(--ard-radius); opacity: 0.6; animation: ui-pulso 1.4s ease-in-out infinite; }
+@keyframes ui-pulso { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .esqueleto { animation: none; } }
+.erro { color: var(--ard-critico-fg); background: var(--ard-critico-bg); padding: 8px 12px; border-radius: var(--ard-radius); font: 400 14px var(--ard-sans); }

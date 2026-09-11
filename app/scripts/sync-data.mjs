@@ -32,6 +32,18 @@ copyDir(
   (name) => name.endsWith(".geojson") || name === "manifest.json"
 );
 
+// 1b) Marcos (linha do tempo de eventos).
+const MARCOS_SRC = join(SRC, "app", "marcos.json");
+if (existsSync(MARCOS_SRC)) {
+  ensureDir(join(DEST, "app"));
+  copyFileSync(MARCOS_SRC, join(DEST, "app", "marcos.json"));
+}
+
+// 1c) Proxies econômicos (luzes, preços).
+if (existsSync(join(SRC, "economia"))) {
+  copyDir(join(SRC, "economia"), join(DEST, "economia"), (name) => name.endsWith(".csv"));
+}
+
 // 2) Tabelas para o painel de estatísticas e para os gráficos.
 const CSV_RAIZ = [
   "stats_by_year_by_unit.csv",

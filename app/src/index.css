@@ -1,4 +1,8 @@
 @import "./ardosia.css";
+@import "./styles/ui.css";
+@import "./styles/slider.css";
+@import "./styles/mancha.css";
+@import "./styles/inicio.css";
 
 * { box-sizing: border-box; }
 
@@ -27,20 +31,45 @@ a.skip-link:focus { left: 0; }
   border-bottom: 2px solid transparent;
 }
 .ard-header nav a:hover, .ard-header nav a[aria-current="page"] { border-bottom-color: var(--ard-acento-claro); }
+/* Cabeçalho em tela estreita: título compacto e navegação numa linha rolável própria,
+   em vez de sete itens espremidos ao lado do título. */
+@media (max-width: 900px) {
+  .ard-header { flex-wrap: wrap; gap: 4px var(--ard-sp-2); padding: var(--ard-sp-1) var(--ard-sp-2); }
+  .ard-header h1 { font-size: 15px; line-height: 1.25; }
+  .ard-header nav { width: 100%; overflow-x: auto; gap: var(--ard-sp-2); scrollbar-width: none; padding-bottom: 2px; }
+  .ard-header nav a { white-space: nowrap; flex: none; }
+  .ard-header button.lang-toggle { flex: none; }
+}
 .ard-header button.lang-toggle {
   background: transparent; border: 1px solid rgba(255,255,255,0.4); color: #fff;
   border-radius: 4px; padding: 4px 8px; font: 600 11px var(--ard-mono); cursor: pointer;
 }
 
-.ard-main { flex: 1 1 auto; overflow: auto; padding: var(--ard-sp-3) var(--ard-sp-4); }
+/* Área rolável = <main> + rodapé. `flex-basis: 100%` sobre um contêiner de altura
+   definida torna a altura de <main> definida: a página de mapa pode usar `height: 100%`
+   e preencher a altura útil da tela; páginas longas crescem e rolam, com o rodapé no fim. */
+.ard-rolagem { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+.ard-main { flex: 1 0 100%; padding: var(--ard-sp-3) var(--ard-sp-4); }
+.ard-main:focus { outline: none; }
 
 .ard-footer {
-  padding: var(--ard-sp-2) var(--ard-sp-4); font-size: 12px; color: var(--ard-text-3);
+  flex: 0 0 auto;
+  padding: var(--ard-sp-2) var(--ard-sp-4); font: 400 12px/1.5 var(--ard-sans); color: var(--ard-text-2);
   border-top: 1px solid var(--ard-border); background: var(--ard-surface);
 }
+.ard-footer__linha { margin: 0; max-width: none; }
+.ard-footer__citar { margin-top: 2px; }
+.ard-footer__citar summary { cursor: pointer; }
 
 /* Layout do mapa */
 .mapa-layout { display: grid; grid-template-columns: 1fr 320px; gap: var(--ard-sp-3); height: calc(100vh - 190px); min-height: 480px; }
+/* Aba Mapa/Mancha: a página ocupa a altura útil de <main> (ver .ard-rolagem) e o mapa
+   fica com o que sobra depois do título e da barra de modo — sem offset fixo em px. */
+.mapa-pagina { height: 100%; display: flex; flex-direction: column; min-height: 560px; }
+.mapa-pagina > h2 { margin-top: 0; }
+.mapa-pagina .mapa-layout { height: auto; flex: 1 1 0; min-height: 480px; }
+.mapa-pagina .comparador { flex: 1 1 0; min-height: 0; }
+.mapa-pagina .comparador__mapas { height: auto; flex: 1 1 0; }
 .mapa-coluna-principal { display: flex; flex-direction: column; gap: var(--ard-sp-2); min-width: 0; }
 .mapa-container { position: relative; flex: 1 1 auto; border: 1px solid var(--ard-border); border-radius: var(--ard-radius); overflow: hidden; min-height: 320px; }
 .maplibregl-map { width: 100%; height: 100%; }
@@ -54,7 +83,8 @@ a.skip-link:focus { left: 0; }
    `glyphs`, então não há camada `symbol` disponível para texto; ver MapaTemporal.jsx). */
 .mapa-rotulo {
   font-family: var(--ard-sans);
-  color: var(--ard-primaria);
+  /* cor de `contexto.toponimo` da paleta (ADR 0018), posta no elemento por camadasBase.js */
+  color: var(--cor-toponimo, var(--ard-primaria));
   text-shadow: 0 0 3px var(--ard-papel-cl), 0 0 3px var(--ard-papel-cl), 0 1px 2px var(--ard-papel-cl);
   white-space: nowrap;
   pointer-events: none;
@@ -71,11 +101,19 @@ a.skip-link:focus { left: 0; }
 .legenda-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .legenda-swatch { width: 14px; height: 14px; border-radius: 3px; flex: 0 0 auto; border: 1px solid rgba(0,0,0,0.15); }
 .legenda-item label { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; }
+/* Camada fora do seu ano (ex.: adensamento 2020→2025 fora de 2025): checkbox
+   desabilitado + nota. Nota em --ard-text-2 (grafite) para manter contraste AA. */
+.legenda-item label.legenda-item--indisponivel { cursor: not-allowed; color: var(--ard-text-2); }
+.legenda-nota { display: block; font-size: 11.5px; font-style: italic; color: var(--ard-text-2); }
+/* Adaptação da legenda WorldCover (ADR 0018): selo discreto, não um alerta. */
+.legenda-adaptacao { display: inline-block; margin-left: 2px; padding: 0 4px; font: 400 10.5px/1.5 var(--ard-mono); color: var(--ard-text-2); border: 1px dashed var(--ard-border); border-radius: 3px; cursor: help; vertical-align: 1px; }
+.legenda-fonte-cores { margin: 8px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--ard-text-2); }
+.legenda-fonte-cores a { color: var(--ard-primaria); }
 
 .aviso-caixa { border-left: 3px solid var(--ard-critico); background: var(--ard-critico-bg); color: var(--ard-critico-fg); padding: 8px 10px; border-radius: 4px; font-size: 12.5px; margin: 6px 0; }
 .aviso-caixa--atencao { border-left-color: var(--ard-atencao); background: var(--ard-atencao-bg); color: var(--ard-atencao-fg); }
 
-.churn-badge { font: 400 11px var(--ard-mono); color: var(--ard-acento); background: var(--ard-acento-nevoa); padding: 3px 6px; border-radius: 4px; }
+.churn-badge { font: 400 11px var(--ard-mono); color: var(--ard-acento-texto); background: var(--ard-acento-nevoa); padding: 3px 6px; border-radius: 4px; }
 
 /* KPI grid */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -92,6 +130,8 @@ a.skip-link:focus { left: 0; }
 }
 .prov-tooltip strong { color: var(--ard-primaria-clara); }
 .prov-nota { margin-top: 6px; color: #d8d4cc; font-size: 11px; }
+/* Linhas do tooltip são <span> em bloco, não <div>: o número pode estar dentro de um <p>. */
+.prov-linha { display: block; }
 
 /* Tabelas de gráfico / metodologia */
 .grafico-card { margin-bottom: var(--ard-sp-4); }
@@ -104,10 +144,6 @@ a.skip-link:focus { left: 0; }
 .adr-card summary { cursor: pointer; font: 600 13px var(--ard-sans); color: var(--ard-primaria); }
 .adr-card pre { white-space: pre-wrap; font-family: var(--ard-mono); font-size: 12px; margin-top: 8px; color: var(--ard-grafite-cl); }
 
-.narrativa-capitulo { border-left: 3px solid var(--ard-acento); padding-left: 16px; margin-bottom: var(--ard-sp-5); }
-.narrativa-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: var(--ard-sp-3); }
-.narrativa-nav button { font: 600 12px var(--ard-sans); border: 1px solid var(--ard-border); background: var(--ard-surface); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
-.narrativa-nav button[aria-current="step"] { background: var(--ard-primaria); color: #fff; border-color: var(--ard-primaria); }
 
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
   outline: 3px solid var(--ard-acento); outline-offset: 2px;

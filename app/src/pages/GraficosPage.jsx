@@ -1,32 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
+  LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   BarChart, Bar,
 } from "recharts";
 import { carregarCsv } from "../lib/data.js";
+import { unidadeLuz } from "../lib/series.js";
 import { useI18n } from "../lib/i18n.jsx";
+import { formatarNumero } from "../lib/formato.js";
 import VeredictoCausal from "../components/VeredictoCausal.jsx";
+import { Figura } from "../components/ui.jsx";
 
 const CORES = ["#24404F", "#9C5B41", "#3D5A4C", "#7E9BAA", "#A98A3F", "#6E3B45"];
 
-function GraficoCard({ titulo, fonte, metodo, selo, children }) {
-  return (
-    <div className="ard-card grafico-card">
-      <h3>{titulo}</h3>
-      <ResponsiveContainer width="100%" height={320}>
-        {children}
-      </ResponsiveContainer>
-      <p className="grafico-fonte">
-        <strong>Fonte:</strong> {fonte} · <strong>Método:</strong> {metodo}
-        {selo ? <> · <strong>Selo:</strong> {selo}</> : null}
-      </p>
-    </div>
-  );
-}
-
 export default function GraficosPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  // Eixos e tooltips do Recharts pelo idioma (PT vírgula decimal) — o padrão do Recharts
+  // imprime o número cru, com ponto.
+  const fmtEixo = (v) => (typeof v === "number" ? formatarNumero(v, lang, { max: 1 }) : v);
+  const fmtTooltip = (v) => (typeof v === "number" ? formatarNumero(v, lang, { max: 2 }) : v);
   const [stats, setStats] = useState([]);
   const [luzes, setLuzes] = useState([]);
 
@@ -101,12 +93,15 @@ export default function GraficosPage() {
   const tipologiaDados = useMemo(
     () =>
       periodos.map((p) => {
-        const linha = (variavel) => stats.find((r) => r.unidade_geografica === "tete" && r.ano === 2025 && r.variavel === `${variavel}_desde_${p}`);
+        // Cada período é gravado no âncora SEGUINTE (`desde_2000` está em ano 2005, …,
+        // `desde_2020` em 2025). Buscar tudo em 2025 deixava só a última barra preenchida.
+        const fim = p + 5;
+        const linha = (variavel) => stats.find((r) => r.unidade_geografica === "tete" && r.ano === fim && r.variavel === `${variavel}_desde_${p}`);
         const infill = linha("prop_infill")?.valor ?? null;
         const borda = linha("prop_borda")?.valor ?? null;
         const leapfrog = linha("prop_leapfrog")?.valor ?? null;
         return {
-          periodo: `desde ${p}`,
+          periodo: `${p}→${fim}`,
           infill: infill != null ? infill * 100 : null,
           borda: borda != null ? borda * 100 : null,
           leapfrog: leapfrog != null ? leapfrog * 100 : null,
@@ -142,7 +137,7 @@ export default function GraficosPage() {
     <div>
       <h2>{t("nav_graficos")}</h2>
 
-      <GraficoCard
+      <Figura
         titulo="Índice 2000 = 100 — área urbana × luz noturna"
         fonte="area_km2_urbano (forma_urbana, unidade tete) · soma_radiancia (causal/serie_luzes_anual.csv, tete_aoi)"
         metodo="Razão simples ao valor de 2000, ×100. Área urbana é catraca não-decrescente por construção (ADR 0013); NÃO inclui população por falta de âncora censitária antes de 2017 para esta unidade."
@@ -151,15 +146,15 @@ export default function GraficosPage() {
         <LineChart data={indiceDados}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--ard-filete-cl)" />
           <XAxis dataKey="ano" />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={fmtEixo} />
+          <Tooltip formatter={fmtTooltip} />
           <Legend />
-          <Line type="monotone" dataKey="area_urbana" name="área urbana" stroke={CORES[0]} strokeWidth={2} dot />
-          <Line type="monotone" dataKey="luz_noturna" name="luz noturna (soma radiância)" stroke={CORES[1]} strokeWidth={2} dot />
+          <Line type="linear" dataKey="area_urbana" name="área urbana" stroke={CORES[0]} strokeWidth={2} dot />
+          <Line type="linear" dataKey="luz_noturna" name="luz noturna (soma radiância)" stroke={CORES[1]} strokeWidth={2} dot />
         </LineChart>
-      </GraficoCard>
+      </Figura>
 
-      <GraficoCard
+      <Figura
         titulo={`Rosa de expansão — Tete, ${rosaInfo ? `${rosaInfo.base}→${rosaInfo.ano}` : "intervalo indisponível"} (16 setores de 22,5°)`}
         fonte={`stats_by_year_by_unit.csv, familia forma_urbana, variável frac_novo_setor_NN_desde_${rosaInfo ? rosaInfo.base : "?"}, unidade tete, ano ${rosaInfo ? rosaInfo.ano : "?"}`}
         metodo={`Fração da área nova (${rosaInfo ? `${rosaInfo.base}→${rosaInfo.ano}` : "—"}) em cada setor direcional de 22,5° a partir do centroide da mancha de ${rosaInfo ? rosaInfo.base : "—"}. Cada ano-âncora mede o intervalo desde o âncora anterior, não desde 2000.`}
@@ -168,31 +163,31 @@ export default function GraficosPage() {
         <RadarChart data={rosaDados} outerRadius={110}>
           <PolarGrid stroke="var(--ard-filete-cl)" />
           <PolarAngleAxis dataKey="setor" />
-          <PolarRadiusAxis angle={30} />
+          <PolarRadiusAxis angle={30} tickFormatter={fmtEixo} />
           <Radar name="% da expansão" dataKey="fracao" stroke={CORES[0]} fill={CORES[0]} fillOpacity={0.4} />
-          <Tooltip />
+          <Tooltip formatter={fmtTooltip} />
         </RadarChart>
-      </GraficoCard>
+      </Figura>
 
-      <GraficoCard
+      <Figura
         titulo="Tipologia de expansão por período (infill / borda / leapfrog)"
-        fonte="stats_by_year_by_unit.csv, variáveis prop_infill/prop_borda/prop_leapfrog_desde_YYYY, unidade tete, ano 2025"
+        fonte="stats_by_year_by_unit.csv, variáveis prop_infill/prop_borda/prop_leapfrog_desde_YYYY, unidade tete, cada período lido no ano-âncora em que termina"
         metodo="Proporção da área nova classificada por adjacência à mancha existente no início do período. Herda o churn de classificação entre anos-âncora (ADR 0013) — não é medida livre de ruído."
         selo="observado, EXPERIMENTAL (herda churn)"
       >
         <BarChart data={tipologiaDados}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--ard-filete-cl)" />
           <XAxis dataKey="periodo" />
-          <YAxis unit="%" />
-          <Tooltip />
+          <YAxis unit="%" tickFormatter={fmtEixo} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow />
+          <Tooltip formatter={fmtTooltip} />
           <Legend />
           <Bar dataKey="infill" stackId="a" name="infill" fill={CORES[0]} />
           <Bar dataKey="borda" stackId="a" name="borda" fill={CORES[1]} />
           <Bar dataKey="leapfrog" stackId="a" name="leapfrog" fill={CORES[4]} />
         </BarChart>
-      </GraficoCard>
+      </Figura>
 
-      <GraficoCard
+      <Figura
         titulo="Comparação com cidades-controle — luz noturna indexada (2000 = 100)"
         fonte="data/processed/causal/serie_luzes_anual.csv (Chen, Yu et al. 2021, ESSD, harmonizado DMSP-VIIRS)"
         metodo="Cada cidade indexada ao seu próprio valor de 2000 = 100. Tete (tratada) vs. Chimoio, Quelimane, Lichinga, Xai-Xai, Inhambane (controles, §3). Comparação NÃO sustenta inferência causal (veredito_fase3.csv: contrafactual não sustentado nas 4 quebras testadas)."
@@ -200,24 +195,33 @@ export default function GraficosPage() {
       >
         <LineChart data={comparacaoDados}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--ard-filete-cl)" />
-          <XAxis dataKey="ano" />
-          <YAxis />
-          <Tooltip />
+          {/* Eixo numérico com os anos-âncora como ticks: cada linha usa os dados do
+              LineChart — passar `data` também em cada <Line> fazia o Recharts repetir as
+              categorias por série (2000…2025 uma vez por cidade). */}
+          <XAxis dataKey="ano" type="number" domain={[2000, 2025]} ticks={[2000, 2005, 2010, 2015, 2020, 2025]} allowDecimals={false} />
+          <YAxis tickFormatter={fmtEixo} />
+          <Tooltip formatter={fmtTooltip} labelFormatter={(a) => String(a)} />
           <Legend />
           {cidadesControle.map((c, i) => (
             <Line
               key={c.unidade}
-              type="monotone"
+              // Segmentos retos entre anos-âncora observados: a curva suavizada sugeria
+              // valores intermediários que a série não tem (mesmo espírito do ADR 0013).
+              type="linear"
               dataKey={c.unidade}
-              name={`${c.unidade}${c.papel === "tratada" ? " (tratada)" : ""}`}
+              name={
+                c.papel === "tratada"
+                  ? unidadeLuz(c.unidade, lang).replace(/\)$/, lang === "en" ? ", treated)" : ", tratada)")
+                  : unidadeLuz(c.unidade, lang)
+              }
               stroke={CORES[i % CORES.length]}
               strokeWidth={c.papel === "tratada" ? 3 : 1.5}
-              dot={false}
-              data={comparacaoDados}
+              dot={{ r: c.papel === "tratada" ? 3 : 2 }}
+              connectNulls={false}
             />
           ))}
         </LineChart>
-      </GraficoCard>
+      </Figura>
 
       <h2>{t("veredicto_secao_titulo")}</h2>
       <VeredictoCausal />

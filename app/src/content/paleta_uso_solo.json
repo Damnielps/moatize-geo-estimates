@@ -1,0 +1,87 @@
+{
+  "adr": "docs/ADR/0018-paleta-uso-do-solo-worldcover.md",
+  "classes": {
+    "adensamento_2020_2025": {
+      "classe_worldcover": "50 — Built-up",
+      "cor": "#FA0000",
+      "estilo": "hachura ou contorno tracejado, sem preenchimento sólido",
+      "nota": "Camada MODELADA (docs/ADR/0016). Nunca com o mesmo preenchimento sólido da mancha observada.",
+      "origem": "adaptacao",
+      "rotulo_en": "Densification 2020→2025 (modelled)",
+      "rotulo_pt": "Adensamento 2020→2025 (modelado)"
+    },
+    "agua": {
+      "classe_worldcover": "80 — Permanent water bodies",
+      "cor": "#0064C8",
+      "origem": "worldcover",
+      "rotulo_en": "Water",
+      "rotulo_pt": "Água"
+    },
+    "cultivo_irrigado": {
+      "classe_worldcover": "40 — Cropland",
+      "cor": "#F096FF",
+      "origem": "worldcover",
+      "rotulo_en": "Irrigated / recession cropland",
+      "rotulo_pt": "Cultivo irrigado / vazante"
+    },
+    "cultivo_sequeiro": {
+      "classe_worldcover": "40 — Cropland",
+      "cor": "#F096FF",
+      "estilo": "somente contorno tracejado, sem preenchimento",
+      "nota": "Candidata reprovada na validação (docs/ADR/0012). Não recebe o preenchimento de Cropland para não ser lida como cultivo.",
+      "origem": "adaptacao",
+      "rotulo_en": "Seasonal vegetation (not confirmed as cropland)",
+      "rotulo_pt": "Vegetação sazonal (não confirmada como cultivo)"
+    },
+    "industrial": {
+      "classe_worldcover": "60 — Bare / sparse vegetation",
+      "contorno": "#6E6E6E",
+      "cor": "#B4B4B4",
+      "nota": "WorldCover não tem classe de mineração. Cavas e pilhas de estéril são solo exposto em LCCS; usa-se a cor de Bare/sparse vegetation, com contorno escuro para leitura sobre fundo claro. Nunca vermelho: cava de mina não é área urbana (CLAUDE.md §10).",
+      "origem": "adaptacao",
+      "rotulo_en": "Industrial/mining footprint",
+      "rotulo_pt": "Pegada industrial/minerária"
+    },
+    "reassentamento": {
+      "classe_worldcover": "50 — Built-up",
+      "contorno": "#5C0000",
+      "cor": "#9E0000",
+      "nota": "Também é área construída em LCCS. Tom escuro do Built-up para manter a separação obrigatória entre crescimento orgânico e reassentamento (CLAUDE.md §0), com contorno para distinguir do vermelho da mancha orgânica.",
+      "origem": "adaptacao",
+      "rotulo_en": "Resettlement footprint",
+      "rotulo_pt": "Pegada de reassentamento"
+    },
+    "urbano": {
+      "classe_worldcover": "50 — Built-up",
+      "cor": "#FA0000",
+      "origem": "worldcover",
+      "rotulo_en": "Organic urban footprint",
+      "rotulo_pt": "Mancha urbana orgânica"
+    },
+    "varzea": {
+      "classe_worldcover": "90 — Herbaceous wetland",
+      "cor": "#0096A0",
+      "nota": "É ZONA (altura acima da drenagem, HydroRIVERS + DEM), não cobertura observada. Cor de Herbaceous wetland em baixa opacidade, para ler como zona por baixo das classes.",
+      "opacidade": 0.25,
+      "origem": "adaptacao",
+      "rotulo_en": "Floodplain (static)",
+      "rotulo_pt": "Várzea (estática)"
+    }
+  },
+  "contexto": {
+    "aerodromo": "#7A7A7A",
+    "contorno_fantasma": "#1A1A1A",
+    "ferrovia": "#1A1A1A",
+    "fundo_mapa": "#FFFFFF",
+    "toponimo": "#1A1A1A",
+    "vias": "#4A4A4A"
+  },
+  "fonte": "config/paleta_uso_solo.yaml",
+  "gerado_por": "pipeline/05_app/gerar_paleta.py",
+  "padrao": {
+    "nome": "ESA WorldCover (FAO LCCS / ISO 19144-2)",
+    "referencia": "Zanaga, D. et al. (2021/2022). ESA WorldCover 10 m v100/v200. doi:10.5281/zenodo.5571936 / 10.5281/zenodo.7254221",
+    "verificado_em": "2026-09-11"
+  },
+  "sha256_config": "e356bda257a6e272fd843b347424d3501308e6cdda699c143d615f9ca9abc49b"
+}

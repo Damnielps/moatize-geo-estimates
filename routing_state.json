@@ -1,14 +1,14 @@
 {
   "_doc": "Camada corrente por classe de tarefa (§0-A.3). T1=haiku T2=sonnet T3=opus T4=fable. Escalonamento por reprovação no portão; rebaixamento após 3 aprovações consecutivas na mesma camada.",
-  "_atualizado_em": "2026-09-07",
+  "_atualizado_em": "2026-09-11",
   "_operante": true,
   "classes": {
     "coleta_dados": {
       "agente": "coletor-dados",
       "camada_inicial": "T1",
       "camada_corrente": "T2",
-      "aprovacoes_consecutivas": 0,
-      "reprovacoes_consecutivas": 1,
+      "aprovacoes_consecutivas": 3,
+      "reprovacoes_consecutivas": 0,
       "_nota": "T2 na Fase 0'. Aprovadas: area construida e proxies economicos (T1); imagem, reassentamento e agricultura (T2). Pendente: demografica (esqueleto PENDENTE apos 4 tentativas, 331K tokens; causa = maxTurns 40). Rebaixamento para T1 desaconselhado ate que a taxa de reprovacao caia."
     },
     "auditoria_licencas": {
@@ -44,15 +44,16 @@
     "app_frontend": {
       "agente": "app-frontend",
       "camada_inicial": "T2",
-      "camada_corrente": "T2",
+      "camada_corrente": "T3",
       "aprovacoes_consecutivas": 0,
-      "reprovacoes_consecutivas": 0
+      "reprovacoes_consecutivas": 3,
+      "_nota": "Subida T2→T3 em 2026-09-11 (Fase 4b) após 3 reprovações seguidas em T2. Volta a T2 depois de 3 aprovações seguidas em T3."
     },
     "redacao_artigo": {
       "agente": "redator-artigo",
       "camada_inicial": "T3",
       "camada_corrente": "T3",
-      "aprovacoes_consecutivas": 0,
+      "aprovacoes_consecutivas": 1,
       "reprovacoes_consecutivas": 0
     },
     "formatacao_traducao_bibliografia": {
@@ -119,6 +120,248 @@
       "motivo": "cinco execucoes interrompidas em maxTurns=40 antes de gravar; nao e falha de camada, e de configuracao",
       "decidido_por": "orquestrador",
       "evidencia": "ORCHESTRATION_LOG.md 0'-13 e 0'-23; maxTurns elevado para 100, so vale apos reinicio da sessao"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "coleta_dados",
+      "tarefa": "A2a preço anual do carvão (WB CMO)",
+      "de": "T1",
+      "para": "T2",
+      "motivo": "portão reprovou: ruff (DTZ005, E501); licença declarada em duas versões (domínio público e CC BY 4.0) com URL de evidência em 404. Dados conferidos corretos em 15 pares.",
+      "decidido_por": "orquestrador",
+      "evidencia": "parecer qa-validador 4b-02"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "metricas_urbanas",
+      "tarefa": "A3 GIF no pipeline",
+      "de": "T2",
+      "para": "T3",
+      "motivo": "portão reprovou: fonte do sistema macOS (Iowan Old Style) quebra reprodução em Docker/CI; ruff com 13 erros",
+      "decidido_por": "orquestrador",
+      "evidencia": "parecer qa-validador 4b-05"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "B1 kit de UI e publicação",
+      "de": "T2",
+      "para": "T3",
+      "motivo": "portão reprovou: unidadeLuz criado mas não ligado; legenda do gráfico de controles exibe chaves cruas do CSV",
+      "decidido_por": "orquestrador",
+      "evidencia": "parecer qa-validador 4b-05"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "coleta_dados",
+      "tarefa": "A2a preço anual do carvão",
+      "de": "T2",
+      "para": "T2",
+      "motivo": "correção aprovada (verificação direta do orquestrador: uma licença CC BY 4.0, URL 200, ruff limpo, CSV com sha256 inalterado). Aprovações consecutivas da classe: 1",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-05"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "pipeline_imagem",
+      "tarefa": "A1b gerar_marcos.py + test_marcos.py (haiku, T1)",
+      "de": "T1",
+      "para": "T1",
+      "motivo": "aprovado na 1ª passagem por verificação direta do orquestrador (ruff, 16 testes, determinismo, conteúdo x YAML). Registro: primeira tarefa T1 da classe; a nota que proíbe T1 vale para classificação/calibração, não para scripts de YAML→JSON",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-07"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "coleta_dados",
+      "tarefa": "A2c Contas do INE (folheto provincial Tete 2021)",
+      "de": "T2",
+      "para": "T3",
+      "motivo": "portão reprovou: CSV de 9 linhas transcrito à mão, sem script que o regenere (§11.2). Transcrição conferida correta linha a linha",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-08"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "metricas_urbanas",
+      "tarefa": "A3 GIF (reexecução em opus)",
+      "de": "T3",
+      "para": "T3",
+      "motivo": "aprovado por verificação direta: fontes embutidas por caminho, paleta fixa, byte a byte intra-plataforma (3 execuções, inclusive com matplotlibrc hostil), tolerância entre plataformas declarada e calibrada; ruff limpo; 11 testes. Classe volta a T2 para a próxima tarefa",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-09"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "coleta_dados",
+      "tarefa": "A2c script extrair_ine_folheto_tete.py (opus)",
+      "de": "T3",
+      "para": "T3",
+      "motivo": "aprovado por verificação direta: regenera o CSV do PDF com hash conferido, download do zero testado, falha sem gravar se o quadro divergir; ruff limpo; 11 testes",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-10"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "formatacao_traducao_bibliografia",
+      "tarefa": "C1–C3 licenças e metadados (haiku)",
+      "de": "T1",
+      "para": "T2",
+      "motivo": "auditor-dados: LICENSE-DADOS.md mantém 'Domínio público / CC BY 4.0' para o World Bank; CITATION.cff com license CC-BY-4.0 na raiz contradiz o MIT do código",
+      "decidido_por": "orquestrador",
+      "evidencia": "DATA_AUDIT.md, seção Fase 4b — Marcos, relatórios de emissor e licenças"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "formatacao_traducao_bibliografia",
+      "tarefa": "C1–C3 correção (sonnet)",
+      "de": "T2",
+      "para": "T2",
+      "motivo": "aprovado com dois ajustes do orquestrador achados por cffconvert --validate (year na raiz; preferred-citation.type)",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-11"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "B2 linha do tempo, churn, comparador (sonnet)",
+      "de": "T2",
+      "para": "T3",
+      "motivo": "portão de código APROVADO; verificação visual do orquestrador achou 4 defeitos (?ano perde a corrida, rodapé fixo corta o mapa, decimal com ponto em PT, camada modelada 2020→2025 desenhada em anos anteriores)",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-12"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "coleta_dados",
+      "tarefa": "A1a complemento: marcos pelo 20-F/6-K (sonnet)",
+      "de": "T2",
+      "para": "T2",
+      "motivo": "aprovado por verificação direta (16 testes; URLs de filings no EDGAR). concessao e venda C→A; obras segue C; censo 2027 A→C. Aprovações consecutivas da classe: 2",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-14"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "redacao_artigo",
+      "tarefa": "B3-txt narrativa da home (opus)",
+      "de": "T3",
+      "para": "T3",
+      "motivo": "aprovado após reescrita de um título pelo orquestrador (atribuição à mina de sinal composto). 100/100 marcadores resolvidos",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-15"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "B2 correção (opus, 1ª em T3)",
+      "de": "T3",
+      "para": "T3",
+      "motivo": "4 defeitos corrigidos, mas regressão: carregamento a frio com ?ano= não desenha camadas; erro useI18n fora do provider. 2ª tentativa em T3; nova falha → arbitragem T4",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-16"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "formatacao_traducao_bibliografia",
+      "tarefa": "B3-en tradução da narrativa (haiku)",
+      "de": "T1",
+      "para": "T1",
+      "motivo": "aprovado por verificação direta: 51 pares PT/EN, marcadores idênticos, nenhum dígito novo, título corrigido traduzido",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-16"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "B4 aba Província e cidades (sonnet)",
+      "de": "T2",
+      "para": "T3",
+      "motivo": "portão reprovou: 3 tabelas 'Ver tabela' com números fora de ProvenanciaNumero",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-17"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "coleta_dados",
+      "tarefa": "A2b produção via EDGAR com SEC_USER_AGENT (sonnet, retomado após limite de turnos)",
+      "de": "T2",
+      "para": "T2",
+      "motivo": "aprovado por verificação direta: ruff limpo no repositório inteiro, 20 testes, falha explícita (rc=2) sem SEC_USER_AGENT. Extração validada só contra fixtures sintéticas; validação real no primeiro download. Aprovações consecutivas da classe: 3 → rebaixamento T2→T1 bloqueado pela nota da classe até reprovações zerarem por uma fase (houve reprovação em A2c nesta fase)",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-18"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "B2 2ª tentativa em T3 (opus)",
+      "de": "T3",
+      "para": "T3",
+      "motivo": "aprovado: carregamento a frio limpo confirmado pelo orquestrador; causa-raiz de contexto duplicado sob Fast Refresh e de dados antes do load corrigidas; 87/87 checagens do agente",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-19"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "B4 correção em T3 (opus)",
+      "de": "T3",
+      "para": "T3",
+      "motivo": "proveniência corrigida, mas verificação visual reprovou layout (eixo cortado, Moçambique achata cidades, painel triplo em duas colunas, estado vazio transbordando, variáveis cruas). 2ª tentativa em T3; nova falha → arbitragem T4",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-19"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "camada corrente da classe",
+      "de": "T2",
+      "para": "T3",
+      "motivo": "três reprovações consecutivas em T2 nesta fase (B1, B2, B4). Aplicada a simetria da regra 3 (§0-A): assim como três aprovações rebaixam, três reprovações sobem a camada inicial. B3 (home) começa em T3",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-19"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "app_frontend",
+      "tarefa": "B6 paleta WorldCover + corrida da home + PT em EN (opus, retomado após limite de 80 turnos)",
+      "de": "T3",
+      "para": "T3",
+      "motivo": "aprovado: causa-raiz provada (Promise.all esperava cultivos de 2–6 MB que a home não desenha), 7 cenários de corrida, paleta lida de um JSON gerado do YAML, 198 testes, ruff limpo. Orquestrador acrescentou aviso de carregamento",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-24"
+    },
+    {
+      "data": "2026-09-11",
+      "fase": "4b",
+      "classe": "coleta_dados",
+      "tarefa": "A2b extração contra os 20-F reais (sonnet)",
+      "de": "T2",
+      "para": "T2",
+      "motivo": "aprovado por verificação direta: 22 valores 2011–2021 (metalúrgico e térmico), 3 conferidos pelo orquestrador no HTML do FY2017; base de 100 % da mina declarada pelo orquestrador a partir da nota de rodapé do 20-F; CSV determinístico; 24 testes",
+      "decidido_por": "orquestrador",
+      "evidencia": "4b-28"
     }
   ]
 }

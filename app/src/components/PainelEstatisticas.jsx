@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { carregarCsv } from "../lib/data.js";
 import { useI18n } from "../lib/i18n.jsx";
+import { formatarNumero } from "../lib/formato.js";
 import ProvenanciaNumero from "./ProvenanciaNumero.jsx";
 
 const UNIDADES_SELECIONAVEIS = [
@@ -13,8 +14,9 @@ const UNIDADES_SELECIONAVEIS = [
   "aoi",
 ];
 
-function fmtNum(casas = 2) {
-  return (v) => (typeof v === "number" ? v.toLocaleString("pt-MZ", { maximumFractionDigits: casas }) : v);
+// Formatação pelo idioma da interface (lib/formato.js): PT vírgula decimal, EN ponto.
+function fmtNumLang(lang, casas = 2) {
+  return (v) => (typeof v === "number" ? formatarNumero(v, lang, { max: casas }) : v);
 }
 
 function KpiCard({ rotulo, sufixo, ...props }) {
@@ -30,7 +32,8 @@ function KpiCard({ rotulo, sufixo, ...props }) {
 }
 
 export default function PainelEstatisticas({ ano, unidade, setUnidade }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const fmtNum = (casas) => fmtNumLang(lang, casas);
   const [stats, setStats] = useState([]);
   const [areaConstruida, setAreaConstruida] = useState([]);
   const [pegada, setPegada] = useState([]);

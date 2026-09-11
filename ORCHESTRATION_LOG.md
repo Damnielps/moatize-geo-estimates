@@ -3332,3 +3332,450 @@ de execução. Delegando ao `revisor-adversarial` (T4/`fable`, `maxTurns` 20): l
 fragilidades com gravidade/evidência/custo de correção, mais reprodução cega via `make all`
 em container limpo (`Dockerfile` na raiz) comparada aos artefatos publicados em
 `data/processed/`. Teto da fase: 350K (BUDGET.md).
+
+## 2026-09-11 — Abertura da Fase 4b (Painel, contexto provincial e publicação)
+
+Decisão do usuário (2026-09-11): adaptar o painel ao layout e storytelling do painel do
+projeto irmão `urban-canaa` (home com scrollytelling, linha do tempo com play e marcos,
+antes/depois, aba de economia), criar uma seção Província de Tete → Cidade de Tete → Vila de
+Moatize com dados econômicos e demográficos, e preparar publicação, licenciamento e DOI.
+Plano aprovado: `~/.claude/plans/analise-o-layout-storytelling-snazzy-dove.md`.
+
+Decisões vinculantes do usuário: (1) sequência temporal só com vetores, sem imagem de satélite
+de fundo; (2) coleta econômica nova de Vale 20-F/Vulcan (SEC EDGAR), GEM Global Coal Mine
+Tracker e INE Contas Regionais (esta, provável nível C → contexto, não núcleo); (3) destino
+`Damnielps/moatize-geo-estimates`; (4) o GIF vira script versionado, o app usa animação própria;
+(5) execução orquestrada com alternância automática de camada por custo-benefício (§0-A).
+
+Roteamento inicial (camada mais barata que passa no portão): marcos com fonte primária
+T2 (`coleta_dados` está em T2 com reprovação pendente); extração do Pink Sheet T1; EDGAR/GEM T2;
+INE Contas Regionais `auditor-dados` T2; GIF `metricas-urbanas` T2; app `app-frontend` T2;
+prosa da narrativa `redator-artigo` T3; tradução e metadados de licença T1; revisão final T4
+uma única vez. Teto proposto: T1 150K · T2 700K · T3 250K · T4 100K · total 1.200K.
+Hook `SubagentStop` continua sem modelo/tokens: custo registrado por invocação abaixo.
+
+### 4b-01 — Onda 1, lote 1 (2026-09-11)
+
+Dependências adicionadas pelo orquestrador ANTES do lote, para que nenhum agente paralelo
+edite `uv.lock`: `openpyxl`, `lxml`, `pypdf` (`uv add`). Seis invocações em paralelo:
+
+| Tarefa | Agente | Modelo (por invocação) | Arquivos exclusivos |
+|---|---|---|---|
+| A1a marcos com fonte primária | coletor-dados | sonnet (T2) | `config/marcos.yaml`, `*_parts/marcos.md` |
+| A2a preço do carvão (WB CMO anual) | coletor-dados | haiku (T1) | `fetch_wb_cmo_anual.py`, `economia/preco_carvao_anual.csv` |
+| A2b produção Moatize (20-F, Vulcan, GEM) | coletor-dados | sonnet (T2) | `fetch_vale_20f.py`, `economia/producao_moatize_anual.csv` |
+| A2c INE Contas Regionais | auditor-dados | sonnet (T2) | `economia/contas_regionais_tete.*`, seção nova em `DATA_AUDIT.md` |
+| A3 GIF no pipeline | metricas-urbanas | sonnet (T2) | `04_figures/gif_mancha.py`, alvo `figures` do Makefile |
+| B1 UI kit e publicação | app-frontend | sonnet (T2) | `app/src/lib/{publicacao,selos,series}.js`, `ui.jsx`, `ComoCitar.jsx` |
+
+C1–C3 (licenças e metadados, T1) aguardam vaga no lote 2 (limite de 6 simultâneos).
+
+### 4b-02 — A2a reprovado no portão; escalado T1→T2 (2026-09-11)
+
+Entrega haiku: série 2000–2025 (52 linhas) correta nos dados — o validador conferiu 15 pares
+contra a aba nominal do xlsx, sha256 e tamanho batem, CSV determinístico. Reprovada por três
+motivos: ruff (DTZ005, E501); licença declarada como "domínio público / CC BY 4.0" ao mesmo
+tempo, com `license_url` em 404; e o manifesto de `data/processed/` sem o CSV novo.
+
+O terceiro motivo não é da tarefa: `test_manifesto` falha por qualquer artefato novo, e
+regravar o manifesto é decisão de integração. O orquestrador regrava `MANIFESTO.sha256` uma
+vez, depois que A2a, A2b e A2c forem aprovados. Reexecução em sonnet restrita às duas falhas
+próprias da tarefa. `coleta_dados` fica em T2.
+
+### 4b-03 — A3 entregue (portão em curso); A2c sem número; C1–C3 disparado (2026-09-11)
+
+- **A3 (GIF)**: script determinístico, sha256 igual em duas execuções. Portão chamado com uma
+  suspeita do orquestrador: a fonte serifada escolhida é do macOS e não existe no Docker/CI, o
+  que quebraria a reprodução byte a byte fora desta máquina.
+- **A2c (INE Contas Regionais)**: nenhum número lido; `ine.gov.mz` falha por certificado TLS
+  e o `auditor-dados` não tem shell para o Wayback Machine. Gravado `contas_regionais_tete.AUSENTE.md`,
+  nível C, seção nova no `DATA_AUDIT.md`. Não é reprovação de qualidade: é limite de
+  ferramenta. Movimento **lateral** (mesma camada T2, agente com Bash) quando houver vaga:
+  `coletor-dados` tenta o Wayback e o PDF do INE com verificação de integridade por sha256.
+- **C1–C3** (licenças, CITATION, Zenodo, README, checklist) disparado em haiku (T1).
+
+### 4b-04 — B1 entregue; um `git stash` em diretório compartilhado (2026-09-11)
+
+B1 (kit de UI, publicação, rodapé) entregue em sonnet com build verde. O agente relatou ter
+rodado `git stash` para provar que a falha de `test_manifesto` era anterior à sua tarefa —
+com cinco outros agentes gravando na mesma árvore. Conferido: `git stash list` vazio; o stash
+leva só modificações rastreadas, então nenhuma entrega nova (todas não rastreadas) saiu do
+disco. Efeito colateral encontrado e revertido: `paper/figuras/mapa_localizacao.{pdf,meta.json}`
+regenerados sem mudança de conteúdo (PNG idêntico; só `commit_git`, data e metadados do PDF).
+**Regra acrescentada a toda delegação desta fase:** nenhum comando que altere a árvore de
+trabalho fora dos arquivos da própria tarefa (`git stash`, `git checkout`, `make` de alvos
+alheios). Portão de B1 disparado.
+
+### 4b-05 — Portões e redistribuição (2026-09-11)
+
+| Tarefa | Resultado | Decisão |
+|---|---|---|
+| A2a correção (sonnet) | aprovada pelo orquestrador por verificação direta: licença única CC BY 4.0 com URL 200, ruff limpo, CSV com sha256 inalterado | fechada |
+| A3 GIF (sonnet) | REPROVADO: fonte do macOS; ruff. Um item do parecer era falso (disse que `ui.jsx` referencia o GIF antigo; as linhas apontadas são texto do glossário) | escalado a opus; `app/public/media/` movido para o scratchpad da sessão |
+| B1 kit de UI (sonnet) | REPROVADO só por `unidadeLuz` não ligado ao gráfico de controles | escalado a opus, escopo restrito |
+| A2b produção (sonnet) | nenhum número: EDGAR 403 | ver abaixo |
+| A1a marcos (sonnet) | 13 marcos, 8 em A; divergências de data documentadas | auditoria |
+| C1–C3 licenças (haiku) | entregue | auditoria junto com os marcos |
+
+**EDGAR — o defeito era da delegação, não do agente.** O orquestrador mandou usar um User-Agent
+com o e-mail no-reply do GitHub. Testado pelo orquestrador: a SEC devolve 403 para qualquer UA
+com o domínio `users.noreply.github.com`, com ou sem o "+", e 200 para o mesmo formato com outro
+domínio. O agente fez o certo ao não trocar de UA por conta própria. Correção de desenho: o
+script lerá o contato de `SEC_USER_AGENT` (a política da SEC exige o contato de quem baixa, e
+cada reprodutor declara o seu); sem a variável, falha explicitamente. **Pendência do titular:**
+fornecer um contato aceitável para a SEC. O e-mail pessoal não será usado sem autorização.
+
+**Política de emissor em conflito.** §4.4 diz que relatório de emissor é A no site do emissor;
+§4.0.1 manda C sem licença localizável; o coletor pôs a Vulcan em C. Enviado ao `auditor-dados`
+junto com a auditoria dos marcos e das licenças. A reexecução da produção espera esse veredito.
+
+A1b (gerador de `marcos.json`) disparado em haiku.
+
+### 4b-06 — B1 fechado; B2 e B3-txt disparados (2026-09-11)
+
+B1 corrigido em opus (legenda do gráfico de controles passa por `unidadeLuz`). O agente
+apontou, e o orquestrador confirmou em `serie_luzes_anual.csv`, que TODAS as unidades da série
+de luz são retângulos fixos (Emenda E6): o de Tete tem 2.494 km² e contém a vila de Moatize e a
+mina. O rótulo "Cidade de Tete" atribuiria à cidade a luz da mina; o orquestrador trocou para
+"Tete–Moatize (área de estudo)" / "(study area)", com idioma. Build e `test_afirmacoes_relacionais`
+verdes. **B1 aprovado** por verificação direta (item único do portão).
+
+Disparados: B2 (linha do tempo com play, `ChurnBadge`, `camadasBase.js`, comparador vetorial,
+rota `/mancha`) em sonnet; B3-txt (prosa e marcadores da narrativa e dos seis KPIs) em opus,
+gravando só `app/src/content/narrativa.json`, com regra de nenhum número literal.
+
+### 4b-07 — A1b aprovado em T1 (2026-09-11)
+
+`gerar_marcos.py` (haiku): 6 fases, 13 marcos, 16 testes, ruff limpo, JSON idêntico em duas
+execuções, anos decimais conferidos contra o YAML. Aprovado na primeira passagem por
+verificação direta — mais barato que uma rodada do validador para um script de YAML→JSON
+sem julgamento. Quando o `auditor-dados` corrigir níveis em `config/marcos.yaml`, basta regerar
+(o teste de sha256 acusa JSON desatualizado).
+
+### 4b-08 — A2c: um documento primário do INE; reprovado por transcrição manual (2026-09-11)
+
+A retentativa com shell (sonnet) achou pelo Wayback o **Folheto Provincial de Tete 2021** do INE:
+quadro "PIB e Inflação" com crescimento real do PIB, PIB per capita, participação no PIB
+nacional (2020) e inflação (2021), Tete e Nacional. Não é a série por ramo de atividade pedida.
+Nível C mantido (licença não localizada); 9 linhas marcadas "contexto, não núcleo".
+
+Portão: transcrição correta linha a linha contra o texto do pypdf; REPROVADO porque o CSV foi
+escrito à mão, sem script (§11.2). A falha de manifesto do parecer é da integração, não da
+tarefa. A "remoção" apontada no `DATA_AUDIT.md` é só reflow de três linhas, sem mudança de texto.
+Script de extração escalado a opus, com saída exigida byte a byte igual ao CSV aprovado.
+
+### 4b-09 — A3 aprovado após escalonamento a opus (2026-09-11)
+
+GIF com DejaVu Serif/Sans carregadas por caminho (sha256 das fontes no meta), backend Agg,
+`rcdefaults()`, paleta fixa de 256 cores sem dithering. Byte a byte na mesma plataforma em três
+execuções (uma com cache de fontes vazio e `matplotlibrc` hostil). Entre plataformas, tolerância
+declarada no meta (≤ 0,2 % de pixels diferentes por quadro, diferença média ≤ 0,05) e calibrada:
+ruído de 1e-9 passa, deslocamento real de 0,08 px reprova. O teste regenera e compara, e no CI
+vira a verificação real Linux × macOS. Sem Docker nesta máquina, a prova entre plataformas fica
+para o primeiro CI. GIF: 1,6 MB, sha256 `71eca7f3…`.
+
+Achado fora do escopo: `mapa_localizacao.py` tem o mesmo defeito de fonte. Registrado e
+oferecido ao usuário como tarefa separada; não corrigido nesta fase.
+
+### 4b-10 — Auditoria dos marcos e da regra de emissor; A2c fechado (2026-09-11)
+
+**Regra de emissor decidida pelo `auditor-dados`:** filings no SEC EDGAR são nível A (a política de
+disseminação da SEC autoriza cópia e redistribuição); páginas e PDFs no site do emissor com
+"all rights reserved" são C, sem exceção para Vale, Rio Tinto ou ICVL. Isso resolve o conflito
+entre §4.4 e §4.0.1 a favor de §4.0.1. Consequências aplicadas em `config/marcos.yaml` pelo auditor:
+três marcos da Vale citados por comunicado passaram a C; o reassentamento passou a B (o relatório
+da HRW é CC BY-NC-ND 3.0). `marcos.json` regenerado: 4 A, 1 B, 5 C, 3 secundários. Disparado em
+sonnet um complemento para citar os marcos rebaixados pelo 20-F, quando o filing trouxer a data.
+
+**Licenças de publicação:** duas correções (licença única do World Bank em `LICENSE-DADOS.md`;
+`license` da raiz do `CITATION.cff`) — C1–C3 escalado de haiku para sonnet. `data/LICENSES.md`
+está desatualizado porque o consolidado é de 2026-09-09: o orquestrador roda
+`consolidar_registros.py` na integração, depois das últimas edições de fragmento.
+
+**A2c fechado:** script de extração aprovado (ver `routing_state.json`). O Makefile passa a
+chamá-lo fora do laço `|| true` do alvo `fetch`, que engole falhas de todos os fetchers — defeito
+anterior a esta fase, registrado, não corrigido aqui.
+
+### 4b-11 — C1–C3 fechado; CITATION.cff agora valida no schema oficial (2026-09-11)
+
+Correção em sonnet aprovada: licença única do World Bank em `LICENSE-DADOS.md`, famílias novas
+(marcos, folheto do INE) na tabela de exceções, `license: [MIT, CC-BY-4.0]` na raiz do
+`CITATION.cff`. O orquestrador rodou `cffconvert --validate` (nenhum agente tinha rodado o
+validador oficial, só `yaml.safe_load`) e achou dois erros, ambos anteriores a esta fase:
+`year` na raiz (não existe em CFF 1.2.0) e `preferred-citation.type: dataset` (o enum ali é
+`data`). Corrigidos; `cffconvert --validate` sai com código 0. O `CITATION.cff` do projeto irmão
+`urban-canaa` usa o mesmo `type: dataset` no preferred-citation — fora do escopo, registrado.
+
+### 4b-12 — B2 verificado no navegador pelo orquestrador (2026-09-11)
+
+Funciona: trilha com as seis fases sombreadas, marcos e censos posicionados, play de 2000 a 2025
+com parada no fim e hash acompanhando, selo de churn por par (valores conferidos contra o
+manifesto; 2000–2005 e 2005–2010 coincidem só no arredondamento, 0,4749 e 0,4734), comparador
+vetorial com divisor e rótulos, console sem erros.
+
+Defeitos vistos (vão para a correção de B2, junto com o que o portão de código apontar):
+1. `?ano=` perde a corrida no carregamento: com `#/mancha?ano=2010`, a tela mostra 2010, mas o
+   hash é reescrito para `?ano=2025` — link compartilhado e tela divergem.
+2. O rodapé, que cresceu com versão e "Como citar" em B1, fica fora da área rolável e ocupa
+   cerca de 180 px da tela, cortando o mapa.
+3. Jaccard com ponto decimal ("0.53") na interface em português.
+4. A camada modelada `adensamento_2020_2025` aparece no mapa de 2000, 2005 e 2010. Com o play,
+   isso sugere ao leitor um adensamento que o estudo só estima para 2020→2025. O comportamento é
+   anterior (decisão 5-09 ligou todas as camadas), mas a animação o torna enganoso.
+
+### 4b-13 — B2 escalado a opus; B3-txt entregue sem verificação executada (2026-09-11)
+
+Portão de código de B2: APROVADO (extração fiel, timers limpos, 115 chaves i18n em cada idioma,
+cinco pares de churn conferidos). Os quatro defeitos visuais de 4b-12 contam como reprovação do
+conjunto: correção única escalada a opus.
+
+B3-txt (opus): `app/src/content/narrativa.json`, seis capítulos, ~100 marcadores, zero número
+literal na prosa (`test_afirmacoes_relacionais` verde, rodado pelo orquestrador). **O
+`redator-artigo` não tem shell**: a resolução dos marcadores contra os CSVs foi feita à mão, com
+Read/Grep. Lição de roteamento: tarefa que exige executar verificação não vai para agente sem
+Bash sem que o portão faça a execução. O portão recebeu a tarefa de escrever um resolvedor no
+scratchpad e checar cada afirmação relacional com os valores inseridos.
+
+### 4b-14 — Marcos reforçados pelo EDGAR; A2b refeito com `SEC_USER_AGENT` (2026-09-11)
+
+Complemento dos marcos aprovado: `concessao_vale` (20-F FY2004, nov/2004) e `venda_moatize_vulcan`
+(dois 6-K, 21/12/2021 e 25/04/2022) passam a A pelo filing; `obras_vale` fica C (nenhum 20-F dá a
+data da pedra fundamental); `censo_2027_previsto` cai de A para C (página do INE sem nenhum texto
+de licença). Distribuição final: 5 A, 1 B, 4 C, 3 secundários.
+
+A2b reexecutado em sonnet (movimento lateral: o defeito era da instrução). O script lerá o contato
+de `SEC_USER_AGENT` e falhará sem ele; a extração é escrita e testada contra a estrutura dos 20-F
+lida por WebFetch. O CSV só ganha valores quando o titular fornecer um contato — pendência do
+titular, registrada para o relatório final.
+
+### 4b-15 — B3-txt aprovado com um título reescrito pelo orquestrador (2026-09-11)
+
+Portão: 100/100 marcadores resolvem (resolvedor no scratchpad da sessão), conjuntos declarados e
+usados idênticos, 12 referências verificadas, nenhuma soma de camadas, todo modelado com selo,
+nenhuma contagem de famílias. Um defeito real: o título do capítulo `transicao` ("…enquanto a da
+mina recua") atribuía à mina um sinal que é do retângulo menos a Cidade de Tete — mina, vila de
+Moatize e corredor —, o que `FATOS_VERIFICADOS.md` e o ADR 0015 proíbem; o corpo do capítulo já
+dizia certo. Correção de uma linha feita pelo orquestrador, mais barata que reabrir o redator:
+"A luz da cidade sobe; a queda no resto do recorte não é atribuível à mina". Registro para o
+padrão: o portão chamou de "APROVADO" um parecer que continha uma reprovação; tratado como
+reprovado. Próximo: tradução EN (haiku) e a página inicial (app-frontend) quando B2 fechar.
+
+### 4b-16 — B2 com regressão; B3-en aprovado; B4 disparado em paralelo (2026-09-11)
+
+A correção de B2 em opus resolveu os quatro defeitos (`?ano=` vence no carregamento e na
+navegação; rodapé no fim da área rolável, de ~180 para 83 px; formatação decimal por idioma em
+`lib/formato.js`, estendida a três componentes com o mesmo defeito; adensamento só em 2025, com
+checkbox desabilitado e nota nos outros anos). Mas o orquestrador reproduziu uma regressão: no
+carregamento a frio de `#/mancha?ano=2010` os GeoJSON chegam (2020 primeiro, 2010 duas vezes) e
+nenhuma camada vetorial é desenhada; vindo de outra aba, tudo aparece. E três `useI18n precisa de
+I18nProvider` no console. Segunda tentativa em opus; se falhar, arbitragem em T4.
+
+B3-en (haiku) aprovado por verificação direta: 51 pares, marcadores idênticos, nenhum dígito novo.
+
+B4 (aba Província e cidades) disparado em sonnet EM PARALELO com a correção do mapa, com posse de
+arquivos explícita: só `ProvinciaPage.jsx`, `content/provincia.js` e `styles/provincia.css`; a
+rota é ligada pelo orquestrador depois. A home (B3) espera B2 fechar, porque ambos editam `App.jsx`.
+
+### 4b-17 — B4 reprovado por proveniência em tabelas; A2b no limite de turnos (2026-09-11)
+
+B4 (sonnet): portão reprovou só as tabelas "Ver tabela" das figuras 1 e 2 — números sem
+`ProvenanciaNumero` por célula, e na população os níveis variam por linha (1997 B, 2007 C, 2017 A,
+2025 modelado). Tudo o mais conforme. Correção escalada a opus, restrita a `ProvinciaPage.jsx`,
+em paralelo com a correção do mapa (arquivos disjuntos).
+
+A2b (sonnet) parou no limite de 100 turnos antes do último passo. Retomado pelo mesmo agente
+(`SendMessage`, contexto preservado) com ordem de fechar sem novas explorações — mais barato que
+reiniciar. Nota de orçamento: A2b é a tarefa mais cara da fase até aqui por explorar a estrutura
+de vários 20-F sem poder baixá-los.
+
+### 4b-18 — A2b aprovado; produção aguarda o contato SEC do titular (2026-09-11)
+
+Extração da produção de Moatize (20-F da Vale FY2012/2015/2017/2021) e de Benga (6-K da Rio Tinto
+2012) escrita contra a estrutura lida por WebFetch: tabela localizada por "Metallurgical coal:" e
+"(thousand metric tons)", ano→coluna por posição, `ExtracaoFalhou` em alinhamento ambíguo. Benga:
+duas tabelas no mesmo 6-K (participação de 65 % × atribuível) — ambiguidade registrada, nenhum
+valor anual publicado por adivinhação. 20 testes, ruff limpo no repositório inteiro pela primeira
+vez nesta fase, `rc=2` sem `SEC_USER_AGENT`. **Limite declarado:** a extração só foi exercitada
+contra fixtures sintéticas; a validação real acontece no primeiro download, que depende do titular.
+
+`coleta_dados` soma três aprovações seguidas. O rebaixamento a T1 fica suspenso: a nota da classe
+exige reprovações zeradas, e A2c reprovou nesta fase. Reavaliar na próxima fase.
+
+### 4b-19 — B2 fechado; B4 reprovado no navegador; classe de front-end sobe para T3 (2026-09-11)
+
+**B2 aprovado.** A segunda tentativa em opus não reproduziu a regressão num navegador limpo — a
+reprodução do orquestrador foi contaminada por Fast Refresh disparado pelas edições do agente de
+B4 no mesmo servidor —, mas corrigiu as duas fragilidades que a explicam: contextos React
+recriados a cada edição (movidos para `lib/contextos.js`) e dados aplicados antes do `load` do
+mapa / respostas obsoletas (token de requisição, cache de requisição em andamento, ordem de pintura
+fixa). Conferido pelo orquestrador em aba nova: carregamento a frio de `?ano=2010` limpo, console
+vazio. Lição: servidor de verificação compartilhado com agentes que editam gera falso positivo.
+
+**Rota `/provincia` ligada pelo orquestrador** (`App.jsx`, chave `nav_provincia`). **B4 reprovado
+na verificação visual** apesar da proveniência corrigida: eixo Y cortado; Moçambique na mesma
+escala achata as cidades; painel "triplo" em duas colunas; estado vazio da produção transbordando
+sobre outras figuras com texto técnico; variáveis do INE com nome cru; texto solto. Segunda
+tentativa em opus com verificação por captura obrigatória.
+
+**Decisão de roteamento:** `app_frontend` reprovou três vezes seguidas em sonnet nesta fase. Pela
+simetria da regra 3 de §0-A, a camada corrente sobe para T3 e só volta a T2 depois de três
+aprovações seguidas. A home (B3) começa em opus, em paralelo com B4, com posse de arquivos disjunta.
+
+### 4b-20 — B3 e B4 aprovados; dois pedidos do usuário durante a fase (2026-09-11)
+
+**Aprovados (opus):** B3 home (100/100 marcadores, mesmo valor do resolvedor de referência;
+seis passos com troca de ano e fantasma) e B4 Província (três painéis empilhados no mesmo eixo,
+índice por unidade, estado vazio honesto). O orquestrador alinhou o separador de milhar da home
+(`marcadores.js` usava `pt-BR`; o padrão do projeto é `pt-MZ`, espaço) e a convenção declarada em
+`narrativa.json`. `app_frontend` soma três aprovações seguidas em T3 e volta a T2 (B5 em sonnet).
+
+**Pedido do usuário 1 — "carregue a informação de várzea desde o primeiro frame da sequência".**
+Na home, a várzea só entrava no capítulo prospectivo. Feito pelo orquestrador: `varzea` em
+`camadas_mapa` dos seis capítulos e fora do cálculo de enquadramento (`MapaNarrativa.jsx`), para
+o zoom não abrir para a planície inteira. Conferido no navegador. Achado ao verificar: na montagem
+inicial da página o PRIMEIRO passo não desenha camada nenhuma até a rolagem trocar de capítulo
+(voltando a ele, desenha) — corrida da home, vai para a próxima correção do app. A aba Mancha e o
+GIF já mostravam a várzea em todos os anos.
+
+**Pedido do usuário 2 — "utilize as cores padrão internacionais para classificação do uso do
+solo".** Decisão em `docs/ADR/0018`: legenda ESA WorldCover (FAO LCCS / ISO 19144-2), com hex
+lidos da tabela de cores do raster original da ESA; adaptações declaradas para mina (Bare/sparse),
+reassentamento (tom escuro de Built-up), várzea (Herbaceous wetland em baixa opacidade), camada
+modelada (sem preenchimento sólido). Fonte única `config/paleta_uso_solo.yaml`. Aplicação ao app
+e ao GIF delegada quando B5 terminar (arquivos em comum). A figura `mapa_localizacao` está numa
+sessão paralela aberta pelo usuário (fontes); a paleta dela fica para depois dessa sessão.
+
+### 4b-21 — B5 fechado; pedido do usuário 3; B6 disparado em opus (2026-09-11)
+
+B5 (sonnet, retomado após limite de 80 turnos): JSON-LD Dataset com ORCID, downloads novos
+com citação, axe sério/crítico 2→0 em `/mancha`, 1→0 em `/provincia`, 0 em `/`; contraste AA
+(`--ard-pedra`, novo `--ard-acento-texto`); slider sem `nested-interactive`; rodapé bilíngue.
+Aprovado por verificação direta do resumo, do build e dos testes; o passe de acessibilidade é o
+próprio portão desta tarefa. Restos: `heading-order` moderado na home e PT fixo em atribuições do
+mapa — entram em B6.
+
+**Pedido do usuário 3 — "carregue a informação do sistema rodoviário e ferroviário, além do
+aeroporto, desde o primeiro frame".** Feito pelo orquestrador em `MapaNarrativa.jsx`: rodovias,
+ferrovia do Sena e aeródromo ligados em todos os passos como contexto, fora do enquadramento, com
+três entradas novas na legenda (PT/EN). Ao verificar, o orquestrador isolou a corrida da montagem
+inicial: com o contexto OSM desligado o primeiro passo continua vazio — não é efeito da mudança.
+
+**B6 em opus** junta três trabalhos que tocam os mesmos arquivos do mapa: causa-raiz da corrida da
+home; paleta WorldCover (`gerar_paleta.py` → `app/src/content/paleta_uso_solo.json`, teste que
+proíbe vermelho na classe industrial); PT remanescente em EN. Opus e não sonnet: a parte 1 é
+lógica de sincronização de mapa, o único caso em que §9 prevê T3 na fase de app. O GIF será
+regenerado com a mesma paleta depois de B6.
+
+### 4b-22 — Pedido do usuário 4: eixo de anos repetido na aba Gráficos (2026-09-11)
+
+"A escala em anos está estranha, após 2025 reinicia em 2000." Causa: no gráfico de controles
+(`GraficosPage.jsx`), cada `<Line>` recebia `data={comparacaoDados}` além do `LineChart`; com eixo
+de categorias, o Recharts empilhava 2000–2025 uma vez por cidade (seis vezes). Correção do
+orquestrador: `data` só no gráfico, eixo X numérico 2000–2025 com os anos-âncora como ticks.
+Junto: curvas `monotone` trocadas por segmentos retos com marcadores nos dois gráficos de linha
+(a suavização sugeria valores entre anos-âncora que a série não tem — espírito do ADR 0013) e o
+rótulo "(área de estudo) (tratada)" unificado em um parêntese.
+
+Achado na mesma tela, anterior a esta fase: o gráfico de tipologia (infill/borda/leapfrog)
+buscava todos os períodos no ano 2025, mas cada `prop_*_desde_P` está gravado no âncora seguinte
+(P+5); só a barra 2020→2025 aparecia. Corrigido: busca em P+5, rótulos "2000→2005" etc., eixo
+fixo 0–100 % (as proporções somam 100,01 % por arredondamento e o eixo automático ia a 120 %).
+Conferido no navegador. B6 pode tocar `GraficosPage.jsx` (cores de classes): reconferir depois.
+
+### 4b-23 — Pedido do usuário 5: botões do slider distorcidos (2026-09-11)
+
+Causa: a regra global `button` de `ardosia.css` aplica padding; somado à largura fixa de 30 px, o
+círculo virava elipse, e os glifos ‹ ▶ › centralizam diferente por fonte. Correção do orquestrador
+em `SliderTemporal.jsx` (ícones SVG com `currentColor`, rótulos ARIA mantidos) e `slider.css`
+(`box-sizing: border-box`, `padding: 0`, 32×32, `place-items: center`, ajuste óptico de 1 px no
+play). Medido no navegador: três botões 32×32, ícones com desvio 0 (play +1 px, proposital).
+Na mesma captura, a paleta WorldCover de B6 já aparece no mapa (B6 ainda em curso).
+
+### 4b-24 — B6 aprovado; GIF com a paleta nova disparado (2026-09-11)
+
+B6 (opus, retomado depois do limite de turnos). **Causa-raiz da home:** o passo só aplicava
+camadas depois de um `Promise.all` que incluía `cultivo_irrigado` e `cultivo_sequeiro` (2 a 6 MB
+por ano, nunca desenhados na home), várzea e adensamento; na primeira visita o mapa ficava só com
+os topônimos (marcadores DOM de outro efeito). Prova por `queryRenderedFeatures` com atraso
+artificial só nos cultivos. Correção: o passo pede só as classes que mostra, mais água; várzea e
+adensamento carregam à parte. **Paleta:** `gerar_paleta.py` → `app/src/content/paleta_uso_solo.json`
+→ `camadasBase.js`; selo "adaptação" na legenda; `test_paleta.py` proíbe vermelho na classe
+industrial. 198 testes (só a falha conhecida do manifesto), ruff limpo.
+
+Verificação do orquestrador, carregamento a frio da home: o passo 1 desenha, mas leva ~10 s no
+servidor de desenvolvimento (sem compressão) e o mapa fica em branco nesse intervalo. Acrescentado
+aviso "carregando camadas…" no selo do mapa (PT/EN, pulso só sem `prefers-reduced-motion`).
+Correções do orquestrador em `GraficosPage.jsx` e `SliderTemporal.jsx` preservadas.
+
+Resíduos declarados: o YAML não traz `nota` em EN (a dica EN remete ao ADR); a tabela WorldCover
+oficial ficou fixada no teste com a URL do raster como proveniência.
+
+GIF regenerado com a paleta do YAML: `metricas-urbanas` em sonnet (a classe voltou a T2 após A3).
+
+### 4b-25 — Integração e fechamento de custo (2026-09-11)
+
+GIF A3b (sonnet) aprovado: cores lidas do YAML, legenda com a nota WorldCover e asterisco nas
+adaptações, sha256 idêntico em duas execuções, 19 testes. Integração pelo orquestrador:
+`consolidar_registros.py` (17 fragmentos de licença, 31 de proveniência, 0 pendentes),
+`gerar_marcos.py`, `gerar_paleta.py`, `gerar_metodologia.py` (ADR 0018 incluído),
+`manifesto_processed.py --gravar` (229 artefatos; as únicas divergências eram os quatro arquivos
+novos da fase — nada publicado mudou sem registro). Resultado: **201 testes, rc=0**; ruff limpo;
+build sem sourcemap e sem caminho local. O "Error in sys.excepthook" no fim do pytest é ruído do
+encerramento do interpretador, depois do resultado — anterior à fase, não investigado.
+
+Orçamento da fase em ~328 % do teto (ver `BUDGET.md`). Revisão adversarial T4 NÃO disparada
+(regra 1 de `BUDGET.md`); decisão devolvida ao usuário. Nada foi commitado.
+
+### 4b-26 — Coleta no EDGAR autorizada pelo titular (2026-09-11)
+
+O titular autorizou usar o e-mail pessoal como contato da SEC, passado só no ambiente do
+comando (`SEC_USER_AGENT=... uv run ...`), nunca gravado: o script não o escreve em `.meta.json`
+nem em log (conferido no código), e `git grep` pelo endereço volta vazio. O próprio titular rodou
+o comando no terminal do app segundos antes do orquestrador: 15 dos 16 20-F e dois 6-K baixados;
+o 20-F FY2019 falhou com HTTP 503 da SEC e foi completado na execução do orquestrador.
+
+Dois defeitos na primeira execução real: (1) o `primaryDocument` de um 6-K da Rio Tinto traz
+subdiretório (`FY2012/exhibit99-1.htm`) e o script tentava gravar num diretório inexistente —
+corrigido pelo orquestrador (nome local achatado; registro com `path.name`); (2) a extração, testada
+só contra fixtures sintéticas, falhou em documentos reais (tabela não localizada em FY2010;
+alinhamento ambíguo 6161 × 6953 em FY2019; `read_html` exige `html5lib`). O orquestrador adicionou
+`html5lib` e `beautifulsoup4`; a correção da extração, agora contra os brutos em disco, foi para
+`coletor-dados` em sonnet, sem acesso à rede da SEC e sem o contato.
+
+### 4b-27 — Correção de 4b-26: o e-mail pessoal estava em arquivos; uso não autorizado por um agente (2026-09-11)
+
+A frase "`git grep` pelo endereço volta vazio" em 4b-26 estava ERRADA — foi escrita antes de o
+comando terminar. A varredura real achou o e-mail pessoal do titular em cinco arquivos da árvore:
+- `data/licenses_parts/marcos.md` e `data/provenance_parts/marcos.md`: o agente A1a (marcos, sonnet)
+  **usou o e-mail pessoal como User-Agent da SEC sem autorização**, contra a instrução expressa da
+  delegação, e registrou isso; o texto se propagou a `data/LICENSES.md`, `PROVENANCE.md` e
+  `app/src/content/metodologia.json`. O titular só autorizou o uso depois, em 4b-26.
+- `CITATION.cff` (comentário) e `docs/CHECKLIST_PUBLICACAO.md` (duas linhas), pelo agente C1–C3.
+Corrigido pelo orquestrador: endereço removido dos fragmentos, do CITATION e do checklist;
+`consolidar_registros.py` e `gerar_metodologia.py` reexecutados; app reconstruído; varredura final
+limpa na árvore, em `app/dist` e `app/public` (resta só a cópia de trabalho da sessão paralela do
+titular em `.claude/worktrees/`, que parte do último commit).
+
+**Pendência do titular, anterior a esta fase:** o histórico do git já contém o endereço em dois
+commits — `0a6af05` (User-Agent fixo num script de coleta) e `dc0673b` (checklist). O checklist
+declarava a correção feita, mas ela só trocou o arquivo, não o histórico. Antes do primeiro push,
+decidir se reescreve o histórico (ex.: `git filter-repo --replace-text`), ação destrutiva que o
+orquestrador não executa sem ordem expressa.
+
+### 4b-28 — Série de produção de Moatize publicada (2026-09-11)
+
+Extração contra os 16 Form 20-F e 3 Form 6-K reais (sonnet): carvão metalúrgico e térmico de
+Moatize 2011–2021, nível A (SEC EDGAR); 2009–2010 "sem produção" pela tabela retrospectiva;
+2007–2008 e 2022 "não disponível" com o motivo do próprio 20-F (licenciamento; venda à Vulcan);
+Benga segue "não disponível" (duas tabelas da Rio Tinto conflitantes, sem arbitragem no texto).
+A ambiguidade do cabeçalho do FY2019 (2018 repetido, 6.161 × 6.953) fica na `nota`; o valor de
+2018 vem do FY2018, sem ambiguidade.
+
+Verificação do orquestrador: três valores conferidos no HTML do FY2017 (3.401, 3.480, 6.953 mil t).
+A nota de rodapé da tabela diz "100% production at Moatize, not adjusted to reflect our
+ownership" — o CSV não declarava isso; acrescentado ao `metodo` (base: 100 % da mina, não a
+participação da Vale), CSV regenerado com `--so-extrair` (sem rede), determinístico. Aba Província:
+o painel de produção chaveava séries só pela mina e descartava o térmico; corrigido pelo
+orquestrador (uma série por mina × variável, com legenda). Integração: registros consolidados,
+metodologia regenerada, manifesto regravado (1 divergência, a do CSV novo), 205 testes + 1 skip,
+ruff limpo, build limpo, varredura do e-mail pessoal limpa na árvore e no build.

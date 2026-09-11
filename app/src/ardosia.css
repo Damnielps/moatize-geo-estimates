@@ -8,7 +8,10 @@
   --ard-tinta: #1B1F23;
   --ard-grafite-cl: #31383D;
   --ard-grafite: #4A5157;
-  --ard-pedra: #7B7D78;
+  /* #686A66, não o cinza-pedra original #7B7D78: esse dava 3,95:1 sobre --ard-papel-cl
+     e 3,71:1 sobre --ard-papel (--ard-text-3 é usado em rótulo/nota/fonte por todo o
+     app) — falha AA (axe color-contrast, Fase 4b B5). Mesma matiz, ~4,9:1 e ~5,2:1. */
+  --ard-pedra: #686A66;
   --ard-filete: #D8D4CC;
   --ard-filete-cl: #E6E2DA;
   --ard-papel: #F4F2ED;
@@ -22,6 +25,11 @@
   --ard-acento: #9C5B41;
   --ard-acento-claro: #B8795C;
   --ard-acento-nevoa: #F2E2DC;
+  /* Terracota mais escura, só para TEXTO sobre --ard-acento-nevoa (badge de churn,
+     glossário, fase ativa do slider): --ard-acento puro dava 4,18:1 sobre a névoa,
+     abaixo de AA (axe color-contrast, Fase 4b B5). --ard-acento em si não muda — é
+     usado majoritariamente como fundo/borda, não como texto. */
+  --ard-acento-texto: #8C513A;
 
   /* Apoio */
   --ard-petroleo: #3D5A4C;
@@ -74,6 +82,7 @@
   --ard-border: #3A4348;
   --ard-primaria: #7E9BAA;
   --ard-acento: #B8795C;
+  --ard-acento-texto: #B8795C;
 }
 
 body {

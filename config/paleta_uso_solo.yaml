@@ -1,0 +1,89 @@
+# config/paleta_uso_solo.yaml — cores das classes de uso e cobertura do solo (docs/ADR/0018).
+#
+# Fonte única de verdade para o app (via pipeline/05_app/) e para as figuras
+# (pipeline/04_figures/). Nenhuma cor de classe é escrita em outro lugar.
+#
+# Padrão adotado: legenda oficial da ESA WorldCover (v100/v200), que implementa o sistema de
+# classificação da FAO, LCCS (ISO 19144-2). Hex lidos da tabela de cores embutida no raster
+# original da ESA em 2026-09-11 (tile S18E033, v100/2020):
+#   /vsicurl/https://esa-worldcover.s3.eu-central-1.amazonaws.com/v100/2020/map/ESA_WorldCover_10m_2020_v100_S18E033_Map.tif
+# ESA WorldCover é fonte de nível A deste estudo (data/LICENSES.md, CC BY 4.0).
+#
+# `origem: worldcover` = cor idêntica à da classe WorldCover indicada.
+# `origem: adaptacao` = a legenda não tem a classe; a cor é derivada da classe LCCS mais
+# próxima e a adaptação é declarada aqui e no ADR 0018, nunca apresentada como oficial.
+
+padrao:
+  nome: "ESA WorldCover (FAO LCCS / ISO 19144-2)"
+  referencia: "Zanaga, D. et al. (2021/2022). ESA WorldCover 10 m v100/v200. doi:10.5281/zenodo.5571936 / 10.5281/zenodo.7254221"
+  verificado_em: "2026-09-11"
+
+classes:
+  urbano:
+    rotulo_pt: "Mancha urbana orgânica"
+    rotulo_en: "Organic urban footprint"
+    cor: "#FA0000"
+    origem: worldcover
+    classe_worldcover: "50 — Built-up"
+  reassentamento:
+    rotulo_pt: "Pegada de reassentamento"
+    rotulo_en: "Resettlement footprint"
+    cor: "#9E0000"
+    contorno: "#5C0000"
+    origem: adaptacao
+    classe_worldcover: "50 — Built-up"
+    nota: "Também é área construída em LCCS. Tom escuro do Built-up para manter a separação obrigatória entre crescimento orgânico e reassentamento (CLAUDE.md §0), com contorno para distinguir do vermelho da mancha orgânica."
+  industrial:
+    rotulo_pt: "Pegada industrial/minerária"
+    rotulo_en: "Industrial/mining footprint"
+    cor: "#B4B4B4"
+    contorno: "#6E6E6E"
+    origem: adaptacao
+    classe_worldcover: "60 — Bare / sparse vegetation"
+    nota: "WorldCover não tem classe de mineração. Cavas e pilhas de estéril são solo exposto em LCCS; usa-se a cor de Bare/sparse vegetation, com contorno escuro para leitura sobre fundo claro. Nunca vermelho: cava de mina não é área urbana (CLAUDE.md §10)."
+  cultivo_irrigado:
+    rotulo_pt: "Cultivo irrigado / vazante"
+    rotulo_en: "Irrigated / recession cropland"
+    cor: "#F096FF"
+    origem: worldcover
+    classe_worldcover: "40 — Cropland"
+  cultivo_sequeiro:
+    rotulo_pt: "Vegetação sazonal (não confirmada como cultivo)"
+    rotulo_en: "Seasonal vegetation (not confirmed as cropland)"
+    cor: "#F096FF"
+    estilo: "somente contorno tracejado, sem preenchimento"
+    origem: adaptacao
+    classe_worldcover: "40 — Cropland"
+    nota: "Candidata reprovada na validação (docs/ADR/0012). Não recebe o preenchimento de Cropland para não ser lida como cultivo."
+  agua:
+    rotulo_pt: "Água"
+    rotulo_en: "Water"
+    cor: "#0064C8"
+    origem: worldcover
+    classe_worldcover: "80 — Permanent water bodies"
+  varzea:
+    rotulo_pt: "Várzea (estática)"
+    rotulo_en: "Floodplain (static)"
+    cor: "#0096A0"
+    opacidade: 0.25
+    origem: adaptacao
+    classe_worldcover: "90 — Herbaceous wetland"
+    nota: "É ZONA (altura acima da drenagem, HydroRIVERS + DEM), não cobertura observada. Cor de Herbaceous wetland em baixa opacidade, para ler como zona por baixo das classes."
+  adensamento_2020_2025:
+    rotulo_pt: "Adensamento 2020→2025 (modelado)"
+    rotulo_en: "Densification 2020→2025 (modelled)"
+    cor: "#FA0000"
+    estilo: "hachura ou contorno tracejado, sem preenchimento sólido"
+    origem: adaptacao
+    classe_worldcover: "50 — Built-up"
+    nota: "Camada MODELADA (docs/ADR/0016). Nunca com o mesmo preenchimento sólido da mancha observada."
+
+contexto:
+  # Camadas de referência (OSM) e elementos de desenho: fora da legenda de uso do solo,
+  # em cinzas neutros para não competir com as classes.
+  fundo_mapa: "#FFFFFF"
+  vias: "#4A4A4A"
+  ferrovia: "#1A1A1A"
+  aerodromo: "#7A7A7A"
+  toponimo: "#1A1A1A"
+  contorno_fantasma: "#1A1A1A"

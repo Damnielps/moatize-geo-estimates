@@ -1,0 +1,224 @@
+/* Linha do tempo do mapa (SliderTemporal.jsx) — só tokens Ardósia (--ard-*, --viz-*).
+   Porte do desenho de urban-canaa/web/src/styles/mancha.css (bloco slider-mancha). */
+
+.slider-temporal {
+  background: var(--ard-surface);
+  border: 1px solid var(--ard-border);
+  border-radius: var(--ard-radius-lg);
+  padding: var(--ard-sp-2) var(--ard-sp-3);
+}
+
+.slider-temporal__controles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: var(--ard-sp-2);
+  flex-wrap: wrap;
+}
+
+.slider-temporal .botao-icone {
+  /* Círculo exato: a regra global de botão (ardosia.css) aplica padding, que somado à
+     largura fixa deformava o círculo em elipse. */
+  box-sizing: border-box;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--ard-border);
+  background: var(--ard-surface);
+  color: var(--ard-primaria);
+  line-height: 0;
+  cursor: pointer;
+}
+.slider-temporal .botao-icone:hover:not(:disabled) { border-color: var(--ard-primaria); }
+.slider-temporal .botao-icone:disabled { opacity: 0.35; cursor: default; }
+.slider-temporal .botao-icone svg { display: block; }
+/* O triângulo do play tem o centro óptico à esquerda do centro geométrico. */
+.slider-temporal__play svg { transform: translateX(1px); }
+
+.slider-temporal__ano {
+  font: 600 26px/1 var(--ard-serif);
+  margin-left: 8px;
+  color: var(--ard-primaria);
+  min-width: 4.5ch;
+}
+
+.slider-temporal__fase-atual {
+  font: 600 11px var(--ard-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ard-acento-texto);
+  background: var(--ard-acento-nevoa);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+.slider-temporal__aviso-movimento {
+  font-size: 11px;
+  color: var(--ard-atencao-fg);
+  background: var(--ard-atencao-bg);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+/* Contêiner de posicionamento — mesmas margens que `.slider-temporal__trilha` tinha
+   antes de as marcas de censo/marco virarem irmãs, não filhas, do widget de slider
+   (nested-interactive, ver SliderTemporal.jsx). */
+.slider-temporal__trilha-wrap {
+  position: relative;
+  height: 34px;
+  margin: 0 4px;
+}
+
+.slider-temporal__trilha {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  outline-offset: 4px;
+}
+
+.slider-temporal__fase {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  background: var(--ard-primaria-nevoa);
+  border-radius: 3px;
+}
+.slider-temporal__fase--ativa {
+  background: var(--ard-acento-nevoa);
+  outline: 1px solid var(--ard-acento);
+}
+
+.slider-temporal__trilho {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  transform: translateY(-50%);
+  background: var(--ard-border);
+  border-radius: 2px;
+}
+.slider-temporal__preenchido {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 3px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--ard-primaria);
+}
+
+.slider-temporal__tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  background: var(--ard-text-2);
+}
+
+.slider-temporal__marca {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--ard-acento);
+  border: 2px solid var(--ard-surface);
+  cursor: default;
+}
+.slider-temporal__marca--censo {
+  background: var(--ard-primaria);
+  width: 3px;
+  height: 20px;
+  border-radius: 1px;
+  border: none;
+}
+.slider-temporal__marca--vazado {
+  background: var(--ard-surface);
+  border: 2px solid var(--ard-acento);
+}
+.slider-temporal__marca--censo.slider-temporal__marca--vazado {
+  background: repeating-linear-gradient(45deg, var(--ard-primaria) 0 2px, transparent 2px 4px);
+}
+.slider-temporal__marca--fora {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  left: auto;
+  transform: translateY(-50%);
+  width: auto;
+  height: auto;
+  background: none;
+  border: none;
+}
+.slider-temporal__seta {
+  font-size: 16px;
+  color: var(--ard-acento);
+  font-weight: 700;
+}
+
+.slider-temporal__tooltip {
+  display: none;
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  background: var(--ard-tinta);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font: 400 11.5px/1.45 var(--ard-sans);
+  z-index: 20;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.slider-temporal__marca--fora .slider-temporal__tooltip { left: auto; right: 0; transform: none; }
+.slider-temporal__marca:hover .slider-temporal__tooltip,
+.slider-temporal__marca:focus .slider-temporal__tooltip,
+.slider-temporal__marca:focus-visible .slider-temporal__tooltip {
+  display: block;
+}
+.slider-temporal__tooltip-tipo { color: var(--ard-primaria-clara); }
+.slider-temporal__tooltip-nivel { color: var(--ard-acento-claro); font-weight: 600; }
+.slider-temporal__tooltip-nota { color: #d8d4cc; font-size: 10.5px; }
+
+.slider-temporal__alca {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--ard-surface);
+  border: 2px solid var(--ard-primaria);
+  pointer-events: none;
+}
+
+.slider-temporal__eixo {
+  position: relative;
+  height: 14px;
+  margin: 2px 4px 0;
+  font: 400 11px/1.3 var(--ard-mono);
+  color: var(--ard-text-3);
+}
+.slider-temporal__rot {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.slider-temporal__rot:first-child { transform: none; }
+.slider-temporal__rot:last-child { transform: translateX(-100%); }
+
+/* Em telas estreitas (375px), os rótulos intermediários das âncoras de imagem se
+   sobrepõem entre si e com os extremos do domínio — mantém-se só 1997 e 2025. */
+@media (max-width: 480px) {
+  .slider-temporal__rot--ancora { display: none; }
+}

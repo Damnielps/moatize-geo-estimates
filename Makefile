@@ -22,6 +22,9 @@ fetch:  ## baixa fontes de nível A, verifica sha256, preenche PROVENANCE.md  (F
 	@echo "[fetch] executando pipeline/00_fetch/ de forma idempotente"
 	@for s in pipeline/00_fetch/*.sh;  do [ -e "$$s" ] && bash "$$s"    || true; done
 	@for s in pipeline/00_fetch/*.py;  do [ -e "$$s" ] && $(PY) "$$s"   || true; done
+	@# o laço acima engole falhas (|| true); o extrator do folheto INE tem de falhar
+	@# explicitamente se o sha256 ou o quadro divergirem (§11.2.2), por isso roda de novo aqui.
+	$(PY) pipeline/00_fetch/extrair_ine_folheto_tete.py
 
 audit:  ## reemite data/DATA_AUDIT.md a partir de data/LICENSES.md  (Fase 0')
 	@echo "[audit] alvo ainda não implementado — Fase 0'"
@@ -116,6 +119,7 @@ causal: metrics agri  ## séries interrompidas, DiD, controle sintético, cenár
 figures: causal  ## figuras e folha de fatos do artigo, paleta Ardósia  (§6.3)
 	$(PY) pipeline/04_figures/mapa_localizacao.py
 	$(PY) pipeline/04_figures/fatos_verificados.py
+	$(PY) pipeline/04_figures/gif_mancha.py
 
 provenance: metrics agri causal  ## monta data/LICENSES.md e PROVENANCE.md dos fragmentos  (§4.0, §11.2.3)
 	$(PY) scripts/consolidar_registros.py
@@ -135,6 +139,10 @@ app-data: causal agri provenance  ## data/processed/app/ a partir de data/proces
 	# Camadas de CONTEXTO do mapa (topônimos, rodovias, ferrovia, aeródromo). Idempotente:
 	# só consulta a Overpass para o que ainda não está espelhado em data/raw/.
 	$(PY) pipeline/00_fetch/fetch_osm_contexto.py
+	$(PY) pipeline/05_app/gerar_marcos.py
+	# Paleta das classes de uso do solo (ADR 0018): config/paleta_uso_solo.yaml ->
+	# app/src/content/paleta_uso_solo.json, lida pelo mapa e pelas legendas do app.
+	$(PY) pipeline/05_app/gerar_paleta.py
 	$(PY) pipeline/05_app/build_web_assets.py
 	$(PY) pipeline/05_app/gerar_metodologia.py
 	$(PY) pipeline/05_app/gerar_artigo.py

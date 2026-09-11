@@ -1,0 +1,283 @@
+/* Página "Província e cidades" (Fase 4b, B4). Importado só por ProvinciaPage.jsx —
+   nenhum outro arquivo depende deste CSS. Usa exclusivamente tokens do Sistema
+   Ardósia já definidos em app/src/ardosia.css (nenhum hex novo). */
+
+.provincia-pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ard-sp-5);
+}
+
+.provincia-lead {
+  max-width: var(--ard-measure);
+  color: var(--ard-text-2);
+}
+
+.provincia-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--ard-sp-3);
+}
+
+.provincia-mini-serie {
+  margin-top: 4px;
+}
+
+.provincia-caixa-atencao {
+  border: 1px solid var(--ard-atencao);
+  background: var(--ard-atencao-bg);
+  color: var(--ard-atencao-fg);
+  border-radius: var(--ard-radius);
+  padding: var(--ard-sp-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.provincia-nota-miuda {
+  font-size: 12px;
+  color: var(--ard-text-3);
+  margin-top: var(--ard-sp-2);
+}
+
+.provincia-tabela-ausencias {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.provincia-tabela-ausencias th,
+.provincia-tabela-ausencias td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ard-border);
+}
+
+.provincia-tabela-ausencias th {
+  color: var(--ard-text-2);
+  font-weight: 600;
+}
+
+/* Nada da página pode alargar a coluna: filhos de grid/flex com min-width 0. */
+.provincia-pagina,
+.provincia-pagina > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.provincia-pagina .segmentado {
+  row-gap: 6px;
+}
+
+.provincia-pagina .prov-tooltip {
+  max-width: min(300px, 80vw);
+}
+
+.provincia-tooltip {
+  background: var(--ard-tinta);
+  color: var(--ard-papel-cl);
+  padding: 8px 10px;
+  border-radius: var(--ard-radius);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: min(340px, 80vw);
+}
+
+/* ------------------------------------------------ Figura 2: painel triplo empilhado */
+.provincia-paineis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ard-sp-2);
+}
+
+.provincia-painel {
+  min-width: 0;
+  border-top: 1px solid var(--ard-filete-cl);
+  padding-top: var(--ard-sp-1);
+}
+
+.provincia-painel:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.provincia-painel__titulo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px var(--ard-sp-3);
+  margin: 0 0 4px;
+  font: 600 13px/1.35 var(--ard-sans);
+  color: var(--ard-text);
+}
+
+.provincia-painel__letra {
+  font: 400 11px/1 var(--ard-mono);
+  color: var(--ard-text-3);
+}
+
+.provincia-painel__unidade {
+  font-weight: 400;
+  color: var(--ard-text-3);
+}
+
+.provincia-legenda {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px var(--ard-sp-2);
+  font: 400 12px/1.3 var(--ard-sans);
+  color: var(--ard-text-2);
+}
+
+.provincia-legenda__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.provincia-legenda__traco {
+  display: inline-block;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+/* Estado vazio do painel de produção: ocupa exatamente a área de plotagem (mesma
+   altura dos outros painéis, recuo igual ao eixo Y) e rola por dentro se precisar. */
+.provincia-painel-vazio {
+  box-sizing: border-box;
+  overflow: auto;
+  border: 1px dashed var(--ard-border);
+  border-radius: var(--ard-radius);
+  background: var(--ard-surface);
+  padding: var(--ard-sp-2) var(--ard-sp-3);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ard-text-2);
+  min-width: 0;
+}
+
+.provincia-painel-vazio__frase {
+  margin: 0 0 var(--ard-sp-1);
+  color: var(--ard-text);
+  max-width: none;
+}
+
+.provincia-painel-vazio__grupos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--ard-sp-1) var(--ard-sp-4);
+}
+
+.provincia-painel-vazio__mina {
+  margin: 0;
+  max-width: none;
+}
+
+.provincia-painel-vazio ul,
+.provincia-lista-simples {
+  margin: 2px 0 0;
+  padding-left: 18px;
+}
+
+.provincia-painel-vazio li,
+.provincia-lista-simples li {
+  margin: 0;
+}
+
+@media (max-width: 519px) {
+  .provincia-painel-vazio {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+/* Chave de fases e marcos, abaixo dos três painéis. */
+.provincia-chave {
+  font: 400 12px/1.5 var(--ard-sans);
+  color: var(--ard-text-2);
+  border-top: 1px solid var(--ard-filete-cl);
+  padding-top: var(--ard-sp-1);
+}
+
+.provincia-chave p {
+  margin: 0 0 4px;
+  max-width: none;
+}
+
+.provincia-chave__fase {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: var(--ard-sp-2);
+  white-space: nowrap;
+}
+
+.provincia-chave__amostra {
+  display: inline-block;
+  width: 12px;
+  height: 10px;
+  border: 1px solid var(--ard-filete);
+}
+
+.provincia-chave__amostra--sombra {
+  background: var(--ard-primaria-nevoa);
+}
+
+/* ------------------------------------------------ Figura 3 e ausências */
+.provincia-contas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ard-sp-2);
+}
+
+.provincia-painel__prov {
+  margin: 0 0 6px;
+  max-width: none;
+  font: 400 12px/1.4 var(--ard-sans);
+  color: var(--ard-text-3);
+}
+
+/* A página já espaça os blocos pelo gap do flex; a margem própria da seção dobraria. */
+.provincia-pagina > .secao {
+  margin-bottom: 0;
+}
+
+/* Caminhos de arquivo e DOIs são palavras longas sem quebra: em telas estreitas
+   quebram em qualquer ponto em vez de alargar a coluna. */
+.provincia-pagina p,
+.provincia-pagina .figura__fonte,
+.provincia-pagina td {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 599px) {
+  /* Rodapé das figuras (fonte + "Ver tabela") quebra linha em vez de empurrar o botão. */
+  .provincia-pagina .figura__rodape {
+    flex-wrap: wrap;
+  }
+
+  .provincia-tabela-ausencias thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .provincia-tabela-ausencias tr,
+  .provincia-tabela-ausencias td {
+    display: block;
+  }
+
+  .provincia-tabela-ausencias td {
+    border-bottom: 0;
+    padding: 6px 0;
+  }
+
+  .provincia-tabela-ausencias tr {
+    border-bottom: 1px solid var(--ard-border);
+    padding: 6px 0;
+  }
+}
