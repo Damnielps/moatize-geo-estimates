@@ -3779,3 +3779,28 @@ o painel de produção chaveava séries só pela mina e descartava o térmico; c
 orquestrador (uma série por mina × variável, com legenda). Integração: registros consolidados,
 metodologia regenerada, manifesto regravado (1 divergência, a do CSV novo), 205 testes + 1 skip,
 ruff limpo, build limpo, varredura do e-mail pessoal limpa na árvore e no build.
+
+### 4b-29 — Publicação: histórico reescrito, push e contrato que só passava localmente (2026-09-11)
+
+Varredura de dados pessoais pedida pelo titular: gitleaks sem achados no histórico, na árvore e
+no build; nenhum e-mail pessoal, caminho local ou segredo nos arquivos publicados; autoria de
+todos os commits no e-mail no-reply. Achado: o repositório JÁ ERA PÚBLICO e dois commits antigos
+continham o e-mail pessoal (script de coleta OSM; checklist) e o nome de usuário do Mac.
+
+Decisão do titular (2026-09-11): reescrever e forçar o push. Feito: backup espelho do histórico no
+scratchpad da sessão; `git filter-repo --replace-text` num clone separado (e-mail → `<e-mail do
+titular>`, `/Users/<nome>` → `/Users/<usuário>`); verificado que nenhum commit novo contém os
+textos, que a árvore final é idêntica à do commit local e que cada commit antigo difere só nas
+linhas substituídas; `push --force-with-lease` do `main` (8f7e919 → 1b0be3a); quatro branches do
+dependabot apagadas (duas já não existiam). **Não resolvível pelo orquestrador:** `refs/pull/1..6`
+dos PRs do dependabot seguem apontando para commits antigos; só o suporte do GitHub remove.
+A branch local da sessão paralela do titular (`claude/pensive-margulis-f9c55c`) continua sobre o
+histórico antigo: precisa de rebase sobre o novo `main` antes de qualquer merge.
+
+CI e publicação falharam em 1b0be3a: `test_producao_sem_valor_inventado_quando_raw_ausente`
+exigia que, sem os 20-F em `data/raw/`, o CSV não tivesse números — mas os brutos nunca são
+versionados, então num clone limpo o contrato falha sempre que a série existe. Terceira vez que um
+contrato só vale com o cache local (ver o commit "CI: corrige testes que só passam com o cache
+local completo de rasters"). Substituído por `test_producao_todo_valor_aponta_para_bruto_registrado`
+(todo número aponta para um documento com `.sha256`/`.meta.json` versionados). Reproduzido o CI em
+clone limpo do GitHub: 163 passed, 43 skipped; build do app limpo.

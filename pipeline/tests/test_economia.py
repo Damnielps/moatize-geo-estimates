@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import csv
 import importlib.util
+import re
 import sys
 from pathlib import Path
 
@@ -209,15 +210,31 @@ def test_producao_valores_em_faixa_plausivel_quando_presentes():
         assert 0 <= valor < 30, (r["unidade_geografica"], r["ano"], r["variavel"], valor)
 
 
-def test_producao_sem_valor_inventado_quando_raw_ausente():
-    """Sem 20-F/6-K em data/raw/, todas as linhas de produção têm de ser
-    'não disponível' — nunca um número, mesmo que plausível."""
-    linhas = _csv_linhas(PRODUCAO_CSV)
-    tem_vale = any(ROOT.glob("data/raw/vale_20f_*.htm"))
-    tem_rt = any(ROOT.glob("data/raw/riotinto_6k_*.htm"))
-    if tem_vale or tem_rt:
-        pytest.skip("brutos presentes nesta máquina — teste de ausência não se aplica")
-    assert all(r["valor"] == "não disponível" for r in linhas)
+def test_producao_todo_valor_aponta_para_bruto_registrado():
+    """Todo número publicado de produção aponta, na coluna `fonte`, para um documento da SEC
+    registrado em data/raw/ com `.sha256` e `.meta.json` VERSIONADOS.
+
+    Substitui um contrato anterior ("sem brutos, nenhum número") que só valia na máquina de
+    quem ainda não tinha baixado: os brutos nunca são versionados (§4.0 regra 2), então num
+    clone limpo — o CI — eles estão sempre ausentes, enquanto o CSV com valores está
+    versionado. O que garante que nenhum número é inventado é a cadeia valor → documento
+    → hash, que existe sem o bruto; a regeneração byte a byte a partir do bruto é testada à
+    parte e pulada quando ele não está presente.
+    """
+    padrao = re.compile(r"(vale_20f_[\w.-]+?\.htm|riotinto_6k_[\w.-]+?\.htm)")
+    numericos = 0
+    for r in _csv_linhas(PRODUCAO_CSV):
+        try:
+            float(r["valor"])
+        except ValueError:
+            continue  # "não disponível"
+        numericos += 1
+        arquivos = padrao.findall(r["fonte"])
+        assert arquivos, ("valor sem documento de origem na coluna fonte", r["ano"], r["variavel"])
+        for nome in arquivos:
+            for sufixo in (".sha256", ".meta.json"):
+                assert (ROOT / "data" / "raw" / f"{nome}{sufixo}").exists(), (nome, sufixo)
+    assert numericos > 0, "a série de produção publicada não tem nenhum valor"
 
 
 def test_producao_metodo_aponta_para_o_script():
