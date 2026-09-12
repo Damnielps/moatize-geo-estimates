@@ -33,8 +33,20 @@ abstract: >-
   (séries interrompidas, DiD, controle sintético) e cenários pós-2025. Não inclui
   microdados de acesso controlado — apenas fontes de nível A sustentam números
   publicados (política em CLAUDE.md §4.0).
+# --- DOI do Zenodo (escrito por scripts/definir_doi.py; não editar à mão) ---
+doi: "10.5281/zenodo.22718197"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22718197"
+    description: "DOI conceitual no Zenodo (resolve para a versão mais recente)"
+  - type: doi
+    value: "10.5281/zenodo.22718198"
+    description: "DOI desta versão arquivada no Zenodo"
+# --- fim do bloco de DOI ---
+
 preferred-citation:
   type: data
+  doi: "10.5281/zenodo.22718197"
   title: "Urbanização induzida pela mineração em Tete e Moatize (Moçambique), 1997–2025"
   authors:
     - family-names: "Pessini Sobreira"

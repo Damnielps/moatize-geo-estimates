@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useI18n } from "../lib/i18n.jsx";
-import { AUTOR, DOI, SITE_URL, referenciaAbnt } from "../lib/publicacao.js";
+import { AUTOR, DOI, referenciaAbnt, referenciaPartes } from "../lib/publicacao.js";
 
 /**
  * Bloco "Como citar": referência ABNT (PT/EN), ORCID do autor, link do DOI quando
@@ -12,8 +12,7 @@ export default function ComoCitar() {
   const [copiado, setCopiado] = useState(false);
   const [erroCopia, setErroCopia] = useState(false);
   const referencia = referenciaAbnt(lang);
-  const linkHref = DOI ? `https://doi.org/${DOI}` : SITE_URL;
-  const linkTexto = DOI ? `${t("como_citar_doi")}: ${DOI}` : SITE_URL;
+  const { corpo, acesso } = referenciaPartes(lang);
 
   async function copiar() {
     setErroCopia(false);
@@ -30,10 +29,11 @@ export default function ComoCitar() {
     <div className="como-citar">
       <p className="ard-kicker">{t("como_citar_titulo")}</p>
       <blockquote className="ard-quote">
-        {referencia}{" "}
-        <a href={linkHref} target="_blank" rel="noopener noreferrer">
-          {linkTexto}
+        {corpo}{" "}
+        <a href={acesso.href} target="_blank" rel="noopener noreferrer">
+          {acesso.rotulo}
         </a>
+        .
       </blockquote>
       <p className="como-citar__orcid">
         {t("como_citar_autor")}: {AUTOR.nome} · ORCID{" "}

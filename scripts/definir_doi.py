@@ -51,6 +51,20 @@ INDEX_HTML = RAIZ / "app/index.html"
 MARCA_README = "<!-- selo DOI: inserir após a release no Zenodo -->"
 MARCA_JSONLD = '      "isAccessibleForFree": true,'
 
+# O comentário que explica a AUSÊNCIA do DOI no JSON-LD. Enquanto o script só inseria o
+# campo, esse comentário ficava para trás dizendo "o Zenodo ainda não emitiu" ao lado de
+# um DOI emitido — uma contradição publicada no HTML servido. Ele é substituído junto.
+COMENTARIO_SEM_DOI = re.compile(
+    r'    <!--\n      Sem "identifier" de DOI por enquanto:.*?-->\n', re.S
+)
+COMENTARIO_COM_DOI = (
+    "    <!--\n"
+    "      O \"identifier\" abaixo é o DOI CONCEITUAL do Zenodo: resolve sempre para a\n"
+    "      versão mais recente. O DOI da versão arquivada fica em CITATION.cff, como\n"
+    "      identificador adicional. Ambos são escritos por scripts/definir_doi.py.\n"
+    "    -->\n"
+)
+
 
 class AncoraAusente(RuntimeError):
     """Um arquivo mudou de forma e a âncora esperada não foi encontrada."""
@@ -159,6 +173,7 @@ def _readme(texto: str, doi: str) -> str:
 
 def _index_html(texto: str, doi: str) -> str:
     identificador = f'      "identifier": "https://doi.org/{doi}",'
+    texto = COMENTARIO_SEM_DOI.sub(COMENTARIO_COM_DOI, texto, count=1)
     # Remove um identificador escrito antes, para que um DOI novo substitua o anterior.
     texto = re.sub(
         r'^      "identifier": "https://doi\.org/[^"]+",\n',

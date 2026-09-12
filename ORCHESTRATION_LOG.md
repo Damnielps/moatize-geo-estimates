@@ -3931,3 +3931,37 @@ descoberta já não exigia a lista —, mas o orquestrador não apaga o arquivo 
 própria: a decisão é do titular.
 
 Repositório atualizado em `9c22cb5`, `ci` e `Publicar` verdes, site no ar.
+
+### 4b-34 — DOI emitido e propagado; duas correções que a emissão revelou (2026-09-11)
+
+O titular ativou o repositório no Zenodo e publicou a release `v1.0.0`. DOIs conferidos
+na API do Zenodo, não lidos do badge: **conceitual `10.5281/zenodo.22718197`** (resolve
+para a versão mais recente; é o que se cita) e **versão `10.5281/zenodo.22718198`**. O
+badge que a página de settings mostra é o **da versão** — confundir os dois é o erro
+clássico aqui, e é por isso que a conferência foi feita no `conceptdoi` do registro. O
+depósito leu `.zenodo.json` corretamente: título, ORCID e CC BY 4.0.
+
+`definir_doi.py` escreveu nos quatro arquivos e `--verificar` devolve rc=0; o
+`CITATION.cff` resultante valida no esquema CFF 1.2.0. A primeira execução real revelou
+dois defeitos que nenhum teste sintético tinha pego — o mesmo padrão de 4b-26, em que a
+extração só falhou contra documentos reais:
+
+1. **Comentário contradizendo o dado ao lado.** O script inseria o `identifier` no
+   JSON-LD mas deixava intacto o comentário que dizia "o Zenodo ainda não emitiu a
+   primeira release" — publicado no HTML servido, a cinco linhas de um DOI emitido.
+   Corrigido **no script**, não à mão: o comentário de ausência é substituído junto, e há
+   teste que falha se "ainda não emitiu" sobreviver a uma emissão.
+2. **Identificador repetido na citação.** `referenciaAbnt` já terminava na cláusula de
+   acesso e o componente acrescentava o link depois: a citação saía com
+   "DOI: 10.5281/… . DOI: 10.5281/…". O defeito era anterior ao DOI — com a URL a
+   duplicação era a mesma, só menos visível. `referenciaPartes` passa a devolver corpo e
+   cláusula de acesso separados, a tela transforma só a cláusula em link, e o botão
+   "Copiar" continua entregando o texto corrido completo.
+
+Dois testes ficaram dependentes do estado "sem DOI" e falharam assim que o repositório
+passou a ter um — reescritos para comparar contra o estado anterior em vez de contra a
+ausência da palavra "zenodo". Um teste que só passa antes da coisa acontecer não é
+contrato.
+
+231 testes, ruff limpo, build limpo. Conferido na tela: citação com o DOI uma única vez,
+rodapé com o link `doi.org`, nota de "sem DOI ainda" ausente, ORCID no lugar.

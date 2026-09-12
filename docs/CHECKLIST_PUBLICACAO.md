@@ -206,7 +206,24 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       para a URL do GitHub Pages, `topics` como `mozambique`, `mining`, `urbanization`,
       `remote-sensing` etc.).
 
-## Procedimento de DOI (Zenodo)
+## Procedimento de DOI (Zenodo) — **executado em 2026-09-11**
+
+DOIs emitidos, conferidos na API do Zenodo (`zenodo.org/api/records/22718198`):
+
+| | DOI |
+|---|---|
+| **Conceitual** — resolve sempre para a versão mais recente; é o que se cita | `10.5281/zenodo.22718197` |
+| **Versão v1.0.0** — o snapshot arquivado | `10.5281/zenodo.22718198` |
+
+O badge que a página de settings do Zenodo mostra é o **da versão**, não o conceitual;
+os dois são distintos e a citação usa o conceitual. O depósito leu `.zenodo.json`
+corretamente: título, autor com ORCID `0000-0002-6632-3991` e licença CC BY 4.0.
+
+Propagação feita por `uv run python scripts/definir_doi.py 10.5281/zenodo.22718197
+--doi-versao 10.5281/zenodo.22718198` + `npm --prefix app run build`; `--verificar`
+devolve rc=0, e o `CITATION.cff` resultante valida no esquema CFF 1.2.0.
+
+O passo a passo abaixo fica como registro do procedimento, para a próxima versão.
 
 1. **Pré-requisito:** repositório público em `github.com/Damnielps/moatize-geo-estimates`.
 

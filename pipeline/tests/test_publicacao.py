@@ -229,9 +229,14 @@ def test_ancora_ausente_impede_qualquer_escrita(copia):
     modulo = _carregar_script(copia)
     antes = (copia / "app/src/lib/publicacao.js").read_text(encoding="utf-8")
 
+    citation_antes = (copia / "CITATION.cff").read_text(encoding="utf-8")
+
     assert modulo.main(["10.5281/zenodo.1234567"]) == 2
     assert (copia / "app/src/lib/publicacao.js").read_text(encoding="utf-8") == antes
-    assert "zenodo" not in (copia / "CITATION.cff").read_text(encoding="utf-8")
+    # Comparação contra o estado anterior, não contra a ausência da palavra "zenodo": o
+    # repositório já pode ter um DOI escrito, e o contrato é "nada foi escrito", não
+    # "nunca houve DOI".
+    assert (copia / "CITATION.cff").read_text(encoding="utf-8") == citation_antes
 
 
 # --- Contrato 6: a exposição residual é verificável, não declarada ---------------------
@@ -338,3 +343,28 @@ def test_falha_de_rede_nao_vira_veredito_de_limpo(monkeypatch):
     monkeypatch.setattr(v, "commits_de_main", lambda: set())
 
     assert v.main(["--repo", "dono/repo"]) == 2, "rc tem de ser 2 (inconclusivo), não 0"
+
+
+def test_comentario_de_doi_ausente_nao_sobrevive_a_emissao(copia):
+    """O JSON-LD não pode publicar "ainda não emitiu" ao lado de um DOI emitido."""
+    modulo = _carregar_script(copia)
+    modulo.main(["10.5281/zenodo.1234567"])
+    html = (copia / "app/index.html").read_text(encoding="utf-8")
+    assert "ainda não emitiu" not in html
+    assert "zenodo.XXXXXXX" not in html
+    assert "DOI CONCEITUAL do Zenodo" in html
+
+
+def test_referencia_nao_repete_o_identificador():
+    """A citação mostrava o identificador duas vezes: o texto ABNT já terminava nele e a
+    tela acrescentava o link em seguida. O corpo e a cláusula de acesso são separados."""
+    fonte = (RAIZ / "app/src/lib/publicacao.js").read_text(encoding="utf-8")
+    assert "export function referenciaPartes" in fonte
+    corpo = fonte.split("export function referenciaPartes")[1].split("export function")[0]
+    assert "DOI: ${DOI}" in corpo, "a cláusula de acesso tem de sair de referenciaPartes"
+
+    jsx = (RAIZ / "app/src/components/ComoCitar.jsx").read_text(encoding="utf-8")
+    assert "referenciaPartes" in jsx
+    assert "{corpo}" in jsx and "acesso.href" in jsx
+    # O texto completo continua existindo — é o que o botão "Copiar" entrega.
+    assert "referenciaAbnt(lang)" in jsx

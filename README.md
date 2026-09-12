@@ -2,7 +2,7 @@
 
 [https://Damnielps.github.io/moatize-geo-estimates](https://Damnielps.github.io/moatize-geo-estimates)
 
-<!-- selo DOI: inserir após a release no Zenodo -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22718197.svg)](https://doi.org/10.5281/zenodo.22718197)
 
 **Licenças:** código sob MIT; dados e textos sob CC BY 4.0 (exceções em `LICENSE-DADOS.md`).
 

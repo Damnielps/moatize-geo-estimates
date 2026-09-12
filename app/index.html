@@ -31,10 +31,9 @@
     }
     </script>
     <!--
-      Sem "identifier" de DOI por enquanto: o Zenodo ainda não emitiu a primeira release
-      arquivada (ver docs/CHECKLIST_PUBLICACAO.md, item de licenças/DOI). Quando isso
-      acontecer, preencher aqui com { "@type": "PropertyValue", "propertyID": "DOI",
-      "value": "10.5281/zenodo.XXXXXXX" } e também src/lib/publicacao.js (DOI).
+      O "identifier" abaixo é o DOI CONCEITUAL do Zenodo: resolve sempre para a
+      versão mais recente. O DOI da versão arquivada fica em CITATION.cff, como
+      identificador adicional. Ambos são escritos por scripts/definir_doi.py.
     -->
     <script type="application/ld+json">
     {
@@ -48,6 +47,7 @@
         "sameAs": "https://orcid.org/0000-0002-6632-3991"
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
+      "identifier": "https://doi.org/10.5281/zenodo.22718197",
       "isAccessibleForFree": true,
       "temporalCoverage": "1997-01-01/2025-12-31",
       "spatialCoverage": { "@type": "Place", "name": "Tete e Moatize, Província de Tete, Moçambique" },
