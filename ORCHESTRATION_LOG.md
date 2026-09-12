@@ -3871,3 +3871,40 @@ porque é o esquema de terceiros que o GitHub e o Zenodo leem.
 
 223 testes, rc=0; `ruff check` limpo; build do app limpo. Checklist atualizado: o
 procedimento de DOI passou de quatro edições manuais para um comando + rebuild.
+
+### 4b-32 — Eliminar a exposição residual: diagnóstico fechado e verificação automatizada (2026-09-11)
+
+Ordem do titular: "elimine a exposição residual". O diagnóstico ficou completo, o
+instrumento de prova está no repositório, e o passo que apaga depende da conta do GitHub.
+
+**Mecanismo, medido e não suposto.** As seis `refs/pull/*` são PRs fechados do dependabot
+e **todas têm `dc0673b` como pai** — conferido commit a commit na API. Não são seis
+exposições independentes: são seis âncoras do mesmo histórico antigo, e é por elas que
+`0a6af05`, `dc0673b` e `8f7e919` continuam sendo entregues pela API a quem tenha o SHA.
+`a81ac6b` (anterior à reescrita de 09-09) já não resolve — 422.
+
+**Por que recriar o repositório passou de "opção destrutiva" a recomendação.** O que
+normalmente torna essa via inaceitável é o que se perde. Medido na API: 0 estrelas,
+0 forks, 0 watchers, 0 subscribers, 0 issues, e os únicos 6 PRs são bumps fechados do
+dependabot — ou seja, o acervo social a preservar **é exatamente o que ancora a
+exposição**. A URL do Pages não muda (mesmo dono, mesmo nome), nenhum link quebra, e o
+Zenodo ainda não arquivou nada. A alternativa (chamado ao suporte do GitHub) preserva os
+números dos PRs e depende do prazo deles.
+
+**O que a sessão fez.** Espelho do histórico limpo em
+`~/Documents/Code/estudos-pesquisa/moatize-geo-estimates-backup-20260911.git`.
+`config/commits_obsoletos.yaml` registra os 10 SHAs descartados e o mapeamento
+antigo→novo **com a confiança de cada correspondência declarada** — três verificadas por
+mensagem e data, e `a81ac6b→ad468af` marcada como **inferida**, porque o objeto foi
+purgado e não há como conferir a árvore. `scripts/verificar_exposicao.py` faz a pergunta
+que `git log` local não responde, porque a resposta está no servidor: nenhuma ref remota
+aponta para descartado, nenhum descartado resolve na API, e toda `refs/pull/*` nasce do
+histórico de `main`. Hoje ele devolve **rc=1 com 21 itens expostos** — é o registro do
+estado antes da correção, e será a prova depois dela.
+
+**A armadilha que o script evita por desenho:** falha de rede e limite de taxa devolvem
+**rc=2 (inconclusivo)**, nunca 0. Um verificador que trate 403 como "o commit sumiu"
+produz exatamente o falso verde que 4b-29 produziu por outro caminho — declarar resolvido
+o que não foi medido. Há teste para isso.
+
+Runbook de oito passos no checklist. 24 contratos em `test_publicacao.py`, ruff limpo.

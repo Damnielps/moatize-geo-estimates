@@ -232,3 +232,109 @@ def test_ancora_ausente_impede_qualquer_escrita(copia):
     assert modulo.main(["10.5281/zenodo.1234567"]) == 2
     assert (copia / "app/src/lib/publicacao.js").read_text(encoding="utf-8") == antes
     assert "zenodo" not in (copia / "CITATION.cff").read_text(encoding="utf-8")
+
+
+# --- Contrato 6: a exposição residual é verificável, não declarada ---------------------
+#
+# Reescrever o histórico não apaga os objetos do servidor: `refs/pull/*` os segura e
+# nenhum push do dono as remove. O contrato aqui não é "o repositório está limpo" — isso
+# depende do servidor e muda fora do repositório —, é que a *verificação* funciona: que
+# ela acusa quando há exposição e que não confunde falha de rede com ausência de exposição.
+
+
+def _carregar_verificador():
+    nome = "verificar_exposicao_teste"
+    spec = importlib.util.spec_from_file_location(
+        nome, RAIZ / "scripts" / "verificar_exposicao.py"
+    )
+    modulo = importlib.util.module_from_spec(spec)
+    sys.modules[nome] = modulo
+    spec.loader.exec_module(modulo)
+    return modulo
+
+
+def test_config_de_commits_obsoletos_lista_o_historico_descartado():
+    v = _carregar_verificador()
+    shas = v.shas_descartados()
+    assert len(shas) == 10, "4 commits de histórico + 6 heads de PR"
+    assert all(re.fullmatch(r"[0-9a-f]{40}", s) for s in shas), "SHA fora do formato"
+    assert len(set(shas)) == len(shas), "SHA repetido na lista"
+
+
+def test_mapeamento_declara_a_confianca_de_cada_correspondencia():
+    """A correspondência de a81ac6b é inferida, não verificada — e tem de dizer isso."""
+    import yaml
+
+    dados = yaml.safe_load((RAIZ / "config/commits_obsoletos.yaml").read_text(encoding="utf-8"))
+    commits = [c for r in dados["reescritas"] for c in r["commits"]]
+    assert all(c["confianca"] in {"verificada", "inferida"} for c in commits)
+    inferidas = [c["sha"][:7] for c in commits if c["confianca"] == "inferida"]
+    assert inferidas == ["a81ac6b"], f"mudou o que é inferido: {inferidas}"
+
+
+def test_verificador_acusa_ref_remota_apontando_para_commit_descartado(monkeypatch):
+    v = _carregar_verificador()
+    descartado = v.shas_descartados()[0]
+    monkeypatch.setattr(v, "ls_remote", lambda _r: {"refs/pull/1/head": descartado})
+    monkeypatch.setattr(v, "commit_na_api", lambda _repo, _sha: None)
+    monkeypatch.setattr(v, "commits_de_main", lambda: set())
+
+    res = v.verificar("dono/repo", "origin")
+    assert not res.limpo
+    assert any("refs/pull/1/head" in m for m in res.expostos)
+
+
+def test_verificador_acusa_commit_que_a_api_ainda_entrega(monkeypatch):
+    v = _carregar_verificador()
+    descartado = v.shas_descartados()[0]
+    monkeypatch.setattr(v, "ls_remote", lambda _r: {})
+    monkeypatch.setattr(
+        v, "commit_na_api", lambda _repo, sha: {"parents": []} if sha == descartado else None
+    )
+    monkeypatch.setattr(v, "commits_de_main", lambda: set())
+
+    res = v.verificar("dono/repo", "origin")
+    assert not res.limpo
+    assert any(descartado in m for m in res.expostos)
+
+
+def test_verificador_acusa_ref_pull_que_nasce_de_historico_morto(monkeypatch):
+    """Uma ref de PR nova com SHA desconhecido ainda pode ancorar histórico descartado."""
+    v = _carregar_verificador()
+    monkeypatch.setattr(v, "ls_remote", lambda _r: {"refs/pull/9/head": "f" * 40})
+    def api(_repo, sha):
+        return {"parents": [{"sha": "e" * 40}]} if sha == "f" * 40 else None
+
+    monkeypatch.setattr(v, "commit_na_api", api)
+    monkeypatch.setattr(v, "commits_de_main", lambda: {"a" * 40})
+
+    res = v.verificar("dono/repo", "origin")
+    assert not res.limpo
+    assert any("ancora um histórico descartado" in m for m in res.expostos)
+
+
+def test_verificador_aprova_ref_pull_nascida_do_historico_vivo(monkeypatch):
+    v = _carregar_verificador()
+    monkeypatch.setattr(v, "ls_remote", lambda _r: {"refs/pull/9/head": "f" * 40})
+    def api(_repo, sha):
+        return {"parents": [{"sha": "a" * 40}]} if sha == "f" * 40 else None
+
+    monkeypatch.setattr(v, "commit_na_api", api)
+    monkeypatch.setattr(v, "commits_de_main", lambda: {"a" * 40})
+
+    res = v.verificar("dono/repo", "origin")
+    assert res.limpo, res.expostos
+
+
+def test_falha_de_rede_nao_vira_veredito_de_limpo(monkeypatch):
+    """Um 403 de limite de taxa não pode ser lido como 'o commit sumiu'."""
+    v = _carregar_verificador()
+    monkeypatch.setattr(v, "ls_remote", lambda _r: {})
+
+    def recusa(_repo, _sha):
+        raise v.ErroDeVerificacao("limite de taxa")
+
+    monkeypatch.setattr(v, "commit_na_api", recusa)
+    monkeypatch.setattr(v, "commits_de_main", lambda: set())
+
+    assert v.main(["--repo", "dono/repo"]) == 2, "rc tem de ser 2 (inconclusivo), não 0"

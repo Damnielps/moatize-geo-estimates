@@ -1,0 +1,59 @@
+# Commits que existiram no repositório público e foram descartados por reescrita de
+# histórico. Não são segredo — um SHA é um identificador, não um conteúdo —, e registrá-los
+# é o que torna a eliminação verificável: `scripts/verificar_exposicao.py` exige que
+# nenhum deles resolva no servidor e que nenhuma referência remota os alcance.
+#
+# Duas reescritas produziram esta lista:
+#
+#  1. 2026-09-09, `git filter-repo --mailmap`: trocou autor/committer do único commit
+#     existente, que usava o e-mail pessoal do titular. O SHA original (a81ac6b) foi
+#     descartado aí. Ele não existe em nenhum clone local — só sobrevive em
+#     `commit_git` de 99 artefatos de `data/processed/imagery` (proveniência pendente,
+#     ver ORCHESTRATION_LOG 4b-30).
+#
+#  2. 2026-09-11, `git filter-repo --replace-text` (ORCHESTRATION_LOG 4b-29): removeu o
+#     e-mail pessoal e o nome de usuário do Mac do conteúdo de três commits. O push
+#     forçado moveu `main`, mas **não apagou os objetos do servidor**: as seis
+#     `refs/pull/*` dos PRs do dependabot têm `dc0673b` como pai e mantinham o histórico
+#     antigo inteiro publicamente recuperável por quem tivesse o SHA.
+
+reescritas:
+  - data: "2026-09-09"
+    ferramenta: "git filter-repo --mailmap"
+    motivo: "e-mail pessoal do titular como autor/committer"
+    commits:
+      - sha: "a81ac6b5803ff36a1dfad3dc30efb0fe22da1442"
+        virou: "ad468af00ce1be6e04553df13b65c1f97fc08ede"
+        mensagem: "Fases 0 a 2: pipeline reprodutível, classificação e métricas"
+        # Correspondência inferida, não verificada contra o objeto: a81ac6b foi purgado
+        # antes desta sessão e não existe em nenhum clone. A inferência se apoia em o
+        # histórico ter exatamente um commit na data da reescrita.
+        confianca: "inferida"
+
+  - data: "2026-09-11"
+    ferramenta: "git filter-repo --replace-text"
+    motivo: "e-mail pessoal e caminho local no conteúdo dos commits"
+    commits:
+      - sha: "0a6af052325c4005420ec22513435b0b4ec1ff77"
+        virou: "ad468af00ce1be6e04553df13b65c1f97fc08ede"
+        mensagem: "Fases 0 a 2: pipeline reprodutível, classificação e métricas"
+        confianca: "verificada"
+      - sha: "dc0673bb9f6b048a6491a04c0a95157873f3a2e7"
+        virou: "58be30f59f864a6d3496a28545ac38e0f6172415"
+        mensagem: "Fase 3, app e infraestrutura de publicação"
+        confianca: "verificada"
+      - sha: "8f7e919e279bb907a2db00399d57891ff31f523e"
+        virou: "0524ee5a5df8c73a0972f4c8e5f90085784ead2f"
+        mensagem: "CI: corrige testes que só passam com o cache local completo de rasters"
+        confianca: "verificada"
+
+# Heads dos PRs do dependabot que ancoravam o histórico antigo (todos com pai dc0673b).
+# Registrados para que a verificação prove que sumiram, e não apenas que `main` está
+# limpa — foi exatamente essa distinção que a entrada 4b-29 deixou passar.
+refs_pull_ancoradas:
+  - { pr: 1, sha: "2e9d152ea5ccbad9fba5f729187f5a479624b4ec" }
+  - { pr: 2, sha: "e7fec66de304551ac3d761a45bf250d6a4962aa0" }
+  - { pr: 3, sha: "3431e8d59fcef4f777058d9b40d1b46227584b0c" }
+  - { pr: 4, sha: "b7eb3b001de52b023474d212efceddd4118d43d7" }
+  - { pr: 5, sha: "307922e5c501a4d43f792a71a8157c045b9ca791" }
+  - { pr: 6, sha: "a6fd5fb632303794dd54f670023298b5a3c3a0cb" }

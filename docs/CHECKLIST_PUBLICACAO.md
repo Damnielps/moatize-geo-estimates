@@ -125,25 +125,51 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       alterados: `LICENSE`, `README.md`, `CITATION.cff`, `.zenodo.json` (atualizados);
       `LICENSE-DADOS.md` (novo); `docs/CHECKLIST_PUBLICACAO.md` (este arquivo).
 
-- [ ] **Exposição residual do e-mail pessoal nos commits antigos — decisão do titular.**
-      A `main` publicada está limpa: a varredura por regras de PII não acha e-mail
-      pessoal nem caminho local em nenhum commit alcançável a partir de `main`, nem na
-      árvore, nem no build servido. Mas a reescrita de histórico de 2026-09-11 (entrada
-      4b-29) não apagou os objetos antigos do servidor: `git ls-remote` mostra
-      `refs/pull/1..6/head` (PRs do dependabot) ainda apontando para o histórico
-      anterior, e a API do GitHub **serve esses commits a quem tenha o SHA** —
-      confirmado nesta sessão: os três commits pré-reescrita respondem 200 e um deles
-      devolve o `User-Agent` de `fetch_osm_reassentamentos.sh` com o e-mail pessoal.
-      Não é resolvível por push: `refs/pull/*` é do lado do servidor. Opções, todas do
-      titular: (a) abrir chamado no suporte do GitHub pedindo a remoção das refs
-      obsoletas e a coleta dos objetos inalcançáveis; (b) apagar e recriar o
-      repositório, o que elimina `refs/pull/*` mas perde issues, PRs e estrelas e exige
-      reconfigurar Pages e as variáveis; (c) aceitar a exposição — é um endereço de
-      e-mail, não uma credencial, e alcançá-lo exige conhecer o SHA.
-      **Pendência correlata:** a branch local `claude/pensive-margulis-f9c55c` ainda
-      está sobre o histórico antigo e **carrega o e-mail**; precisa de rebase sobre o
-      `main` novo (ou de descarte) antes de qualquer merge ou push, senão a reescrita é
-      desfeita.
+- [ ] **Exposição residual do e-mail pessoal nos commits antigos — eliminar.**
+      **Diagnóstico (verificado em 2026-09-11).** A `main` publicada está limpa. O que
+      não está: a reescrita de histórico de 4b-29 moveu `main`, mas não apagou os objetos
+      do servidor. As seis `refs/pull/1..6/head` — PRs fechados do dependabot — têm
+      **todas o commit `dc0673b` como pai**, e por isso seguravam o histórico antigo
+      inteiro. A API do GitHub entrega esses commits a quem tenha o SHA, e um deles
+      devolve `fetch_osm_reassentamentos.sh` com o e-mail pessoal em texto. `refs/pull/*`
+      é do lado do servidor: **nenhum push do dono a remove.**
+
+      **Por que apagar e recriar o repositório é a saída, e não um exagero.** As duas
+      únicas opções são pedir ao suporte do GitHub que remova as refs obsoletas, ou
+      apagar e recriar. O custo que normalmente torna a segunda inaceitável — perder
+      estrelas, forks, issues, discussões e histórico de PRs — **aqui é zero**, medido na
+      API em 2026-09-11: 0 estrelas, 0 forks, 0 watchers, 0 subscribers, 0 issues, e os
+      únicos 6 PRs são bumps fechados do dependabot — isto é, exatamente aquilo que
+      ancora a exposição. O repositório foi criado em 2026-09-09. A URL do Pages não
+      muda (mesmo dono, mesmo nome), então nenhum link publicado quebra, e o Zenodo ainda
+      não arquivou nada.
+
+      **Passos (só o titular pode executá-los — exigem a conta do GitHub).**
+      1. Confirmar o backup: espelho do histórico limpo em
+         `~/Documents/Code/estudos-pesquisa/moatize-geo-estimates-backup-20260911.git`
+         (criado nesta sessão, `git clone --mirror`, `main` em `6b8c3e7`). O clone de
+         trabalho também é cópia completa.
+      2. GitHub → o repositório → *Settings* → *General* → *Danger Zone* →
+         **Delete this repository**.
+      3. Criar de novo com o **mesmo nome**, `moatize-geo-estimates`, **público** e
+         **vazio** — sem README, sem .gitignore, sem licença (qualquer arquivo inicial
+         cria um commit que conflita com o push).
+      4. `git push -u origin main` a partir deste clone (o remoto não muda).
+      5. *Settings* → *Pages* → *Source*: **GitHub Actions**.
+      6. *Settings* → *Secrets and variables* → *Actions* → *Variables*: recriar
+         `SITE_URL` e `BASE_PATH` com os valores acima. Sem elas o job `construir` cai no
+         placeholder e o site publica com URL errada.
+      7. Verificar: `uv run python scripts/verificar_exposicao.py` — **rc=0 e "LIMPO"**.
+         O script consulta o servidor (não a árvore local): nenhuma referência remota
+         aponta para commit descartado, nenhum descartado resolve na API, e toda
+         `refs/pull/*` que exista nasce do histórico de `main`. Um erro de rede devolve
+         rc=2 (inconclusivo), nunca "limpo".
+      8. Aguardar o `Publicar` e reconferir o site no ar.
+
+      Os SHAs descartados e o mapeamento antigo→novo estão em
+      `config/commits_obsoletos.yaml`, com a confiança de cada correspondência declarada.
+      Dependabot voltará a abrir PRs; as refs novas nascerão do histórico limpo e são
+      inofensivas — o passo 7 continua provando isso a cada execução.
 
 - [ ] **Endereço institucional de terceiro no acervo publicado.** A passada de PII achou
       `dpa@ine.gov.mz` (contato público da Direcção de Planificação do INE de
