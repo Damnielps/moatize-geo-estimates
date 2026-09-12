@@ -125,7 +125,7 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       alterados: `LICENSE`, `README.md`, `CITATION.cff`, `.zenodo.json` (atualizados);
       `LICENSE-DADOS.md` (novo); `docs/CHECKLIST_PUBLICACAO.md` (este arquivo).
 
-- [ ] **Exposição residual do e-mail pessoal nos commits antigos — eliminar.**
+- [x] **Exposição residual do e-mail pessoal nos commits antigos — aceita pelo titular.**
       **Diagnóstico (verificado em 2026-09-11).** A `main` publicada está limpa. O que
       não está: a reescrita de histórico de 4b-29 moveu `main`, mas não apagou os objetos
       do servidor. As seis `refs/pull/1..6/head` — PRs fechados do dependabot — têm
@@ -144,7 +144,16 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       muda (mesmo dono, mesmo nome), então nenhum link publicado quebra, e o Zenodo ainda
       não arquivou nada.
 
-      **Passos (só o titular pode executá-los — exigem a conta do GitHub).**
+      **Decisão do titular, 2026-09-11: não eliminar.** Depois do diagnóstico e com o
+      runbook pronto, o titular desistiu de apagar e recriar o repositório. A exposição
+      fica, e fica **declarada aqui** em vez de esquecida: os commits antigos seguem
+      recuperáveis por quem tenha o SHA, e o que eles contêm é um endereço de e-mail
+      pessoal — não uma credencial, nada que se possa usar para agir em nome do titular.
+      Nenhum segredo, chave ou token foi exposto em momento algum (gitleaks verde no
+      histórico, na árvore e no build). Se mudar de ideia, os passos abaixo continuam
+      válidos, e `scripts/verificar_exposicao.py` continua sendo a prova de que funcionou.
+
+      **Passos, se e quando o titular quiser executá-los (exigem a conta do GitHub).**
       1. Confirmar o backup: espelho do histórico limpo em
          `~/Documents/Code/estudos-pesquisa/moatize-geo-estimates-backup-20260911.git`
          (criado nesta sessão, `git clone --mirror`, `main` em `6b8c3e7`). O clone de

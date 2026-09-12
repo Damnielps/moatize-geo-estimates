@@ -3908,3 +3908,26 @@ produz exatamente o falso verde que 4b-29 produziu por outro caminho — declara
 o que não foi medido. Há teste para isso.
 
 Runbook de oito passos no checklist. 24 contratos em `test_publicacao.py`, ruff limpo.
+
+### 4b-33 — Titular desiste da eliminação; exposição fica declarada (2026-09-11)
+
+Decisão do titular, depois do diagnóstico de 4b-32 e com o runbook pronto: **não** apagar
+e recriar o repositório. A exposição permanece e passa de pendência a **fato declarado**
+no checklist — que é o desfecho honesto quando se escolhe conviver com um risco: o erro
+seria deixar no repositório um item aberto que ninguém pretende executar.
+
+O que fica exposto, dito sem atenuação e sem alarme: os commits pré-reescrita continuam
+recuperáveis por quem tenha o SHA, e neles há um **endereço de e-mail pessoal**. Não é
+credencial, não permite agir em nome do titular, e nenhum segredo, chave ou token foi
+exposto em momento algum — gitleaks verde no histórico, na árvore e no build.
+
+`config/commits_obsoletos.yaml` e `scripts/verificar_exposicao.py` ficam. O verificador
+deixa de ser prova de uma correção e passa a ser **sentinela**: se uma ref nova ancorar
+outro histórico descartado, ele acusa. Ponto que o titular precisa saber e que mudou de
+sinal com a decisão: publicar a lista de SHAs deixa de ser inócuo (não vão parar de
+resolver) e vira um índice do que está exposto. Efeito marginal — os seis PRs do
+dependabot são públicos e o commit-base aparece na aba de commits de cada um, então a
+descoberta já não exigia a lista —, mas o orquestrador não apaga o arquivo por conta
+própria: a decisão é do titular.
+
+Repositório atualizado em `9c22cb5`, `ci` e `Publicar` verdes, site no ar.
