@@ -205,6 +205,10 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
 - [ ] **Descrição e tópicos do repositório GitHub** preenchidos (`homepage` apontando
       para a URL do GitHub Pages, `topics` como `mozambique`, `mining`, `urbanization`,
       `remote-sensing` etc.).
+      **Parcial, verificado na API em 2026-09-11:** `description` e `homepage`
+      (`https://damnielps.github.io/moatize-geo-estimates/`) gravados; **`topics` continua
+      vazio** — no diálogo do About cada tópico só é aceito com Enter antes de salvar.
+      Sem tópicos o repositório não aparece nas buscas por tema, que é a razão do item.
 
 ## Procedimento de DOI (Zenodo) — **executado em 2026-09-11**
 
