@@ -3804,3 +3804,70 @@ contrato só vale com o cache local (ver o commit "CI: corrige testes que só pa
 local completo de rasters"). Substituído por `test_producao_todo_valor_aponta_para_bruto_registrado`
 (todo número aponta para um documento com `.sha256`/`.meta.json` versionados). Reproduzido o CI em
 clone limpo do GitHub: 163 passed, 43 skipped; build do app limpo.
+
+### 4b-30 — Publicação verificada no ar; varredura de PII a pedido do titular (2026-09-11)
+
+**Site publicado conferido de fato**, não por inferência do workflow. `ci` e `Publicar`
+concluíram com sucesso em `96225aa` (o par anterior, em `1b0be3a`, falhava pelo contrato
+corrigido em 4b-29). No ar: raiz, `sitemap.xml`, `robots.txt`, `favicon.svg`, `404.html` e
+os dois assets do bundle respondem 200; `canonical`, `og:url` e o JSON-LD trazem a URL real,
+sem `__SITE_URL__` e sem `EXEMPLO.invalid`. Percorridas no navegador as abas Início (o mapa
+de scrollytelling desenha as camadas), Mancha e pegadas (11 camadas; 30 requisições de dados,
+todas 200), Província e cidades (painel de preço e produção) e Metodologia (ADRs e
+dependências geradas do lockfile): **zero erro de console, zero requisição falha**. Quatro
+itens do checklist passaram de declaração a verificação (rodapé global fora de `<Routes>`,
+`SITE_URL`/`BASE_PATH`, `git status`, Pages em HTTPS).
+
+**Varredura de dados pessoais (pedido do titular), gitleaks 8.30.1, quatro passadas.** As
+três com as regras padrão — histórico completo (`--log-opts=--all`, 8 commits, 530 MB,
+inclusive a branch local anterior à reescrita), árvore de trabalho (905 MB) e uma cópia do
+build publicado (31 MB) — deram **no leaks found**. A quarta usou **regras próprias de PII**
+(e-mail, `/Users/<usuário>`, CPF, telefone), porque gitleaks procura credenciais, não dado
+pessoal: 9 achados, e é neles que está o que importa.
+
+**A `main` publicada está limpa.** Os dois achados alcançáveis a partir de `main` são falsos
+positivos de PII do titular: `/Users/` em `publicar.yml:138` é a *própria guarda* que faz o
+job falhar se um caminho local vazar para `app/dist`; e `dpa@ine.gov.mz` é o contato público
+do INE numa nota reprovada (não é dado do titular, mas foi levado ao checklist para decisão).
+
+**O que não está resolvido, e não é resolvível por push:** a reescrita de 4b-29 não apagou os
+objetos antigos do servidor. `git ls-remote` mostra `refs/pull/1..6/head` — dos PRs do
+dependabot — ainda no histórico anterior, e a API do GitHub **serve esses commits a quem tenha
+o SHA**: confirmado nesta sessão que os três commits pré-reescrita respondem 200 e que um deles
+devolve o `User-Agent` de `fetch_osm_reassentamentos.sh` com o e-mail pessoal em texto. A
+afirmação de 4b-29 de que só faltava o suporte do GitHub remover as refs estava certa quanto ao
+caminho, mas não media a consequência: **o endereço continua publicamente recuperável hoje**.
+Três opções, todas do titular, estão escritas no checklist (suporte do GitHub; apagar e recriar
+o repositório; aceitar). A branch local `claude/pensive-margulis-f9c55c` continua sobre o
+histórico antigo e carrega o e-mail: rebase ou descarte antes de qualquer merge.
+
+### 4b-31 — ORCID na tela e DOI por um comando (pedido do titular, 2026-09-11)
+
+Pedido: "garanta que a publicação contenha DOI e ORCID". Os dois estavam em estados
+diferentes e o pedido só se cumpre por inteiro num deles.
+
+**ORCID — estava só legível por máquina.** Aparecia em `CITATION.cff`, `.zenodo.json`,
+`README.md` e no `sameAs` do JSON-LD, mas **não na tela**: o bloco "Como citar" mostrava
+a referência ABNT e nada de autor identificado. Agora `ComoCitar.jsx` renderiza
+"Autor: … · ORCID …" com link para `orcid.org`, em PT e EN, conferido no app construído
+(`npm run build` + servidor de pré-visualização). Contratos novos em
+`pipeline/tests/test_publicacao.py`: o identificador é o mesmo nos cinco arquivos que o
+declaram e **passa no dígito verificador mod 11-2** da especificação do ORCID — um dígito
+trocado num dos cinco arquivos deixaria de ser detectável por leitura.
+
+**DOI — não existe e não pode ser inventado.** O Zenodo só emite o identificador na
+primeira release arquivada, e isso depende das contas do titular (nenhuma sessão tem
+acesso a elas). O que se podia fazer, e foi feito, é tirar a ambiguidade e o trabalho
+manual do caminho: (1) o painel agora **declara a ausência** em vez de silenciar —
+"sem DOI ainda: o Zenodo emite o identificador na primeira release arquivada"; (2)
+`scripts/definir_doi.py` escreve o DOI nos quatro arquivos que o publicam
+(`publicacao.js`, `CITATION.cff`, `README.md`, JSON-LD) numa chamada. O checklist mandava
+quatro edições à mão — a classe de erro de §11.2: basta um arquivo ficar para trás para o
+painel citar um DOI e o `CITATION.cff` citar outro. O script é transacional (âncora
+ausente ⇒ rc=2 e **nada** escrito), idempotente, e substitui em vez de acumular quando
+reexecutado com outro DOI. O `CITATION.cff` que ele gera foi validado contra o esquema
+**CFF 1.2.0** com `cffconvert` — verificação que importa mais que os testes próprios,
+porque é o esquema de terceiros que o GitHub e o Zenodo leem.
+
+223 testes, rc=0; `ruff check` limpo; build do app limpo. Checklist atualizado: o
+procedimento de DOI passou de quatro edições manuais para um comando + rebuild.

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useI18n } from "../lib/i18n.jsx";
-import { DOI, SITE_URL, referenciaAbnt } from "../lib/publicacao.js";
+import { AUTOR, DOI, SITE_URL, referenciaAbnt } from "../lib/publicacao.js";
 
 /**
- * Bloco "Como citar": referência ABNT (PT/EN), link do DOI quando existir (senão a URL
- * do site), botão "Copiar" com navigator.clipboard em try/catch (§6-A, CLAUDE.md).
+ * Bloco "Como citar": referência ABNT (PT/EN), ORCID do autor, link do DOI quando
+ * existir (senão a URL do site e a razão de ainda não haver DOI), botão "Copiar" com
+ * navigator.clipboard em try/catch (§6-A, CLAUDE.md).
  */
 export default function ComoCitar() {
   const { lang, t } = useI18n();
@@ -34,6 +35,17 @@ export default function ComoCitar() {
           {linkTexto}
         </a>
       </blockquote>
+      <p className="como-citar__orcid">
+        {t("como_citar_autor")}: {AUTOR.nome} · ORCID{" "}
+        <a
+          href={`https://orcid.org/${AUTOR.orcid}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {AUTOR.orcid}
+        </a>
+      </p>
+      {!DOI && <p className="como-citar__sem-doi">{t("como_citar_sem_doi")}</p>}
       <button type="button" onClick={copiar}>
         {copiado ? t("como_citar_copiado") : t("como_citar_copiar")}
       </button>

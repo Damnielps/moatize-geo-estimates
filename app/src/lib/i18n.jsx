@@ -162,6 +162,9 @@ export const DICIONARIO = {
     como_citar_copiado: "Copiado",
     como_citar_falhou: "Não foi possível copiar — selecione o texto manualmente.",
     como_citar_doi: "DOI",
+    como_citar_autor: "Autor",
+    como_citar_sem_doi:
+      "Sem DOI ainda: o Zenodo emite o identificador na primeira release arquivada. Até lá, cite pela URL do painel.",
     rodape_versao: "Versão",
     rodape_licenca: "código MIT · dados CC BY 4.0",
     rodape_repositorio: "Repositório",
@@ -386,6 +389,9 @@ export const DICIONARIO = {
     como_citar_copiado: "Copied",
     como_citar_falhou: "Could not copy — select the text manually.",
     como_citar_doi: "DOI",
+    como_citar_autor: "Author",
+    como_citar_sem_doi:
+      "No DOI yet: Zenodo mints the identifier on the first archived release. Until then, cite the dashboard URL.",
     rodape_versao: "Version",
     rodape_licenca: "MIT code · CC BY 4.0 data",
     rodape_repositorio: "Repository",

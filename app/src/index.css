@@ -60,6 +60,10 @@ a.skip-link:focus { left: 0; }
 .ard-footer__linha { margin: 0; max-width: none; }
 .ard-footer__citar { margin-top: 2px; }
 .ard-footer__citar summary { cursor: pointer; }
+/* Bloco "Como citar": o ORCID identifica o autor de forma persistente e aparece sempre;
+   a nota de DOI ausente só é renderizada enquanto o Zenodo não emitiu o identificador. */
+.como-citar__orcid { margin: var(--ard-sp-1) 0 0; }
+.como-citar__sem-doi { margin: 2px 0 0; color: var(--ard-text-2); font-style: italic; }
 
 /* Layout do mapa */
 .mapa-layout { display: grid; grid-template-columns: 1fr 320px; gap: var(--ard-sp-3); height: calc(100vh - 190px); min-height: 480px; }

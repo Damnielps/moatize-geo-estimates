@@ -39,6 +39,14 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       **Verificado pela sessão em 2026-09-09.** Repetir sempre que novos arquivos forem
       adicionados antes de um push (o job `verificar` do `publicar.yml` cobre o
       histórico do git a cada push, mas não escaneia arquivos ainda não commitados).
+      **Reexecutado em 2026-09-11 (gitleaks 8.30.1), a pedido do titular, em quatro
+      passadas:** (1) `gitleaks git . --log-opts=--all` — 8 commits, 530 MB, inclusive a
+      branch local com o histórico anterior à reescrita: *no leaks found*; (2)
+      `gitleaks dir .` sobre a árvore inteira — 905 MB: *no leaks found*; (3)
+      `gitleaks dir` sobre uma cópia de `app/dist` (o build publicado) — 31 MB: *no
+      leaks found*; (4) passada com **regras próprias de dado pessoal** (e-mail, caminho
+      `/Users/<usuário>`, CPF, telefone), porque gitleaks procura credenciais e não PII —
+      9 achados, discutidos no item abaixo.
 
 - [x] **Varredura manual complementar de dados sensíveis** (além de segredos/chaves,
       que o gitleaks já cobre): padrões de e-mail pessoal, CPF, caminho local
@@ -67,11 +75,17 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
       atualizado para os próximos commits. **Verificado pela sessão em 2026-09-09:**
       `git log --all --format='%ae' | sort -u` retorna só o e-mail no-reply.
 
-- [ ] **Rodapé/aviso de fonte em todas as visualizações.** Amostrar mapa, população,
+- [x] **Rodapé/aviso de fonte em todas as visualizações.** Amostrar mapa, população,
       gráficos, narrativa, artigo e metodologia: todas devem trazer a atribuição às
       fontes (WSF Evolution/DLR, GHSL/JRC, HDX, classificação própria) — hoje presente
       no rodapé fixo do app (`app/src/App.jsx`, componente `Rodape`) e no rodapé
       estático de `app/index.html` (visível antes do React montar).
+      **Verificado pela sessão em 2026-09-11, no site publicado:** `<Rodape />` está
+      fora de `<Routes>` em `App.jsx`, portanto vale para as sete rotas (início, mancha,
+      província, população, gráficos, artigo, metodologia); o texto
+      (`rodape_atribuicao_sufixo`, PT e EN) nomeia classificação própria
+      (Landsat/Sentinel-2), WSF Evolution (DLR), GHSL (JRC) e COD-AB/COD-PS (HDX), mais
+      a ressalva "nenhuma leitura causal... sem o veredito da Fase 3".
 
 - [x] **Licenças no lugar.** Três arquivos:
       - `LICENSE` (MIT para código; remete a `LICENSE-DADOS.md` para dados)
@@ -81,31 +95,73 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
 
 - [ ] **ORCID confirmado pelo titular.** Campo `orcid` em `CITATION.cff` e `.zenodo.json`
       contém "https://orcid.org/0000-0002-6632-3991". ORCID é o mesmo registrado no
-      projeto irmão `urban-canaa`. **Ação pendente:** titular confirma por e-mail
-      o e-mail pessoal, que é o identificador pessoal vigente antes do push.
+      projeto irmão `urban-canaa`. **Ação pendente:** só o titular pode confirmar que o
+      ORCID é o seu; a sessão não tem como verificar isso.
+      **O que a sessão verificou em 2026-09-11:** o identificador é o mesmo nos cinco
+      arquivos que o declaram (`CITATION.cff`, `.zenodo.json`, `README.md`, o JSON-LD de
+      `app/index.html` e `app/src/lib/publicacao.js`), passa no dígito verificador
+      mod 11-2 da especificação do ORCID, e agora **aparece na tela** — o bloco "Como
+      citar" do rodapé mostra "Autor: ... · ORCID ..." com link para `orcid.org`, em PT e
+      em EN, conferido no app construído. Contratos em `pipeline/tests/test_publicacao.py`.
 
-- [ ] **`SITE_URL`/`BASE_PATH` corretos.** Destino decidido em 2026-09-09: repositório
+- [x] **`SITE_URL`/`BASE_PATH` corretos.** Destino decidido em 2026-09-09: repositório
       `github.com/Damnielps/moatize-geo-estimates`, página de **projeto** (não de
-      usuário/organização). ⚠️ **Falta apenas criar o repositório e configurar as
-      variáveis** (a sessão não tem acesso à conta do GitHub do titular) — em
+      usuário/organização). Variáveis em
       *Settings → Secrets and variables → Actions → Variables*:
       - `SITE_URL` = `https://Damnielps.github.io/moatize-geo-estimates`
       - `BASE_PATH` = `/moatize-geo-estimates/`
-      Até lá, `app/vite.config.js` e `.github/workflows/publicar.yml` caem no
-      placeholder `https://EXEMPLO.invalid` (RFC 2606) e o job `construir` emite um
-      aviso (`::warning::`). `CITATION.cff` e `.zenodo.json` já usam a URL real.
+      **Resolvido e verificado pela sessão em 2026-09-11:** o repositório existe, as
+      variáveis foram configuradas pelo titular e o site responde. Conferido no ar:
+      `<link rel="canonical">`, `og:url` e o JSON-LD trazem
+      `https://Damnielps.github.io/moatize-geo-estimates/`; os dois assets
+      (`assets/index-*.js`, `assets/index-*.css`) e `sitemap.xml`, `robots.txt`,
+      `favicon.svg`, `404.html` respondem 200; nenhum `__SITE_URL__` e nenhum
+      `EXEMPLO.invalid` no build servido.
 
-- [ ] **`git status` mostra só o esperado.** Antes do primeiro push, conferir que os
+- [x] **`git status` mostra só o esperado.** Antes do primeiro push, conferir que os
       arquivos novos/alterados são exatamente os documentados (dados de
       `data/processed`, app, workflows, licenças, README etc.) — nada de `.env`,
       chaves ou outro segredo. **Verificado pela sessão em 2026-09-11:** arquivos
       alterados: `LICENSE`, `README.md`, `CITATION.cff`, `.zenodo.json` (atualizados);
       `LICENSE-DADOS.md` (novo); `docs/CHECKLIST_PUBLICACAO.md` (este arquivo).
 
+- [ ] **Exposição residual do e-mail pessoal nos commits antigos — decisão do titular.**
+      A `main` publicada está limpa: a varredura por regras de PII não acha e-mail
+      pessoal nem caminho local em nenhum commit alcançável a partir de `main`, nem na
+      árvore, nem no build servido. Mas a reescrita de histórico de 2026-09-11 (entrada
+      4b-29) não apagou os objetos antigos do servidor: `git ls-remote` mostra
+      `refs/pull/1..6/head` (PRs do dependabot) ainda apontando para o histórico
+      anterior, e a API do GitHub **serve esses commits a quem tenha o SHA** —
+      confirmado nesta sessão: os três commits pré-reescrita respondem 200 e um deles
+      devolve o `User-Agent` de `fetch_osm_reassentamentos.sh` com o e-mail pessoal.
+      Não é resolvível por push: `refs/pull/*` é do lado do servidor. Opções, todas do
+      titular: (a) abrir chamado no suporte do GitHub pedindo a remoção das refs
+      obsoletas e a coleta dos objetos inalcançáveis; (b) apagar e recriar o
+      repositório, o que elimina `refs/pull/*` mas perde issues, PRs e estrelas e exige
+      reconfigurar Pages e as variáveis; (c) aceitar a exposição — é um endereço de
+      e-mail, não uma credencial, e alcançá-lo exige conhecer o SHA.
+      **Pendência correlata:** a branch local `claude/pensive-margulis-f9c55c` ainda
+      está sobre o histórico antigo e **carrega o e-mail**; precisa de rebase sobre o
+      `main` novo (ou de descarte) antes de qualquer merge ou push, senão a reescrita é
+      desfeita.
+
+- [ ] **Endereço institucional de terceiro no acervo publicado.** A passada de PII achou
+      `dpa@ine.gov.mz` (contato público da Direcção de Planificação do INE de
+      Moçambique) em `data/_reprovado/0p-demograficas/FASE0_DEMOGRAFICAS_SUMMARY.md`,
+      commit `ad468af`, alcançável a partir de `main`. Não é dado do titular e o INE o
+      publica, mas está numa nota de trabalho reprovada. Decidir se sai do acervo
+      publicado.
+
 ## Depois do primeiro deploy
 
-- [ ] **GitHub Pages com HTTPS** ativo (Settings → Pages do repositório). Domínios
+- [x] **GitHub Pages com HTTPS** ativo (Settings → Pages do repositório). Domínios
       `*.github.io` sem domínio próprio são servidos em HTTPS por padrão.
+      **Verificado pela sessão em 2026-09-11:** o workflow `Publicar` concluiu com
+      sucesso em `96225aa` e `https://Damnielps.github.io/moatize-geo-estimates/`
+      responde 200 em HTTPS. Percorridas no site publicado as abas Início (mapa de
+      scrollytelling desenhando), Mancha e pegadas (11 camadas, 30 requisições de dados,
+      todas 200), Província e cidades e Metodologia: **zero erro de console e zero
+      requisição falha**.
 - [ ] **Google Search Console**: propriedade verificada; confirmar em *Sitemaps* que
       `sitemap.xml` foi enviado. Como o app é uma página única com `HashRouter`, o
       sitemap lista só a URL raiz (ver `app/public/sitemap.xml`) — não há URLs por seção
@@ -141,45 +197,39 @@ exceto onde anotado "verificado pela sessão", que registra o que uma sessão j�
      - **DOI conceitual** (sempre resolve para versão mais recente): `10.5281/zenodo/XXXXXX`
      - **DOI de versão** (específico de v1.0.0): `10.5281/zenodo/YYYYYY`
 
-5. **Propagador o DOI nos metadados** (editar **antes** de arquivar do Zenodo):
-   - No Zenodo, no depósito editável (antes de publicar), atualize metadados se necessário
-   - Depois de arquivar, os DOIs são fixos; volte ao repositório GitHub e faça um novo commit:
+5. **Propagar o DOI para os quatro arquivos que o publicam — um comando, não quatro
+   edições à mão** (acrescentado em 2026-09-11; a versão anterior deste checklist
+   mandava editar `CITATION.cff`, `README.md`, `publicacao.js` e `index.html` um a um,
+   e basta um ficar para trás para o painel citar um DOI e o `CITATION.cff` citar outro):
 
    ```bash
-   # Editar CITATION.cff
-   # - Adicionar campo identifiers (se não houver)
-   # - Adicionar seção preferred-citation.doi com o DOI conceitual
+   uv run python scripts/definir_doi.py 10.5281/zenodo.XXXXXX --doi-versao 10.5281/zenodo.YYYYYY
    ```
 
-   Exemplo `CITATION.cff` após a release:
-   ```yaml
-   doi: "10.5281/zenodo.XXXXXX"  # DOI conceitual
-   identifiers:
-     - type: doi
-       value: "10.5281/zenodo.XXXXXX"
-       description: "DOI conceitual no Zenodo (todas as versões)"
-     - type: doi
-       value: "10.5281/zenodo.YYYYYY"
-       description: "DOI da versão v1.0.0 no Zenodo"
-   preferred-citation:
-     type: dataset
-     doi: "10.5281/zenodo.XXXXXX"
-   ```
+   O script valida a forma do DOI, localiza todas as âncoras e só então grava (se
+   alguma faltar, **nada** é escrito e o rc é 2); é idempotente; e reexecutar com outro
+   DOI substitui o anterior em vez de acumular. `--verificar` informa o estado sem
+   escrever. Os contratos estão em `pipeline/tests/test_publicacao.py`, e o
+   `CITATION.cff` que ele gera foi validado contra o esquema CFF 1.2.0 (`cffconvert`).
 
 6. **Verificar `.zenodo.json`**:
    - Arquivo já tem `"creators"`, `"license": "CC-BY-4.0"`, `"related_identifiers"`
    - Nenhuma alteração necessária após a release
 
-7. **Atualizar `README.md` e `app/`**:
-   - Remova o comentário `<!-- selo DOI: inserir após a release no Zenodo -->`
-   - Adicione logo acima: `[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXX)`
-   - Em `app/src/lib/publicacao.js` (se houver), atualize a constante `DATASET_DOI = "10.5281/zenodo.XXXXXX"`
-   - Em `app/index.html`, seção JSON-LD, atualize `"url": "https://doi.org/10.5281/zenodo.XXXXXX"`
+7. **Reconstruir o app** para o DOI chegar ao site (o script não constrói sozinho):
+
+   ```bash
+   npm --prefix app run build
+   ```
+
+   O bloco "Como citar" passa a mostrar o DOI no lugar da URL, a nota "sem DOI ainda"
+   desaparece e o rodapé ganha o link `doi.org`. Confirme com
+   `uv run python scripts/definir_doi.py --verificar` (rc=0) e `uv run pytest -q`.
 
 8. **Commit e push final**:
    ```bash
    git add CITATION.cff README.md app/src/lib/publicacao.js app/index.html
-   git commit -m "Adiciona DOI do Zenodo (10.5281/zenodo.XXXXXX)"
+   git commit -m "Adiciona DOI do Zenodo"
    git push origin main
    ```
    - O workflow `publicar.yml` reconstrói e redeploya o app automaticamente
